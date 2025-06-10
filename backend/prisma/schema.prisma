@@ -1,0 +1,258 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  user_id         String        @id @default(uuid())
+  full_name       String
+  email           String        @unique
+  password_hash   String
+  is_verified     Boolean       @default(false)
+  profile_picture String?
+  referral_code   String?       @unique
+  role            Role          @default(USER)
+  admins          Admin[]
+  addresses       Address[]
+  cart            Cart?
+  vouchers        Voucher[]
+  transactions    Transaction[]
+  created_at      DateTime      @default(now())
+  updated_at      DateTime      @updatedAt
+}
+
+model Address {
+  address_id   String  @id @default(uuid())
+  user_id      String
+  address_name String
+  latitude     Float
+  longitude    Float
+  is_primary   Boolean @default(false)
+
+  user         User          @relation(fields: [user_id], references: [user_id])
+  transactions Transaction[]
+}
+
+model Store {
+  store_id     String         @id @default(uuid())
+  name         String
+  address      String
+  latitude     Float
+  longitude    Float
+  products     ProductStore[]
+  admins       Admin[]
+  journals     StockJournal[]
+  transactions Transaction[]
+  Discount     Discount[]
+}
+
+model Admin {
+  admin_id String    @id @default(uuid())
+  user_id  String
+  store_id String?
+  role     AdminRole
+
+  user  User   @relation(fields: [user_id], references: [user_id])
+  store Store? @relation(fields: [store_id], references: [store_id])
+}
+
+model Product {
+  product_id        String            @id @default(uuid())
+  name              String
+  description       String?
+  price             Float
+  image_url         String?
+  categories        ProductCategory[]
+  stores            ProductStore[]
+  cart_items        CartItem[]
+  transaction_items TransactionItem[]
+  discount          Discount[]        @relation("ProductDiscount")
+  StockJournal      StockJournal[]
+}
+
+model Category {
+  category_id String            @id @default(uuid())
+  name        String            @unique
+  products    ProductCategory[]
+}
+
+model ProductCategory {
+  id          String @id @default(uuid())
+  product_id  String
+  category_id String
+
+  product  Product  @relation(fields: [product_id], references: [product_id])
+  category Category @relation(fields: [category_id], references: [category_id])
+}
+
+model ProductStore {
+  id         String @id @default(uuid())
+  product_id String
+  store_id   String
+  stock      Int
+
+  product Product @relation(fields: [product_id], references: [product_id])
+  store   Store   @relation(fields: [store_id], references: [store_id])
+}
+
+model Cart {
+  cart_id String     @id @default(uuid())
+  user_id String     @unique
+  items   CartItem[]
+
+  user User @relation(fields: [user_id], references: [user_id])
+}
+
+model CartItem {
+  cart_item_id String @id @default(uuid())
+  cart_id      String
+  product_id   String
+  quantity     Int
+
+  cart    Cart    @relation(fields: [cart_id], references: [cart_id])
+  product Product @relation(fields: [product_id], references: [product_id])
+}
+
+model Transaction {
+  transaction_id String            @id @default(uuid())
+  user_id        String
+  store_id       String
+  address_id     String
+  status         TransactionStatus
+  total_amount   Float
+  created_at     DateTime          @default(now())
+  updated_at     DateTime          @updatedAt
+
+  user          User                 @relation(fields: [user_id], references: [user_id])
+  store         Store                @relation(fields: [store_id], references: [store_id])
+  address       Address              @relation(fields: [address_id], references: [address_id])
+  items         TransactionItem[]
+  payment_proof PaymentProof?
+  shipping      ShippingTransaction?
+}
+
+model TransactionItem {
+  id             String @id @default(uuid())
+  transaction_id String
+  product_id     String
+  quantity       Int
+  subtotal       Float
+
+  transaction Transaction @relation(fields: [transaction_id], references: [transaction_id])
+  product     Product     @relation(fields: [product_id], references: [product_id])
+}
+
+model PaymentProof {
+  id             String   @id @default(uuid())
+  transaction_id String   @unique
+  image_url      String
+  uploaded_at    DateTime @default(now())
+
+  transaction Transaction @relation(fields: [transaction_id], references: [transaction_id])
+}
+
+model Discount {
+  discount_id           String         @id @default(uuid())
+  store_id              String
+  type                  DiscountType
+  value                 Float
+  condition_type        ConditionType?
+  condition_value       Float?
+  expired_at            DateTime
+  applies_to_product_id String?
+
+  store    Store     @relation(fields: [store_id], references: [store_id])
+  product  Product?  @relation("ProductDiscount", fields: [applies_to_product_id], references: [product_id])
+  vouchers Voucher[]
+}
+
+model Voucher {
+  voucher_id   String   @id @default(uuid())
+  user_id      String
+  code         String   @unique
+  discount_id  String
+  is_used      Boolean  @default(false)
+  valid_until  DateTime
+  for_shipping Boolean  @default(false)
+
+  user     User     @relation(fields: [user_id], references: [user_id])
+  discount Discount @relation(fields: [discount_id], references: [discount_id])
+}
+
+model ShippingOption {
+  option_id       String                @id @default(uuid())
+  name            String
+  base_price      Float
+  courier         String
+  estimation_days Int
+  shipping        ShippingTransaction[]
+}
+
+model ShippingTransaction {
+  id                 String @id @default(uuid())
+  transaction_id     String @unique
+  shipping_option_id String
+  cost               Float
+
+  transaction     Transaction    @relation(fields: [transaction_id], references: [transaction_id])
+  shipping_option ShippingOption @relation(fields: [shipping_option_id], references: [option_id])
+}
+
+model StockJournal {
+  journal_id  String      @id @default(uuid())
+  store_id    String
+  product_id  String
+  change_type JournalType
+  quantity    Int
+  created_at  DateTime    @default(now())
+
+  store   Store   @relation(fields: [store_id], references: [store_id])
+  product Product @relation(fields: [product_id], references: [product_id])
+}
+
+enum Role {
+  USER
+  SUPER_ADMIN
+  STORE_ADMIN
+}
+
+enum AdminRole {
+  SUPER_ADMIN
+  STORE_ADMIN
+}
+
+enum TransactionStatus {
+  MENUNGGU_PEMBAYARAN
+  MENUNGGU_KONFIRMASI
+  DIPROSES
+  DIKIRIM
+  DIKONFIRMASI
+  DIBATALKAN
+}
+
+enum DiscountType {
+  PERCENTAGE
+  NOMINAL
+}
+
+enum ConditionType {
+  MIN_PURCHASE
+  BUY_ONE_GET_ONE
+}
+
+enum JournalType {
+  ADD
+  REMOVE
+  MUTATION
+}
