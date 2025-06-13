@@ -1,5 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// This is your Prisma schema file
+// Learn more in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
   provider = "prisma-client-js"
@@ -10,6 +10,57 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// =======================
+// ENUMS
+// =======================
+
+// Role user
+enum Role {
+  SUPER_ADMIN // admin UTAMA
+  STORE_ADMIN // admin cabang toko
+  USER // customer
+}
+
+// Status pembayaran pesanan
+enum PaymentStatus {
+  UNPAID
+  PAID
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELED
+}
+
+// Sumber pembatalan pesanan
+enum CancellationSource {
+  USER
+  SYSTEM
+}
+
+// Jenis transaksi mutasi stok
+enum TransactionType {
+  IN
+  OUT
+}
+
+// Status mutasi stok antar gudang
+enum MutationStatus {
+  PENDING
+  CANCELED
+  APPROVED
+  REJECTED
+}
+
+// Jenis diskon yang tersedia
+enum DiscountType {
+  PERCENTAGE // diskon persentase
+  NOMINAL // diskon nominal (rupiah)
+  BUY1GET1 // beli satu gratis satu
+}
+
+// MODELS
+
+// Data kategori produk
 model Category {
   id        Int      @id @default(autoincrement())
   slug      String   @unique
@@ -22,6 +73,7 @@ model Category {
   @@map("categories")
 }
 
+// Data produk
 model Product {
   id           Int      @id @default(autoincrement())
   slug         String   @unique
@@ -40,10 +92,12 @@ model Product {
   productBranchs ProductBranch[]
   mutations      Mutation[]
   wishlists      Wishlist[]
+  Discount       Discount[]
 
   @@map("products")
 }
 
+// Data user (admin & pembeli)
 model User {
   id         Int      @id @default(autoincrement())
   username   String?  @unique
@@ -51,9 +105,8 @@ model User {
   password   String?
   isVerified Boolean  @default(false)
   role       Role     @default(USER)
-  jwtToken   String?
   image      String?  @default("/profile.jpg")
-  provider   String?
+  provider   String? // social login provider
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
@@ -66,12 +119,7 @@ model User {
   @@map("users")
 }
 
-enum Role {
-  SUPER_ADMIN
-  ADMIN
-  USER
-}
-
+// Alamat milik user
 model Address {
   id         Int      @id @default(autoincrement())
   name       String
@@ -95,6 +143,7 @@ model Address {
   @@map("addresses")
 }
 
+// Keranjang belanja user
 model Cart {
   id        Int      @id @default(autoincrement())
   isActive  Boolean  @default(true)
@@ -108,6 +157,7 @@ model Cart {
   @@map("carts")
 }
 
+// Relasi antara produk dan cart
 model ProductCart {
   id        Int      @id @default(autoincrement())
   quantity  Int
@@ -122,6 +172,7 @@ model ProductCart {
   @@map("product_carts")
 }
 
+// Pesanan yang dibuat oleh user
 model Order {
   id                 Int                 @id @default(autoincrement())
   name               String
@@ -148,20 +199,7 @@ model Order {
   @@map("orders")
 }
 
-enum PaymentStatus {
-  UNPAID
-  PAID
-  PROCESSING
-  SHIPPED
-  DELIVERED
-  CANCELED
-}
-
-enum CancellationSource {
-  USER
-  SYSTEM
-}
-
+// Rincian produk yang dipesan
 model OrderProduct {
   id        Int      @id @default(autoincrement())
   quantity  Int
@@ -178,6 +216,7 @@ model OrderProduct {
   @@map("order_products")
 }
 
+// Data toko cabang
 model Branch {
   id         Int      @id @default(autoincrement())
   name       String
@@ -187,7 +226,7 @@ model Branch {
   postalCode String
   latitude   Float
   longitude  Float
-  userId     Int?     @unique
+  userId     Int?     @unique // Store admin
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
@@ -199,10 +238,12 @@ model Branch {
   province             Province          @relation(fields: [provinceId], references: [id])
   city                 City              @relation(fields: [cityId], references: [id])
   jurnalMutations      JournalMutation[]
+  discounts            Discount[] // diskon yang dimiliki cabang toko
 
   @@map("branchs")
 }
 
+// Stok produk per toko
 model ProductBranch {
   id        Int      @id @default(autoincrement())
   stock     Int
@@ -220,6 +261,7 @@ model ProductBranch {
   @@map("product_branchs")
 }
 
+// Data mutasi stok antar gudang
 model Mutation {
   id                  Int            @id @default(autoincrement())
   stockRequest        Int
@@ -240,6 +282,7 @@ model Mutation {
   @@map("mutations")
 }
 
+// Log perubahan stok
 model JournalMutation {
   id              Int             @id @default(autoincrement())
   quantity        Int
@@ -258,18 +301,7 @@ model JournalMutation {
   @@map("journal_mutations")
 }
 
-enum TransactionType {
-  IN
-  OUT
-}
-
-enum MutationStatus {
-  PENDING
-  CANCELED
-  APPROVED
-  REJECTED
-}
-
+// Daftar provinsi (untuk pengiriman)
 model Province {
   id   Int    @id
   name String
@@ -281,6 +313,7 @@ model Province {
   @@map("provinces")
 }
 
+// Daftar kota dalam provinsi
 model City {
   id         Int    @id
   name       String
@@ -293,6 +326,7 @@ model City {
   @@map("cities")
 }
 
+// Produk favorit user
 model Wishlist {
   id        Int      @id @default(autoincrement())
   userId    Int
@@ -307,6 +341,28 @@ model Wishlist {
   @@map("wishlists")
 }
 
+// Model diskon toko atau produk
+model Discount {
+  id           Int          @id @default(autoincrement())
+  type         DiscountType // jenis diskon
+  value        Float // bisa nominal atau persen
+  isPercentage Boolean      @default(true) // true = persen
+  minPurchase  Float? // untuk syarat minimum belanja
+
+  buyX Int? // untuk buy 1 get 1
+  getY Int? // untuk buy 1 get 1
+
+  productId Int?
+  branchId  Int // toko cabang pemilik diskon
+  expiredAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  product Product? @relation(fields: [productId], references: [id])
+  branch  Branch   @relation(fields: [branchId], references: [id])
+}
+
+// Contoh data
 model Sample {
   id   Int    @id @default(autoincrement())
   name String
