@@ -1,6 +1,6 @@
-import SmallOne from "./components/small-one";
-import Middle from "./components/middle";
-import NavLinks from "./components/nav-links";
+import SmallOne from "./small-one";
+import Middle from "./middle";
+import NavLinks from "./nav-links";
 
 export default function Navbar() {
   return (
