@@ -1,4 +1,5 @@
 import Bannar from "@/components/bannar";
+import Featured from "@/components/featured";
 import Navbar from "@/components/navigation";
 
 export default function Homepage() {
@@ -7,6 +8,7 @@ export default function Homepage() {
       <Navbar/>
       <div className="px-[300px]">
         <Bannar/>
+        <Featured/>
       </div>
     </>
   );

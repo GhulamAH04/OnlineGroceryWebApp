@@ -1,4 +1,4 @@
-import { Heart, Search, ShoppingCart } from "lucide-react";
+import { Heart, Search } from "lucide-react";
 import Image from "next/image";
 
 export default function Middle() {
@@ -22,8 +22,8 @@ export default function Middle() {
         <p className="text-2xl">|</p>
         <div className="flex gap-6 w-[127px] h-[34px]">
           <div className="flex items-center justify-center">
-            <ShoppingCart className="absolute" width={34} height={34} />
-            <div className="bg-[#2C742F] rounded-full w-[16px] h-[16px] text-white text-[10px] flex items-center justify-center relative bottom-[10px] left-[12px]">
+            <Image className="absolute" src="/navigation/bag.svg" alt="bag" width={34} height={34} />
+            <div className="bg-[#2C742F] rounded-full w-[16px] h-[16px] text-white text-[10px] flex items-center justify-center relative bottom-[8px] left-[8px]">
               2
             </div>
           </div>
