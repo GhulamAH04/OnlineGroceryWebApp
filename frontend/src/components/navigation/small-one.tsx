@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export default function SmallOne() {
   return (
-    <div className="h-[42px] text-[#666666] text-xs flex justify-between px-[300px] py-3">
+    <div className="h-[42px] text-[#666666] text-xs flex justify-between px-[300px] py-3 shadow-xs/15">
       <div className="flex gap-1 items-center">
         <MapPinIcon width={15} height={18} />
         <p>Store Location:</p>

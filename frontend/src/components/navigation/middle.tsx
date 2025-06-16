@@ -5,7 +5,7 @@ export default function Middle() {
   return (
     <div className="h-[93px] text-[#666666] text-xs flex justify-between items-center px-[300px] py-[27.5px]">
       <div className="w-[183px] h-[38px] flex gap-2 py-[3px] items-center">
-        <Image src="/plant.jpg" alt="plant" width={32} height={32} />
+        <Image src="/navigation/plant.jpg" alt="plant" width={32} height={32} />
         <p className="font-semibold text-[32px] text-[#000000]">Ecobazar</p>
       </div>
       <div className="w-[498px] h-[45px] border border-[#E5E5E5] flex items-center justify-between rounded-r-md">
