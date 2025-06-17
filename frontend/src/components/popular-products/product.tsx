@@ -13,7 +13,7 @@ export default function Product({ icon, title }: props) {
 
   return (
     <div
-      className="w-[264px] h-[327px] text-[#4D4D4D] flex flex-col justify-center items-center gap-4 border border-[#E5E5E5] rounded-[5px] hover:border-[#2C742F] hover:shadow-xl/25 hover:text-[#2C742F]"
+      className="w-[264px] h-[327px] bg-[#FFFFFF] text-[#4D4D4D] flex flex-col justify-center items-center gap-4 border border-[#E5E5E5] rounded-[5px] hover:border-[#2C742F] hover:shadow-xl/25 hover:text-[#2C742F]"
       onMouseEnter={() => setDisplayIcon(true)}
       onMouseLeave={() => setDisplayIcon(false)}
     >

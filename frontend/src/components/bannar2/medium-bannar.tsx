@@ -18,13 +18,13 @@ export default function MediumBannar() {
           Sale of the Month
         </p>
         <div className="w-[290px] h-[52px] mb-6 flex justify-center">
-          <Timer number={1} time="DAYS" />
+          <Timer number={1} time="DAYS" textColor="#FFFFFF" />
           <p className="text-2xl text-[#FFFFFF]">:</p>
-          <Timer number={13} time="HOURS" />
+          <Timer number={13} time="HOURS" textColor="#FFFFFF" />
           <p className="text-2xl text-[#FFFFFF]">:</p>
-          <Timer number={45} time="MINS"/>
+          <Timer number={45} time="MINS" textColor="#FFFFFF"/>
           <p className="text-2xl text-[#FFFFFF]">:</p>
-          <Timer number={60} time="SECS" />
+          <Timer number={60} time="SECS" textColor="#FFFFFF" />
         </div>
         <Button1 />
       </div>
