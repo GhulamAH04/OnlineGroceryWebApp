@@ -2,6 +2,7 @@ import Bannar from "@/components/bannar";
 import Featured from "@/components/featured";
 import Navbar from "@/components/navigation";
 import PopularCategories from "@/components/popular-categories";
+import PopularProducts from "@/components/popular-products";
 
 export default function Homepage() {
   return (
@@ -11,6 +12,7 @@ export default function Homepage() {
         <Bannar/>
         <Featured/>
         <PopularCategories/>
+        <PopularProducts/>
       </div>
     </>
   );

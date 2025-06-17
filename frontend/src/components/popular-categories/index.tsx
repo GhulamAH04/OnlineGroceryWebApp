@@ -56,7 +56,7 @@ export default function PopularCategories() {
   return (
     <div className="w-[1320px] h-[520px] mt-[60px]">
       <div className="w-[1320px] h-[38px] flex items-center justify-between">
-        <h1 className="text-[32px] font-semibold mb-8">Popular Categories</h1>
+        <h1 className="text-[32px] font-semibold">Popular Categories</h1>
         <button className="w-[118px] h-[19px] text-[#00B207] text-[16px] font-semibold flex justify-center gap-1">
           View All <ArrowRight />
         </button>
