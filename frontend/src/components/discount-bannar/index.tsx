@@ -2,7 +2,7 @@ import ShopButton from "../shop-button";
 
 export default function DiscountBannar() {
   return (
-    <div className="w-[1320px] h-[358px] mt-[60px]">
+    <div className="w-[1320px] h-[358px] my-[60px]">
       {/* eslint-disable-next-line */}
       <img
         className="w-[1320px] h-[358px] rounded-[10px] absolute"
