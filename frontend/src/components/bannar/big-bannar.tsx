@@ -1,9 +1,9 @@
-import Button1 from "../button1";
+import ShopButton from "../shop-button";
 
 export default function BigBannar() {
   return (
     <>
-    {/* eslint-disable-next-line */}
+      {/* eslint-disable-next-line */}
       <img
         src="/bannar/big-bannar.jpg"
         alt="big-bannar"
@@ -25,7 +25,7 @@ export default function BigBannar() {
             <p className="text-sm">Free shipping on all your order.</p>
           </div>
         </div>
-        <Button1/>
+        <ShopButton background="#FFFFFF" textColour="#00B207" />
       </div>
     </>
   );

@@ -1,4 +1,4 @@
-import Button1 from "../button1";
+import ShopButton from "../shop-button";
 import Timer from "./timer";
 
 export default function MediumBannar() {
@@ -22,11 +22,11 @@ export default function MediumBannar() {
           <p className="text-2xl text-[#FFFFFF]">:</p>
           <Timer number={13} time="HOURS" textColor="#FFFFFF" />
           <p className="text-2xl text-[#FFFFFF]">:</p>
-          <Timer number={45} time="MINS" textColor="#FFFFFF"/>
+          <Timer number={45} time="MINS" textColor="#FFFFFF" />
           <p className="text-2xl text-[#FFFFFF]">:</p>
           <Timer number={60} time="SECS" textColor="#FFFFFF" />
         </div>
-        <Button1 />
+        <ShopButton background="#FFFFFF" textColour="#00B207" />
       </div>
     </div>
   );

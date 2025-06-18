@@ -8,7 +8,7 @@ export default function BigProduct() {
         <div className="w-[525px] h-[426px] self-center">
           {/* eslint-disable-next-line */}
           <img
-            className="w-[524px] h-[426px] absolute"
+            className="w-[524px] h-[416px] absolute"
             src="/hot-deals/green-apple.jpg"
             alt="icon"
           />
@@ -23,13 +23,13 @@ export default function BigProduct() {
               </p>
             </button>
           </div>
-          <div className="w-[527px] h-[46px] flex justify-center items-center gap-2 relative top-[354px]">
+          <div className="w-[527px] h-[46px] flex justify-center items-center gap-2 relative top-[340px]">
             <button className="w-[40px] h-[40px]">
               <div className="w-[40px] h-[40px] bg-[#F2F2F2] hover:bg-[#00B207] text-[#1A1A1A] hover:text-[#FFFFFF] rounded-full flex justify-center items-center">
                 <Heart width={20} height={20} />
               </div>
             </button>
-            <button className="w-[371px] h-[45px] bg-[#00B207] rounded-4xl text-[16px] font-bold flex justify-center items-center gap-4 text-[#FFFFFF]">
+            <button className="w-[371px] h-[45px] bg-[#F2F2F2] hover:bg-[#00B207] rounded-4xl text-[16px] font-bold flex justify-center items-center gap-4 text-[#1A1A1A] hover:text-[#FFFFFF]">
               Add To Cart
               <svg
                 width="18"

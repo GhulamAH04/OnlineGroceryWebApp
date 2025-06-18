@@ -1,5 +1,6 @@
 import Bannar from "@/components/bannar";
 import Bannar2 from "@/components/bannar2";
+import DiscountBannar from "@/components/discount-bannar";
 import Featured from "@/components/featured";
 import HotDeals from "@/components/hot-deals";
 import Navbar from "@/components/navigation";
@@ -17,8 +18,11 @@ export default function Homepage() {
         <PopularProducts />
         <Bannar2 />
       </div>
-      <div className="px-[300px] py-[60px] bg-[#F7F7F7]">
+      <div className="h-[1171px] px-[300px] py-[60px] bg-[#F7F7F7]">
         <HotDeals/>
+      </div>
+      <div className="px-[300px]">
+        <DiscountBannar/>
       </div>
     </>
   );
