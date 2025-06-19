@@ -3,7 +3,7 @@ import DiscountBannar from "@/components/discount-bannar";
 import Featured from "@/components/featured";
 import Footer from "@/components/footer";
 import HotDeals from "@/components/hot-deals";
-import Navbar from "@/components/navigation";
+import Navbar from "@/components/header";
 import PopularCategories from "@/components/popular-categories";
 import PopularProducts from "@/components/popular-products";
 
