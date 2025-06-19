@@ -1,5 +1,5 @@
 import { EyeIcon, Heart, Star } from "lucide-react";
-import Timer from "../bannar2/timer";
+import Timer from "../timer";
 
 export default function BigProduct() {
   return (
