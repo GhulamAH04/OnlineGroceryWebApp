@@ -8,13 +8,9 @@ export default function SmallOne() {
         <MapPinIcon width={15} height={18} />
         <p>Store Location:</p>
       </div>
-      <div className="flex gap-5">
-        <p>Id</p>
-        <p>IDR</p>|
-        <div className="flex gap-1">
-          <Link href="/login">Sign In</Link> <p>/</p>
-          <Link href="/register">Sign Up</Link>
-        </div>
+      <div className="flex gap-3 mr-4">
+        <Link href="/login">Sign In</Link> <p>/</p>
+        <Link href="/register">Sign Up</Link>
       </div>
     </div>
   );
