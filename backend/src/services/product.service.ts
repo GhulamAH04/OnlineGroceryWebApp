@@ -12,7 +12,7 @@ async function getProductBranchesByStoreId(storeId: number) {
       },
       include: {
         products: true,
-        branchs: true
+        branchs: true,
       },
     });
     return productBranches;
@@ -26,6 +26,7 @@ async function getCity(latitude: number, longitude: number) {
   const { data } = await axios.get(
     `https://api.opencagedata.com/geocode/v1/json?q=${latitude}%2C+${longitude}&key=${API_KEY}`
   );
+  console.log(data.results[0].components.city);
   //get city
   try {
     const city: string = data.results[0].components.city;

@@ -7,7 +7,8 @@ export async function GetProductsByLocationController(
   next: NextFunction
 ) {
   try {
-    const { latitude, longitude } = req.body;
+    const latitude = parseFloat(req.query.latitude as string);
+    const longitude = parseFloat(req.query.longitude as string);
     const coupon = await GetProductsByLocationService(latitude, longitude);
 
     res.status(200).send({
