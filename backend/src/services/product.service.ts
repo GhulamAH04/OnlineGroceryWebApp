@@ -98,7 +98,9 @@ export async function GetProductsByLocationService(
       productBranches.push(product);
     }
 
-    return productBranches;
+    const allProducts = productBranches.flat();
+
+    return allProducts;
   } catch (err) {
     throw err;
   }

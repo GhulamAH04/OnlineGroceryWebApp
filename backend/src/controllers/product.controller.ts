@@ -9,11 +9,11 @@ export async function GetProductsByLocationController(
   try {
     const latitude = parseFloat(req.query.latitude as string);
     const longitude = parseFloat(req.query.longitude as string);
-    const coupon = await GetProductsByLocationService(latitude, longitude);
+    const products = await GetProductsByLocationService(latitude, longitude);
 
     res.status(200).send({
       message: `Get products by location success`,
-      data: coupon,
+      data: products,
     });
   } catch (err) {
     next(err);
