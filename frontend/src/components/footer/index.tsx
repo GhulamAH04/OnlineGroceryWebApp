@@ -8,7 +8,6 @@ import {
   FacebookIcon,
   TwitterIcon,
 } from "lucide-react";
-import Image from "next/image";
 export default function Footer() {
   return (
     <footer className="border-t">
@@ -16,11 +15,11 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
             <div className="w-[183px] h-[38px] flex gap-2 py-[3px] items-center">
-              <Image
+              {/* eslint-disable-next-line */}
+              <img
+                className="w-[32px] h-[32px]"
                 src="/navigation/plant.svg"
                 alt="plant"
-                width={32}
-                height={32}
               />
               <p className="font-semibold text-[32px] text-[#FFFFFF]">
                 Ecobazar
@@ -72,7 +71,10 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/faq" className="text-[#808080] hover:text-[#FFFFFF]">
+                <Link
+                  href="/faq"
+                  className="text-[#808080] hover:text-[#FFFFFF]"
+                >
                   FAQ
                 </Link>
               </li>

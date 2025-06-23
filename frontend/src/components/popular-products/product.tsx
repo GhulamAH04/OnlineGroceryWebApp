@@ -4,11 +4,12 @@ import { EyeIcon, Heart, Star } from "lucide-react";
 import { useState } from "react";
 
 interface props {
-  icon: string;
-  title: string;
+  image: string;
+  name: string;
+  price: number;
 }
 
-export default function Product({ icon, title }: props) {
+export default function Product({ image, name, price }: props) {
   const [displayIcon, setDisplayIcon] = useState(false);
 
   return (
@@ -21,13 +22,13 @@ export default function Product({ icon, title }: props) {
         {/* eslint-disable-next-line */}
         <img
           className="w-[254px] h-[230px] self-center absolute"
-          src={`/products/${icon}.png`}
-          alt={icon}
+          src={`/products/${image}`}
+          alt={image}
         />
-        <button className="w-[80px] h-[27px] bg-[#EA4B48] px-2 py-[3px] flex gap-1 rounded-[4px] relative top-4 left-4">
+        {/* <button className="w-[80px] h-[27px] bg-[#EA4B48] px-2 py-[3px] flex gap-1 rounded-[4px] relative top-4 left-4">
           <p className="text-[#FFFFFF] text[14px] font-normal">Sale</p>
           <p className="text-[#FFFFFF] text[14px] font-medium">50%</p>
-        </button>
+        </button> */}
         {displayIcon && (
           <>
             <button className="w-[40px] h-[40px] mt-4 mr-2 relative bottom-8 left-[210px]">
@@ -45,12 +46,12 @@ export default function Product({ icon, title }: props) {
       </div>
       <div className="w-[264px] h-[87px] flex justify-center items-center gap-1.5 px-3 pb-4">
         <div className="w-[240px] h-[45px]">
-          <p className="text-[14px] font-normal">{title}</p>
+          <p className="text-[14px] font-normal">{name}</p>
           <div className="w-[106px] h-[24px] flex gap-1">
-            <p className="text-[16px] text-[#1A1A1A] font-medium">IDR14.999</p>
-            <p className="text-[16px] text-[#999999] font-normal line-through">
+            <p className="text-[16px] text-[#1A1A1A] font-medium">IDR.{price}</p>
+            {/* <p className="text-[16px] text-[#999999] font-normal line-through">
               IDR20.500
-            </p>
+            </p> */}
           </div>
           <div className="w-[60px] h-[12px] mt-1.5 flex">
             <Star
