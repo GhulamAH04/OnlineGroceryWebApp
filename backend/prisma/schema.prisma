@@ -1,179 +1,129 @@
-// This is your Prisma schema file
-// Learn more in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
-// =======================
-// ENUMS
-// =======================
-
-// Role user
-enum Role {
-  SUPER_ADMIN // admin UTAMA
-  STORE_ADMIN // admin cabang toko
-  USER // customer
-}
-
-// Status pembayaran pesanan
-enum PaymentStatus {
-  UNPAID
-  PAID
-  PROCESSING
-  SHIPPED
-  DELIVERED
-  CANCELED
-}
-
-// Sumber pembatalan pesanan
-enum CancellationSource {
-  USER
-  SYSTEM
-}
-
-// Jenis transaksi mutasi stok
-enum TransactionType {
-  IN
-  OUT
-}
-
-// Status mutasi stok antar gudang
-enum MutationStatus {
-  PENDING
-  CANCELED
-  APPROVED
-  REJECTED
-}
-
-// Jenis diskon yang tersedia
-enum DiscountType {
-  PERCENTAGE // diskon persentase
-  NOMINAL // diskon nominal (rupiah)
-  BUY1GET1 // beli satu gratis satu
-}
-
-// MODELS
-
-// Data kategori produk
-model Category {
-  id        Int      @id @default(autoincrement())
-  slug      String   @unique
-  name      String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  products Product[]
-
-  @@map("categories")
-}
-
-// Data produk
-model Product {
-  id           Int      @id @default(autoincrement())
-  slug         String   @unique
-  name         String   @unique
-  description  String?
-  price        Float
-  image        String?  @default("/product.jpg")
-  currentStock Int?
-  categoryId   Int
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  category       Category        @relation(fields: [categoryId], references: [id])
-  productCarts   ProductCart[]
-  orderProducts  OrderProduct[]
-  productBranchs ProductBranch[]
-  mutations      Mutation[]
-  wishlists      Wishlist[]
-  Discount       Discount[]
-
-  @@map("products")
-}
-
-// Data user (admin & pembeli)
-model User {
-  id         Int      @id @default(autoincrement())
-  username   String?  @unique
-  email      String   @unique
-  password   String?
-  isVerified Boolean  @default(false)
-  role       Role     @default(USER)
-  image      String?  @default("/profile.jpg")
-  provider   String? // social login provider
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  branch    Branch?
-  addresses Address[]
-  carts     Cart[]
-  wishlists Wishlist[]
-  orders    Order[]
-
-  @@map("users")
-}
-
-// Alamat milik user
-model Address {
-  id         Int      @id @default(autoincrement())
+model addresses {
+  id         Int       @id @default(autoincrement())
   name       String
   address    String
   provinceId Int
   cityId     Int
   postalCode String
-  isPrimary  Boolean  @default(false)
+  isPrimary  Boolean   @default(false)
   userId     Int
   latitude   Float
   longitude  Float
-  isDeleted  Boolean  @default(false)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  user     User     @relation(fields: [userId], references: [id])
-  orders   Order[]
-  province Province @relation(fields: [provinceId], references: [id])
-  city     City     @relation(fields: [cityId], references: [id])
-
-  @@map("addresses")
+  isDeleted  Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime
+  cities     cities    @relation(fields: [cityId], references: [id])
+  provinces  provinces @relation(fields: [provinceId], references: [id])
+  users      users     @relation(fields: [userId], references: [id])
+  orders     orders[]
 }
 
-// Keranjang belanja user
-model Cart {
-  id        Int      @id @default(autoincrement())
-  isActive  Boolean  @default(true)
-  userId    Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user         User          @relation(fields: [userId], references: [id])
-  productCarts ProductCart[]
-
-  @@map("carts")
+model branchs {
+  id                                               Int                 @id @default(autoincrement())
+  name                                             String
+  address                                          String
+  provinceId                                       Int
+  cityId                                           Int
+  postalCode                                       String
+  latitude                                         Float
+  longitude                                        Float
+  userId                                           Int?                @unique
+  createdAt                                        DateTime            @default(now())
+  updatedAt                                        DateTime
+  cities                                           cities              @relation(fields: [cityId], references: [id])
+  provinces                                        provinces           @relation(fields: [provinceId], references: [id])
+  users                                            users?              @relation(fields: [userId], references: [id])
+  journal_mutations                                journal_mutations[]
+  mutations_mutations_destinationBranchIdTobranchs mutations[]         @relation("mutations_destinationBranchIdTobranchs")
+  mutations_mutations_sourceBranchIdTobranchs      mutations[]         @relation("mutations_sourceBranchIdTobranchs")
+  orders                                           orders[]
+  product_branchs                                  product_branchs[]
 }
 
-// Relasi antara produk dan cart
-model ProductCart {
+model carts {
+  id            Int             @id @default(autoincrement())
+  isActive      Boolean         @default(true)
+  userId        Int
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime
+  users         users           @relation(fields: [userId], references: [id])
+  product_carts product_carts[]
+}
+
+model categories {
+  id        Int        @id @default(autoincrement())
+  slug      String     @unique
+  name      String     @unique
+  createdAt DateTime   @default(now())
+  updatedAt DateTime
+  products  products[]
+}
+
+model cities {
+  id         Int         @id
+  name       String
+  provinceId Int
+  addresses  addresses[]
+  branchs    branchs[]
+  provinces  provinces   @relation(fields: [provinceId], references: [id])
+}
+
+model journal_mutations {
+  id              Int             @id @default(autoincrement())
+  quantity        Int
+  transactionType TransactionType
+  description     String
+  productBranchId Int
+  branchId        Int?
+  mutationId      Int?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime
+  branchs         branchs?        @relation(fields: [branchId], references: [id])
+  mutations       mutations?      @relation(fields: [mutationId], references: [id])
+  product_branchs product_branchs @relation(fields: [productBranchId], references: [id])
+}
+
+model mutations {
+  id                                             Int                 @id @default(autoincrement())
+  stockRequest                                   Int
+  stockProcess                                   Int?
+  note                                           String?
+  sourceBranchId                                 Int
+  destinationBranchId                            Int
+  productId                                      Int
+  status                                         MutationStatus
+  createdAt                                      DateTime            @default(now())
+  updatedAt                                      DateTime
+  journal_mutations                              journal_mutations[]
+  branchs_mutations_destinationBranchIdTobranchs branchs             @relation("mutations_destinationBranchIdTobranchs", fields: [destinationBranchId], references: [id])
+  products                                       products            @relation(fields: [productId], references: [id])
+  branchs_mutations_sourceBranchIdTobranchs      branchs             @relation("mutations_sourceBranchIdTobranchs", fields: [sourceBranchId], references: [id])
+}
+
+model order_products {
   id        Int      @id @default(autoincrement())
   quantity  Int
+  price     Float
+  total     Float
+  orderId   Int
   productId Int
-  cartId    Int
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  cart    Cart    @relation(fields: [cartId], references: [id])
-  product Product @relation(fields: [productId], references: [id])
-
-  @@map("product_carts")
+  updatedAt DateTime
+  orders    orders   @relation(fields: [orderId], references: [id])
+  products  products @relation(fields: [productId], references: [id])
 }
 
-// Pesanan yang dibuat oleh user
-model Order {
+model orders {
   id                 Int                 @id @default(autoincrement())
   name               String
   paymentStatus      PaymentStatus
@@ -189,184 +139,131 @@ model Order {
   shippedAt          DateTime?
   cancellationSource CancellationSource?
   createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
-
-  address       Address        @relation(fields: [addressId], references: [id])
-  branch        Branch         @relation(fields: [branchId], references: [id])
-  user          User           @relation(fields: [userId], references: [id])
-  orderProducts OrderProduct[]
-
-  @@map("orders")
+  updatedAt          DateTime
+  order_products     order_products[]
+  addresses          addresses           @relation(fields: [addressId], references: [id])
+  branchs            branchs             @relation(fields: [branchId], references: [id])
+  users              users               @relation(fields: [userId], references: [id])
 }
 
-// Rincian produk yang dipesan
-model OrderProduct {
-  id        Int      @id @default(autoincrement())
-  quantity  Int
-  price     Float
-  total     Float
-  orderId   Int
-  productId Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  product Product @relation(fields: [productId], references: [id])
-  order   Order   @relation(fields: [orderId], references: [id])
-
-  @@map("order_products")
-}
-
-// Data toko cabang
-model Branch {
-  id         Int      @id @default(autoincrement())
-  name       String
-  address    String
-  provinceId Int
-  cityId     Int
-  postalCode String
-  latitude   Float
-  longitude  Float
-  userId     Int?     @unique // Store admin
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  user                 User?             @relation(fields: [userId], references: [id])
-  orders               Order[]
-  productBranchs       ProductBranch[]
-  sourceMutations      Mutation[]        @relation("SourceBranch")
-  destinationMutations Mutation[]        @relation("DestinationBranch")
-  province             Province          @relation(fields: [provinceId], references: [id])
-  city                 City              @relation(fields: [cityId], references: [id])
-  jurnalMutations      JournalMutation[]
-  discounts            Discount[] // diskon yang dimiliki cabang toko
-
-  @@map("branchs")
-}
-
-// Stok produk per toko
-model ProductBranch {
-  id        Int      @id @default(autoincrement())
-  stock     Int
-  productId Int
-  branchId  Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  deleted   Boolean  @default(false)
-
-  branch           Branch            @relation(fields: [branchId], references: [id])
-  product          Product           @relation(fields: [productId], references: [id])
-  journalMutations JournalMutation[]
+model product_branchs {
+  id                Int                 @id @default(autoincrement())
+  stock             Int
+  productId         Int
+  branchId          Int
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime
+  deleted           Boolean             @default(false)
+  journal_mutations journal_mutations[]
+  branchs           branchs             @relation(fields: [branchId], references: [id])
+  products          products            @relation(fields: [productId], references: [id])
 
   @@unique([productId, branchId])
-  @@map("product_branchs")
 }
 
-// Data mutasi stok antar gudang
-model Mutation {
-  id                  Int            @id @default(autoincrement())
-  stockRequest        Int
-  stockProcess        Int?
-  note                String?
-  sourceBranchId      Int
-  destinationBranchId Int
-  productId           Int
-  status              MutationStatus
-  createdAt           DateTime       @default(now())
-  updatedAt           DateTime       @updatedAt
-
-  sourceBranch      Branch            @relation("SourceBranch", fields: [sourceBranchId], references: [id])
-  destinationBranch Branch            @relation("DestinationBranch", fields: [destinationBranchId], references: [id])
-  journalMutation   JournalMutation[]
-  product           Product           @relation(fields: [productId], references: [id])
-
-  @@map("mutations")
+model product_carts {
+  id        Int      @id @default(autoincrement())
+  quantity  Int
+  productId Int
+  cartId    Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+  carts     carts    @relation(fields: [cartId], references: [id])
+  products  products @relation(fields: [productId], references: [id])
 }
 
-// Log perubahan stok
-model JournalMutation {
-  id              Int             @id @default(autoincrement())
-  quantity        Int
-  transactionType TransactionType
-  description     String
-  productBranchId Int
-  branchId        Int?
-  mutationId      Int?
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-
-  productBranch ProductBranch @relation(fields: [productBranchId], references: [id])
-  branch        Branch?       @relation(fields: [branchId], references: [id])
-  mutation      Mutation?     @relation(fields: [mutationId], references: [id])
-
-  @@map("journal_mutations")
+model products {
+  id              Int               @id @default(autoincrement())
+  slug            String            @unique
+  name            String            @unique
+  description     String?
+  price           Float
+  image           String?           @default("/product.jpg")
+  currentStock    Int?
+  categoryId      Int
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime
+  mutations       mutations[]
+  order_products  order_products[]
+  product_branchs product_branchs[]
+  product_carts   product_carts[]
+  categories      categories        @relation(fields: [categoryId], references: [id])
+  wishlists       wishlists[]
 }
 
-// Daftar provinsi (untuk pengiriman)
-model Province {
-  id   Int    @id
+model provinces {
+  id        Int         @id
+  name      String
+  addresses addresses[]
+  branchs   branchs[]
+  cities    cities[]
+}
+
+model samples {
+  id   Int    @id @default(autoincrement())
   name String
-
-  cities    City[]
-  branchs   Branch[]
-  addresses Address[]
-
-  @@map("provinces")
+  code String
 }
 
-// Daftar kota dalam provinsi
-model City {
-  id         Int    @id
-  name       String
-  provinceId Int
-
-  branchs   Branch[]
-  province  Province  @relation(fields: [provinceId], references: [id])
-  addresses Address[]
-
-  @@map("cities")
+model users {
+  id         Int         @id @default(autoincrement())
+  username   String?     @unique
+  email      String      @unique
+  password   String?
+  isVerified Boolean     @default(false)
+  role       Role        @default(USER)
+  jwtToken   String?
+  image      String?     @default("/profile.jpg")
+  provider   String?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime
+  addresses  addresses[]
+  branchs    branchs?
+  carts      carts[]
+  orders     orders[]
+  wishlists  wishlists[]
 }
 
-// Produk favorit user
-model Wishlist {
+model wishlists {
   id        Int      @id @default(autoincrement())
   userId    Int
   productId Int
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user    User    @relation(fields: [userId], references: [id])
-  product Product @relation(fields: [productId], references: [id])
+  updatedAt DateTime
+  products  products @relation(fields: [productId], references: [id])
+  users     users    @relation(fields: [userId], references: [id])
 
   @@unique([userId, productId])
-  @@map("wishlists")
 }
 
-// Model diskon toko atau produk
-model Discount {
-  id           Int          @id @default(autoincrement())
-  type         DiscountType // jenis diskon
-  value        Float // bisa nominal atau persen
-  isPercentage Boolean      @default(true) // true = persen
-  minPurchase  Float? // untuk syarat minimum belanja
-
-  buyX Int? // untuk buy 1 get 1
-  getY Int? // untuk buy 1 get 1
-
-  productId Int?
-  branchId  Int // toko cabang pemilik diskon
-  expiredAt DateTime
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  product Product? @relation(fields: [productId], references: [id])
-  branch  Branch   @relation(fields: [branchId], references: [id])
+enum CancellationSource {
+  USER
+  SYSTEM
 }
 
-// Contoh data
-model Sample {
-  id   Int    @id @default(autoincrement())
-  name String
-  code String
+enum MutationStatus {
+  PENDING
+  CANCELED
+  APPROVED
+  REJECTED
+}
 
-  @@map("samples")
+enum PaymentStatus {
+  UNPAID
+  PAID
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELED
+}
+
+enum Role {
+  SUPER_ADMIN
+  STORE_ADMIN
+  USER
+}
+
+enum TransactionType {
+  IN
+  OUT
 }
