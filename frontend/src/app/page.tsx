@@ -59,20 +59,27 @@ export default function Homepage() {
 
   useEffect(() => {
     const fetchProducts = async () => {
-      if (coordinates.latitude !== 0 && coordinates.longitude !== 0) {
-        try {
+      try {
+        if (coordinates.latitude !== 0 && coordinates.longitude !== 0) {
           const { data } = await axios.get(
             `http://localhost:8080/api/products/nearby?latitude=${coordinates.latitude}&longitude=${coordinates.longitude}`
           );
           setProducts(data.data);
-        } catch (error) {
-          console.error("Error fetching products:", error);
+        } else {
+          const { data } = await axios.get(
+            `http://localhost:8080/api/products/main`
+          );
+          setProducts(data.data);
         }
+      } catch (err) {
+        console.error("Error fetching products:", err);
       }
     };
 
     fetchProducts();
   }, [coordinates]);
+
+  console.log(products);
 
   // Filter products based on the selected category
   const filteredProducts = selectedCategoryId
