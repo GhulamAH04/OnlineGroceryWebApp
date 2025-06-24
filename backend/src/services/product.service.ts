@@ -26,8 +26,6 @@ async function getCity(latitude: number, longitude: number) {
   const { data } = await axios.get(
     `https://api.opencagedata.com/geocode/v1/json?q=${latitude}%2C+${longitude}&key=${API_KEY}`
   );
-  console.log(data.results[0].components.city);
-  //get city
   try {
     const city: string = data.results[0].components.city;
     return city;
@@ -84,7 +82,7 @@ async function calculateStoreDistances(lat1: number, lon1: number) {
   }
 }
 
-export async function GetProductsByLocationService(
+export async function GetNearbyProductsService(
   latitude: number,
   longitude: number
 ) {
@@ -94,6 +92,35 @@ export async function GetProductsByLocationService(
     const storeDistances = await calculateStoreDistances(latitude, longitude);
     for (let i = 0; i < storeDistances.length; i++) {
       const storeId = storeDistances[i].storeId;
+      const product = await getProductBranchesByStoreId(storeId);
+      productBranches.push(product);
+    }
+
+    const allProducts = productBranches.flat();
+
+    return allProducts;
+  } catch (err) {
+    throw err;
+  }
+}
+
+export async function GetMainStoresProductsService() {
+  try {
+    let productBranches = [];
+
+    const mainStores = await prisma.branchs.findMany({
+      where: {
+        cities: {
+          name: {
+            contains: "Jakarta",
+            mode: "insensitive"
+          },
+        },
+      },
+    });
+
+    for (let i = 0; i < mainStores.length; i++) {
+      const storeId = mainStores[i].id;
       const product = await getProductBranchesByStoreId(storeId);
       productBranches.push(product);
     }

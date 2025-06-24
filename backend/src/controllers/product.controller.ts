@@ -1,7 +1,10 @@
 import { Request, Response, NextFunction } from "express";
-import { GetProductsByLocationService } from "../services/product.service";
+import {
+  GetMainStoresProductsService,
+  GetNearbyProductsService,
+} from "../services/product.service";
 
-export async function GetProductsByLocationController(
+export async function GetNearbyProductsController(
   req: Request,
   res: Response,
   next: NextFunction
@@ -9,10 +12,27 @@ export async function GetProductsByLocationController(
   try {
     const latitude = parseFloat(req.query.latitude as string);
     const longitude = parseFloat(req.query.longitude as string);
-    const products = await GetProductsByLocationService(latitude, longitude);
+    const products = await GetNearbyProductsService(latitude, longitude);
 
     res.status(200).send({
       message: `Get products by location success`,
+      data: products,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function GetMainStoresProductsController(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const products = await GetMainStoresProductsService();
+
+    res.status(200).send({
+      message: `Get main stores products success`,
       data: products,
     });
   } catch (err) {

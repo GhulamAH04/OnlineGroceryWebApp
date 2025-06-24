@@ -1,8 +1,9 @@
 import { Router } from "express";
-import { GetProductsByLocationController } from "../controllers/product.controller";
+import { GetMainStoresProductsController, GetNearbyProductsController } from "../controllers/product.controller";
 const router = Router();
 
 // read
-router.get("/nearby", GetProductsByLocationController);
+router.get("/nearby", GetNearbyProductsController);
+router.get("/main", GetMainStoresProductsController);
 
 export default router;
