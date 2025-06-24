@@ -40,6 +40,7 @@ model branchs {
   userId                                           Int?                @unique
   createdAt                                        DateTime            @default(now())
   updatedAt                                        DateTime
+  Discount                                         Discount[]
   cities                                           cities              @relation(fields: [cityId], references: [id])
   provinces                                        provinces           @relation(fields: [provinceId], references: [id])
   users                                            users?              @relation(fields: [userId], references: [id])
@@ -66,6 +67,7 @@ model categories {
   name      String     @unique
   createdAt DateTime   @default(now())
   updatedAt DateTime
+  image     String?    @db.VarChar(50)
   products  products[]
 }
 
@@ -183,6 +185,7 @@ model products {
   categoryId      Int
   createdAt       DateTime          @default(now())
   updatedAt       DateTime
+  Discount        Discount[]
   mutations       mutations[]
   order_products  order_products[]
   product_branchs product_branchs[]
@@ -212,7 +215,6 @@ model users {
   password   String?
   isVerified Boolean     @default(false)
   role       Role        @default(USER)
-  jwtToken   String?
   image      String?     @default("/profile.jpg")
   provider   String?
   createdAt  DateTime    @default(now())
@@ -234,6 +236,23 @@ model wishlists {
   users     users    @relation(fields: [userId], references: [id])
 
   @@unique([userId, productId])
+}
+
+model Discount {
+  id           Int          @id @default(autoincrement())
+  type         DiscountType
+  value        Float
+  isPercentage Boolean      @default(true)
+  minPurchase  Float?
+  buyX         Int?
+  getY         Int?
+  productId    Int?
+  branchId     Int
+  expiredAt    DateTime
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime
+  branchs      branchs      @relation(fields: [branchId], references: [id])
+  products     products?    @relation(fields: [productId], references: [id])
 }
 
 enum CancellationSource {
@@ -266,4 +285,10 @@ enum Role {
 enum TransactionType {
   IN
   OUT
+}
+
+enum DiscountType {
+  PERCENTAGE
+  NOMINAL
+  BUY1GET1
 }
