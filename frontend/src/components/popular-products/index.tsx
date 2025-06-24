@@ -15,6 +15,7 @@ interface props {
 }
 
 export default function PopularProducts({ products }: props) {
+  const displayedProducts = products.slice(0, 10);
 
   return (
     <div className="w-[1320px] mt-[60px]">
@@ -24,8 +25,8 @@ export default function PopularProducts({ products }: props) {
           View All <ArrowRight />
         </button>
       </div>
-      <div className="w-[1320px] grid grid-cols-5 grid-rows-2 gap-0 mt-8">
-        {products.map((product) => (
+      <div className="w-[1320px] grid grid-cols-5 gap-0 mt-8">
+        {displayedProducts.map((product) => (
           <Product
             key={product.id}
             image={product.products.image}

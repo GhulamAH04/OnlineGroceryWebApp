@@ -48,7 +48,7 @@ export default function Product({ image, name, price }: props) {
         <div className="w-[240px] h-[45px]">
           <p className="text-[14px] font-normal">{name}</p>
           <div className="w-[106px] h-[24px] flex gap-1">
-            <p className="text-[16px] text-[#1A1A1A] font-medium">IDR.{price}</p>
+            <p className="text-[16px] text-[#1A1A1A] font-medium">IDR{price}</p>
             {/* <p className="text-[16px] text-[#999999] font-normal line-through">
               IDR20.500
             </p> */}

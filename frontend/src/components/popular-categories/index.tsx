@@ -13,6 +13,7 @@ interface props {
 }
 
 export default function PopularCategories({ categories }: props ) {
+  const displayedCategories = categories.slice(0, 6);
 
   return (
     <div className="w-[1320px] mt-[60px]">
@@ -22,8 +23,8 @@ export default function PopularCategories({ categories }: props ) {
           View All <ArrowRight />
         </button>
       </div>
-      <div className="w-[1320px] grid grid-cols-6 grid-rows-2 gap-6 mt-8">
-        {categories.map((category, index) => (
+      <div className="w-[1320px] grid grid-cols-6 gap-6 mt-8">
+        {displayedCategories.map((category, index) => (
           <Category
             key={index}
             image={category.image}
