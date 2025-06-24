@@ -16,6 +16,7 @@ export default function Homepage() {
     longitude: 0,
   });
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
 
   useEffect(() => {
     if (navigator.geolocation)
@@ -25,7 +26,20 @@ export default function Homepage() {
       });
   }, []);
 
-  console.log(coordinates);
+  useEffect(() => {
+    const fetchCategories = async () => {
+        try {
+          const { data } = await axios.get(
+            `http://localhost:8080/api/categories/`
+          );
+          setCategories(data.data);
+        } catch (error) {
+          console.error("Error fetching categories:", error);
+        }
+    };
+
+    fetchCategories();
+  }, []);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -44,15 +58,13 @@ export default function Homepage() {
     fetchProducts();
   }, [coordinates]);
 
-  console.log(products);
-
   return (
     <>
       <Navbar />
       <div className="px-[300px] pb-8">
         <Bannar />
         <Featured />
-        <PopularCategories />
+        <PopularCategories categories={categories} />
         <PopularProducts products={products} />
       </div>
       <div className="px-[300px] bg-[#1A1A1A]">
