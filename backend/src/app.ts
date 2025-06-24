@@ -4,6 +4,7 @@ import cors from "cors";
 import { FE_URL, PORT } from "./config";
 
 import ProductRouter from "./routers/product.router";
+import CategoryRouter from "./routers/category.router";
 
 const port = PORT;
 const app: Application = express();
@@ -28,6 +29,7 @@ app.use(
 );
 
 app.use("/api/products", ProductRouter);
+app.use("/api/categories", CategoryRouter);
 
 // ERROR HANDLING MIDDLEWARE
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
