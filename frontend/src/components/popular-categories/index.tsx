@@ -2,7 +2,7 @@ import { ArrowRight } from "lucide-react";
 import Category from "./category";
 
 interface ICategory {
-  id: string;
+  id: number;
   slug: string;
   name: string;
   image: string;
@@ -10,9 +10,10 @@ interface ICategory {
 
 interface props {
   categories: ICategory[];
+  onCategoryClick: (categoryId: number) => void;
 }
 
-export default function PopularCategories({ categories }: props ) {
+export default function PopularCategories({ categories, onCategoryClick }: props ) {
   const displayedCategories = categories.slice(0, 6);
 
   return (
@@ -24,12 +25,10 @@ export default function PopularCategories({ categories }: props ) {
         </button>
       </div>
       <div className="w-[1320px] grid grid-cols-6 gap-6 mt-8">
-        {displayedCategories.map((category, index) => (
-          <Category
-            key={index}
-            image={category.image}
-            name={category.name}
-          />
+        {displayedCategories.map((category) => (
+          <div key={category.id} onClick={() => onCategoryClick(category.id)}>
+            <Category image={category.image} name={category.name} />
+          </div>
         ))}
       </div>
     </div>

@@ -10,6 +10,19 @@ import { ICoordinates } from "@/interfaces/location.interface";
 import axios from "axios";
 import { useEffect, useState } from "react";
 
+interface IProduct {
+  id: number;
+  categoryId: number;
+}
+
+interface IProducts {
+  id: number;
+  name: string;
+  price: number;
+  image: string;
+  products: IProduct;
+}
+
 export default function Homepage() {
   const [coordinates, setCoordinates] = useState<ICoordinates>({
     latitude: 0,
@@ -17,6 +30,7 @@ export default function Homepage() {
   });
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
 
   useEffect(() => {
     if (navigator.geolocation)
@@ -26,16 +40,18 @@ export default function Homepage() {
       });
   }, []);
 
+  console.log(coordinates);
+
   useEffect(() => {
     const fetchCategories = async () => {
-        try {
-          const { data } = await axios.get(
-            `http://localhost:8080/api/categories/`
-          );
-          setCategories(data.data);
-        } catch (error) {
-          console.error("Error fetching categories:", error);
-        }
+      try {
+        const { data } = await axios.get(
+          `http://localhost:8080/api/categories/`
+        );
+        setCategories(data.data);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
     };
 
     fetchCategories();
@@ -58,14 +74,27 @@ export default function Homepage() {
     fetchProducts();
   }, [coordinates]);
 
+  // Filter products based on the selected category
+  const filteredProducts = selectedCategoryId
+    ? products.filter((product: IProducts) => product.products.categoryId === selectedCategoryId)
+    : products;
+
+  // Handle category click
+  const handleCategoryClick = (categoryId: number) => {
+    setSelectedCategoryId(categoryId);
+  };
+
   return (
     <>
       <Navbar />
       <div className="px-[300px] pb-8">
         <Bannar />
         <Featured />
-        <PopularCategories categories={categories} />
-        <PopularProducts products={products} />
+        <PopularCategories
+          categories={categories}
+          onCategoryClick={handleCategoryClick}
+        />
+        <PopularProducts products={filteredProducts} />
       </div>
       <div className="px-[300px] bg-[#1A1A1A]">
         <Footer />
