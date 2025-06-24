@@ -1,3 +1,5 @@
+import { imageUrl } from "@/config";
+
 interface props {
     image: string;
     name: string;
@@ -9,7 +11,7 @@ export default function name({image, name}: props) {
         {/* eslint-disable-next-line */}
         <img
           className="w-[190px] h-[130px]"
-          src={`/popular-categories/${image}.png`}
+          src={`${imageUrl}${image}.jpg`}
           alt={image}
         />
         <p className="text-[18px] font-semibold">{name}</p>

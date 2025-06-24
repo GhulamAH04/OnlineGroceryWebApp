@@ -1,5 +1,6 @@
 "use client"
 
+import { imageUrl } from "@/config";
 import { EyeIcon, Heart, Star } from "lucide-react";
 import { useState } from "react";
 
@@ -22,7 +23,7 @@ export default function Product({ image, name, price }: props) {
         {/* eslint-disable-next-line */}
         <img
           className="w-[254px] h-[230px] self-center absolute"
-          src={`/products/${image}`}
+          src={`${imageUrl}${image}.jpg`}
           alt={image}
         />
         {/* <button className="w-[80px] h-[27px] bg-[#EA4B48] px-2 py-[3px] flex gap-1 rounded-[4px] relative top-4 left-4">

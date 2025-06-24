@@ -57,6 +57,8 @@ export default function Homepage() {
     fetchCategories();
   }, []);
 
+  console.log(categories);
+
   useEffect(() => {
     const fetchProducts = async () => {
       try {
