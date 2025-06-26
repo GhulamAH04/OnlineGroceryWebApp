@@ -5,23 +5,21 @@ interface Props {
   name: string;
 }
 
-export default function Category({ image, name }: Props) {
+export default function SmallCategory({ image, name }: Props) {
   return (
     <div
       className="
       w-full
-      aspect-square
-      flex flex-col
-      items-center
-      justify-between
-      p-4
+      flex items-center
+      gap-3 sm:gap-4
+      p-2 sm:p-3
       border border-gray-200
       rounded-lg
       bg-white
       transition-all
-      duration-300
+      duration-200
       hover:border-green-600
-      hover:shadow-md
+      hover:shadow-sm
       hover:text-green-700
       group
       overflow-hidden
@@ -30,11 +28,12 @@ export default function Category({ image, name }: Props) {
       {/* Image Container */}
       <div
         className="
-        w-full
-        h-[70%]
-        flex items-center justify-center
-        overflow-hidden
+        flex-shrink-0
+        w-8 h-8 sm:w-10 sm:h-10
         rounded-md
+        overflow-hidden
+        bg-gray-50
+        flex items-center justify-center
       "
       >
         {/* eslint-disable-next-line */}
@@ -44,7 +43,7 @@ export default function Category({ image, name }: Props) {
             object-contain
             group-hover:scale-105
             transition-transform
-            duration-500
+            duration-300
           "
           src={`${imageUrl}${image}.jpg`}
           alt={name}
@@ -53,18 +52,17 @@ export default function Category({ image, name }: Props) {
       </div>
 
       {/* Category Name */}
-      <h3
+      <p
         className="
-        text-center
         text-sm sm:text-base
         font-semibold
-        mt-2
-        px-2
-        line-clamp-2
+        truncate
+        text-left
+        flex-1
       "
       >
         {name}
-      </h3>
+      </p>
     </div>
   );
 }

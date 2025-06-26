@@ -5,6 +5,7 @@ import Featured from "@/components/featured";
 import Footer from "@/components/footer";
 import Navbar from "@/components/header";
 import PopularCategories from "@/components/popular-categories";
+import CategoriesModal from "@/components/popular-categories/categories-modal";
 import PopularProducts from "@/components/popular-products";
 import { ICoordinates } from "@/interfaces/location.interface";
 import axios from "axios";
@@ -30,7 +31,10 @@ export default function Homepage() {
   });
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(
+    null
+  );
+  const [showCategories, setShowCategories] = useState(false);
 
   useEffect(() => {
     if (navigator.geolocation)
@@ -39,8 +43,6 @@ export default function Homepage() {
         setCoordinates({ latitude, longitude });
       });
   }, []);
-
-  console.log(coordinates);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -56,8 +58,6 @@ export default function Homepage() {
 
     fetchCategories();
   }, []);
-
-  console.log(categories);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -81,11 +81,12 @@ export default function Homepage() {
     fetchProducts();
   }, [coordinates]);
 
-  console.log(products);
-
   // Filter products based on the selected category
   const filteredProducts = selectedCategoryId
-    ? products.filter((product: IProducts) => product.products.categoryId === selectedCategoryId)
+    ? products.filter(
+        (product: IProducts) =>
+          product.products.categoryId === selectedCategoryId
+      )
     : products;
 
   // Handle category click
@@ -96,18 +97,25 @@ export default function Homepage() {
   return (
     <>
       <Navbar />
-      <div className="px-[300px] pb-8">
+      <div className="2xl:px-[300px] xl:px-[150px] 2xl:pb-8 xl:pb-4">
         <Bannar />
         <Featured />
         <PopularCategories
           categories={categories}
           onCategoryClick={handleCategoryClick}
+          onViewAllClick={() => setShowCategories(true)}
         />
         <PopularProducts products={filteredProducts} />
       </div>
-      <div className="px-[300px] bg-[#1A1A1A]">
+      <div className="2xl:px-[300px] xl:px-[150px] bg-[#1A1A1A]">
         <Footer />
       </div>
+      <CategoriesModal
+        isVisible={showCategories}
+        categories={categories}
+        onClose={() => setShowCategories(false)}
+        onCategoryClick={handleCategoryClick}
+      />
     </>
   );
 }

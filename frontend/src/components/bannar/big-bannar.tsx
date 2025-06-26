@@ -1,32 +1,81 @@
 import ShopButton from "../shop-button";
 
-export default function BigBannar() {
+export default function BigBanner() {
   return (
-    <>
+    <section className="relative w-full h-full aspect-[872/600] rounded-[10px] overflow-hidden">
+      {/* Banner Image */}
       {/* eslint-disable-next-line */}
       <img
         src="/bannar/big-bannar.jpg"
-        alt="big-bannar"
-        className="rounded-[10px] w-[872px] h-[600px] absolute"
+        alt="Fresh organic fruits and vegetables"
+        className="w-full h-full object-cover absolute inset-0"
       />
-      <div className="w-[596px] h-[290px] flex flex-col justify-center gap-7 text-white relative top-[155px] left-[60px]">
-        <p className="font-bold text-5xl w-[75%]">
-          Fresh & Healthy Organic Food
-        </p>
-        <div className="w-[275px] h-[67px] flex items-center gap-3">
-          <p className="text-[65px] text-[#84D187]">|</p>
-          <div className="w-[217px] h-[67px] flex flex-col gap-2">
-            <div className="flex gap-2 items-center w-full">
-              <p className="w-[101px] text-[20px]">Sale up to</p>
-              <div className="bg-[#FF8A00] w-[125px] h-[38px] text-white text-xl text-center px-3 py-1 rounded-[5px]">
-                <p>30% OFF</p>
+
+      {/* Content Overlay */}
+      <div
+        className="
+        relative z-10
+        h-full
+        flex flex-col
+        justify-center
+        px-6 sm:px-8 md:px-12 lg:px-16 xl:px-[60px]
+        py-8 sm:py-12
+      "
+      >
+        <div
+          className="
+          max-w-[500px] lg:max-w-[596px]
+          space-y-4 sm:space-y-5 md:space-y-6
+          text-white
+        "
+        >
+          <h1
+            className="
+            sm:w-[30rem] w-[12rem]
+            font-bold
+            text-xl sm:text-4xl md:text-5xl
+            leading-tight
+          "
+          >
+            Fresh & Healthy Organic Food
+          </h1>
+
+          {/* Discount Badge Section */}
+          <div className="flex items-start gap-3 sm:gap-4">
+            <span className="text-4xl sm:text-5xl md:text-[65px] text-green-300">
+              |
+            </span>
+            <div className="flex flex-col gap-2 sm:gap-3">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                <p className="text-lg sm:text-xl">Sale up to</p>
+                <div
+                  className="
+                  bg-orange-500
+                  text-white
+                  text-lg sm:text-xl
+                  px-3 py-1
+                  rounded-[5px]
+                  whitespace-nowrap
+                "
+                >
+                  30% OFF
+                </div>
               </div>
+              <p className="text-sm sm:text-base text-white/90">
+                Free shipping on all your order.
+              </p>
             </div>
-            <p className="text-sm">Free shipping on all your order.</p>
+          </div>
+
+          {/* Shop Button */}
+          <div className="pt-2 sm:pt-4 ">
+            <ShopButton
+              background="#FFFFFF"
+              textColour="#00B207"
+            />
           </div>
         </div>
-        <ShopButton background="#FFFFFF" textColour="#00B207" />
       </div>
-    </>
+    </section>
   );
 }

@@ -1,93 +1,129 @@
-"use client"
+"use client";
 
-import { imageUrl } from "@/config";
-import { EyeIcon, Heart, Star } from "lucide-react";
+import { EyeIcon, Heart, Star, ShoppingCart } from "lucide-react";
 import { useState } from "react";
+import { imageUrl } from "@/config";
 
-interface props {
+interface Props {
   image: string;
   name: string;
   price: number;
 }
 
-export default function Product({ image, name, price }: props) {
-  const [displayIcon, setDisplayIcon] = useState(false);
+export default function Product({ image, name, price }: Props) {
+  const [isHovered, setIsHovered] = useState(false);
 
   return (
-    <div
-      className="w-[264px] h-[327px] bg-[#FFFFFF] text-[#4D4D4D] flex flex-col justify-center items-center gap-4 border border-[#E5E5E5] rounded-[5px] hover:border-[#2C742F] hover:shadow-xl/25 hover:text-[#2C742F]"
-      onMouseEnter={() => setDisplayIcon(true)}
-      onMouseLeave={() => setDisplayIcon(false)}
+    <article
+      className="
+        w-full
+        bg-white
+        border border-gray-200
+        rounded-lg
+        overflow-hidden
+        transition-all
+        duration-300
+        hover:border-green-600
+        hover:shadow-md
+        group
+      "
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="w-[264px] h-[240px] flex flex-col">
+      {/* Product Image Container */}
+      <div className="relative aspect-square overflow-hidden">
+        {/* Product Image */}
         {/* eslint-disable-next-line */}
         <img
-          className="w-[254px] h-[230px] self-center absolute"
+          className="
+            w-full h-full
+            object-contain
+            p-4
+            transition-transform
+            duration-500
+            group-hover:scale-105
+          "
           src={`${imageUrl}${image}.jpg`}
-          alt={image}
+          alt={name}
+          loading="lazy"
         />
-        {/* <button className="w-[80px] h-[27px] bg-[#EA4B48] px-2 py-[3px] flex gap-1 rounded-[4px] relative top-4 left-4">
-          <p className="text-[#FFFFFF] text[14px] font-normal">Sale</p>
-          <p className="text-[#FFFFFF] text[14px] font-medium">50%</p>
-        </button> */}
-        {displayIcon && (
-          <>
-            <button className="w-[40px] h-[40px] mt-4 mr-2 relative bottom-8 left-[210px]">
-              <div className="w-[40px] h-[40px] bg-[#F2F2F2] hover:bg-[#00B207] text-[#1A1A1A] hover:text-[#FFFFFF] rounded-full flex justify-center items-center">
-                <Heart width={20} height={20} />
-              </div>
+
+        {/* Action Buttons */}
+        {isHovered && (
+          <div className="absolute top-3 right-3 space-y-2">
+            <button
+              className="
+                w-10 h-10
+                bg-white/90 backdrop-blur-sm
+                rounded-full
+                flex items-center justify-center
+                text-gray-700 hover:text-green-600
+                shadow-sm
+                transition-all
+              "
+              aria-label="Add to wishlist"
+            >
+              <Heart className="w-5 h-5" />
             </button>
-            <button className="w-[40px] h-[40px] mt-4 mr-2 relative bottom-10 left-[210px]">
-              <div className="w-[40px] h-[40px] bg-[#F2F2F2] hover:bg-[#00B207] text-[#1A1A1A] hover:text-[#FFFFFF] rounded-full flex justify-center items-center">
-                <EyeIcon width={20} height={20} />
-              </div>
+            <button
+              className="
+                w-10 h-10
+                bg-white/90 backdrop-blur-sm
+                rounded-full
+                flex items-center justify-center
+                text-gray-700 hover:text-green-600
+                shadow-sm
+                transition-all
+              "
+              aria-label="Quick view"
+            >
+              <EyeIcon className="w-5 h-5" />
             </button>
-          </>
+          </div>
         )}
       </div>
-      <div className="w-[264px] h-[87px] flex justify-center items-center gap-1.5 px-3 pb-4">
-        <div className="w-[240px] h-[45px]">
-          <p className="text-[14px] font-normal">{name}</p>
-          <div className="w-[106px] h-[24px] flex gap-1">
-            <p className="text-[16px] text-[#1A1A1A] font-medium">IDR{price}</p>
-            {/* <p className="text-[16px] text-[#999999] font-normal line-through">
-              IDR20.500
-            </p> */}
-          </div>
-          <div className="w-[60px] h-[12px] mt-1.5 flex">
+
+      {/* Product Info */}
+      <div className="p-4 space-y-2">
+        <h3 className="text-sm text-gray-700 line-clamp-2">
+          {name}
+        </h3>
+
+        {/* Rating */}
+        <div className="flex items-center space-x-1">
+          {[1, 2, 3, 4, 5].map((star) => (
             <Star
-              className="fill-[#FF8A00] text-[#FF8A00]"
-              width={9.75}
-              height={9.35}
+              key={star}
+              className={`w-3 h-3 ${
+                star <= 4
+                  ? "fill-yellow-500 text-yellow-500"
+                  : "fill-gray-300 text-gray-300"
+              }`}
             />
-            <Star
-              className="fill-[#CCCCCC] text-[#CCCCCC]"
-              width={9.75}
-              height={9.35}
-            />
-          </div>
+          ))}
         </div>
-        <div className="w-[40px] h-[40px] mt-4 mr-2">
-          <div className="w-[40px] h-[40px] bg-[#F2F2F2] hover:bg-[#00B207]  rounded-full flex justify-center items-center relative">
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 18 18"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M5.66667 7.33333H3.16667L1.5 16.5H16.5L14.8333 7.33333H12.3333M5.66667 7.33333V4.83334C5.66667 2.99239 7.15905 1.5 9 1.5V1.5C10.8409 1.5 12.3333 2.99238 12.3333 4.83333V7.33333M5.66667 7.33333H12.3333M5.66667 7.33333V9.83333M12.3333 7.33333V9.83333"
-                className="hover:stroke-[#FFFFFF]"
-                stroke="#1A1A1A"
-                strokeWidth="1.3"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </div>
+
+        {/* Price and Add to Cart */}
+        <div className="flex items-center justify-between pt-2">
+          <span className="text-base font-semibold text-gray-900">
+            IDR {price.toLocaleString()}
+          </span>
+
+          <button
+            className="
+              w-10 h-10
+              bg-gray-100 hover:bg-green-600
+              rounded-full
+              flex items-center justify-center
+              text-gray-700 hover:text-white
+              transition-colors
+            "
+            aria-label="Add to cart"
+          >
+            <ShoppingCart className="w-5 h-5" />
+          </button>
         </div>
       </div>
-    </div>
+    </article>
   );
 }
