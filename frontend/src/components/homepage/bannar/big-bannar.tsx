@@ -1,4 +1,4 @@
-import ShopButton from "../shop-button";
+import ShopButton from "../../shop-button";
 
 export default function BigBanner() {
   return (
@@ -69,10 +69,7 @@ export default function BigBanner() {
 
           {/* Shop Button */}
           <div className="pt-2 sm:pt-4 ">
-            <ShopButton
-              background="#FFFFFF"
-              textColour="#00B207"
-            />
+            <ShopButton />
           </div>
         </div>
       </div>

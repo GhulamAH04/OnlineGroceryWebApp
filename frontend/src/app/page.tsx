@@ -1,12 +1,10 @@
 "use client";
 
-import Bannar from "@/components/bannar";
-import Featured from "@/components/featured";
-import Footer from "@/components/footer";
-import Navbar from "@/components/header";
-import PopularCategories from "@/components/popular-categories";
-import CategoriesModal from "@/components/popular-categories/categories-modal";
-import PopularProducts from "@/components/popular-products";
+import Bannar from "@/components/homepage/bannar";
+import Featured from "@/components/homepage/featured";
+import PopularCategories from "@/components/homepage/popular-categories";
+import CategoriesModal from "@/components/homepage/popular-categories/categories-modal";
+import PopularProducts from "@/components/homepage/popular-products";
 import { ICoordinates } from "@/interfaces/location.interface";
 import axios from "axios";
 import { useEffect, useState } from "react";
@@ -96,7 +94,6 @@ export default function Homepage() {
 
   return (
     <>
-      <Navbar />
       <div className="2xl:px-[300px] xl:px-[150px] 2xl:pb-8 xl:pb-4">
         <Bannar />
         <Featured />
@@ -106,9 +103,6 @@ export default function Homepage() {
           onViewAllClick={() => setShowCategories(true)}
         />
         <PopularProducts products={filteredProducts} />
-      </div>
-      <div className="2xl:px-[300px] xl:px-[150px] bg-[#1A1A1A]">
-        <Footer />
       </div>
       <CategoriesModal
         isVisible={showCategories}
