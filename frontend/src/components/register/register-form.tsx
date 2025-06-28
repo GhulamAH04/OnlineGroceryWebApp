@@ -1,25 +1,19 @@
 "use client";
 
-import { useState } from "react";
 import { useFormik } from "formik";
 import { RegisterSchema } from "@/schemas/register-schema";
-import { EyeIcon, GoogleIcon } from "./icons";
+import { GoogleIcon } from "./icons";
 import { useGoogleLogin } from "@react-oauth/google";
 import Link from "next/link";
 import axios from "axios";
 import { apiUrl } from "@/config";
 
 export default function RegisterForm() {
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const formik = useFormik({
     initialValues: {
       name: "",
       email: "",
-      password: "",
-      confirmPassword: "",
-      role: "",
       termsAccepted: false,
     },
     validationSchema: RegisterSchema,
@@ -54,7 +48,7 @@ export default function RegisterForm() {
 
         const { name, email } = userInfoResponse.data;
 
-        await axios.post(`${apiUrl}/api/auth/google/register`, { name, email });
+        await axios.post(`${apiUrl}/api/auth/register`, { name, email });
 
         alert("Account created successfully");
       } catch (err) {
@@ -116,78 +110,6 @@ export default function RegisterForm() {
             </div>
             {formik.touched.email && formik.errors.email && (
               <p className="text-red-500 text-xs mt-1">{formik.errors.email}</p>
-            )}
-          </div>
-
-          {/* Password Field */}
-          <div>
-            <div className="relative">
-              <input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                placeholder="Password"
-                {...formik.getFieldProps("password")}
-                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 ${
-                  formik.touched.password && formik.errors.password
-                    ? "border-red-500 focus:ring-red-500"
-                    : "border-gray-300 focus:ring-green-500"
-                }`}
-              />
-              <EyeIcon onClick={() => setShowPassword(!showPassword)} />
-            </div>
-            {formik.touched.password && formik.errors.password && (
-              <p className="text-red-500 text-xs mt-1">
-                {formik.errors.password}
-              </p>
-            )}
-          </div>
-
-          {/* Confirm Password Field */}
-          <div>
-            <div className="relative">
-              <input
-                id="confirmPassword"
-                type={showConfirmPassword ? "text" : "password"}
-                placeholder="Confirm Password"
-                {...formik.getFieldProps("confirmPassword")}
-                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 ${
-                  formik.touched.confirmPassword &&
-                  formik.errors.confirmPassword
-                    ? "border-red-500 focus:ring-red-500"
-                    : "border-gray-300 focus:ring-green-500"
-                }`}
-              />
-              <EyeIcon
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              />
-            </div>
-            {formik.touched.confirmPassword &&
-              formik.errors.confirmPassword && (
-                <p className="text-red-500 text-xs mt-1">
-                  {formik.errors.confirmPassword}
-                </p>
-              )}
-          </div>
-
-          {/* Role Field */}
-          <div>
-            <div className="relative">
-              <select
-                id="role"
-                {...formik.getFieldProps("role")}
-                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 ${
-                  formik.touched.role && formik.errors.role
-                    ? "border-red-500 focus:ring-red-500"
-                    : "border-gray-300 focus:ring-green-500"
-                }`}
-              >
-                <option value="" label="Register as" />
-                <option value="USER">Costumer</option>
-                <option value="STORE_ADMIN">Store Owner</option>
-              </select>
-            </div>
-            {formik.touched.role && formik.errors.role && (
-              <p className="text-red-500 text-xs mt-1">{formik.errors.role}</p>
             )}
           </div>
 
