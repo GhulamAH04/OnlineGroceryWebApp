@@ -1,10 +1,13 @@
-"use client"
+"use client";
 
 import { useState } from "react";
 import { useFormik } from "formik";
 import { RegisterSchema } from "@/schemas/register-schema";
 import { EyeIcon, GoogleIcon } from "./icons";
 import { useGoogleLogin } from "@react-oauth/google";
+import Link from "next/link";
+import axios from "axios";
+import { apiUrl } from "@/config";
 
 export default function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false);
@@ -12,34 +15,59 @@ export default function RegisterForm() {
 
   const formik = useFormik({
     initialValues: {
+      name: "",
       email: "",
       password: "",
       confirmPassword: "",
+      role: "",
       termsAccepted: false,
     },
     validationSchema: RegisterSchema,
-    onSubmit: (values) => {
-      alert("Account created successfully!");
-      console.log("Form Submitted:", {
-        email: values.email,
-        password: "***",
-        termsAccepted: values.termsAccepted,
-      });
-      // Add your account creation logic here (e.g., API call)
+    onSubmit: async (values) => {
+      // make api call here
+      try {
+        await axios.post(`${apiUrl}/api/auth/register`, values);
+        alert("Account created successfully");
+      } catch (err) {
+        if (axios.isAxiosError(err) && err.response) {
+          const errorMessage = err.response.data.message;
+          alert(`${errorMessage}`);
+        } else {
+          alert("An unexpected error occurred");
+        }
+      }
     },
   });
 
   // --- Google Login Logic ---
   const googleLogin = useGoogleLogin({
-    onSuccess: (tokenResponse) => {
-      console.log("Google Login Success:", tokenResponse);
-      // In a real app, you would send this access_token to your backend.
-      // Your backend would then verify the token with Google, retrieve the user's profile,
-      // and create an account or session for the user.
-      alert("Google registration successful! Check the console for the token.");
+    onSuccess: async (tokenResponse) => {
+      try {
+        const userInfoResponse = await axios.get(
+          "https://www.googleapis.com/oauth2/v3/userinfo",
+          {
+            headers: {
+              Authorization: `Bearer ${tokenResponse.access_token}`,
+            },
+          }
+        );
+
+        const { name, email } = userInfoResponse.data;
+
+        await axios.post(`${apiUrl}/api/auth/google/register`, { name, email });
+
+        alert("Account created successfully");
+      } catch (err) {
+        if (axios.isAxiosError(err) && err.response) {
+          const errorMessage = err.response.data.message;
+          alert(`${errorMessage}`);
+        } else {
+          alert("An unexpected error occurred");
+        }
+      }
     },
-    onError: () => {
-      console.error("Google Login Failed");
+    onError: (errorResponse) => {
+      console.error("Google Login Failed:", errorResponse);
       alert("Google registration failed. Please try again.");
     },
   });
@@ -51,6 +79,26 @@ export default function RegisterForm() {
           Create Account
         </h1>
         <form onSubmit={formik.handleSubmit} className="space-y-4">
+          {/* Name Field */}
+          <div>
+            <div className="relative">
+              <input
+                id="name"
+                type="text"
+                placeholder="Name"
+                {...formik.getFieldProps("name")}
+                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 ${
+                  formik.touched.name && formik.errors.name
+                    ? "border-red-500 focus:ring-red-500"
+                    : "border-gray-300 focus:ring-green-500"
+                }`}
+              />
+            </div>
+            {formik.touched.name && formik.errors.name && (
+              <p className="text-red-500 text-xs mt-1">{formik.errors.name}</p>
+            )}
+          </div>
+
           {/* Email Field */}
           <div>
             <div className="relative">
@@ -121,7 +169,29 @@ export default function RegisterForm() {
               )}
           </div>
 
-          {/* Terms and Conditions Checkbox */}
+          {/* Role Field */}
+          <div>
+            <div className="relative">
+              <select
+                id="role"
+                {...formik.getFieldProps("role")}
+                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 ${
+                  formik.touched.role && formik.errors.role
+                    ? "border-red-500 focus:ring-red-500"
+                    : "border-gray-300 focus:ring-green-500"
+                }`}
+              >
+                <option value="" label="Register as" />
+                <option value="USER">Costumer</option>
+                <option value="STORE_ADMIN">Store Owner</option>
+              </select>
+            </div>
+            {formik.touched.role && formik.errors.role && (
+              <p className="text-red-500 text-xs mt-1">{formik.errors.role}</p>
+            )}
+          </div>
+
+          {/* Terms and Conditions Checkbox*/}
           <div>
             <div className="flex items-center">
               <input
@@ -145,15 +215,16 @@ export default function RegisterForm() {
             )}
           </div>
 
-          {/* Submit Button */}
+          {/* Submit Button*/}
           <button
             type="submit"
-            disabled={!formik.isValid || !formik.dirty}
+            disabled={!formik.isValid || !formik.dirty || formik.isSubmitting}
             className="w-full py-3 mt-4 px-4 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
-            Create Account
+            {formik.isSubmitting ? "Creating Account..." : "Create Account"}
           </button>
         </form>
+
         {/* --- OR Separator --- */}
         <div className="my-6 flex items-center">
           <div className="flex-grow border-t border-gray-300"></div>
@@ -171,10 +242,13 @@ export default function RegisterForm() {
           Register with Google
         </button>
         <p className="text-center text-sm text-gray-600 mt-8">
-          Already have an account?{" "}
-          <a href="/login" className="font-bold text-gray-800 hover:underline">
+          Already have an account?
+          <Link
+            href="/login"
+            className="font-bold text-gray-800 hover:underline"
+          >
             Login
-          </a>
+          </Link>
         </p>
       </div>
     </div>
