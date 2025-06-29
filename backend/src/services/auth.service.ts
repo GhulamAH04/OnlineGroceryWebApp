@@ -74,7 +74,7 @@ async function Register(userData: IRegister) {
     const html = compiledTemplate({
       name,
       email,
-      fe_url: `${FE_URL}/verify-email?token=${token}`,
+      fe_url: `${FE_URL}/verify-email/${token}`,
     });
 
     await Transporter.sendMail({
