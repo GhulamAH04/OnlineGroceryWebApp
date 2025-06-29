@@ -8,11 +8,31 @@ import { EyeIcon } from "../register/icons";
 import { SetPasswordSchema } from "@/schemas/setpassword.schema";
 import { useRouter } from "next/navigation";
 
-export default function VerifyEmail() {
+export interface props {
+  token: string | undefined;
+}
+
+export default function VerifyEmail({ token }: props) {
   const router = useRouter();
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  useEffect(() => {
+    const verifyToken = async () => {
+      try {
+        if (!token) throw new Error("Token not provided");
+
+        await axios.patch(`${apiUrl}/api/auth/verify`, {
+          token,
+        });
+      } catch (error) {
+        console.error("Error:", error);
+      }
+    };
+
+    verifyToken();
+  }, [token]);
 
   const formik = useFormik({
     initialValues: {
@@ -23,9 +43,6 @@ export default function VerifyEmail() {
     onSubmit: async (values) => {
       // make api call here
       try {
-        const urlParams = new URLSearchParams(window.location.search);
-        const token = urlParams.get("token");
-
         const password = values.confirmPassword;
 
         if (!token) throw new Error("Token not provided");
@@ -48,25 +65,6 @@ export default function VerifyEmail() {
       }
     },
   });
-
-  useEffect(() => {
-    const verifyToken = async () => {
-      try {
-        const urlParams = new URLSearchParams(window.location.search);
-        const token = urlParams.get("token");
-
-        if (!token) throw new Error("Token not provided");
-
-        await axios.patch(`${apiUrl}/api/auth/verify`, {
-          token,
-        });
-      } catch (error) {
-        console.error("Error:", error);
-      }
-    };
-
-    verifyToken();
-  }, []);
 
   return (
     <div className="bg-gray-100 flex flex-col items-center justify-center font-sans py-4 px-4">
