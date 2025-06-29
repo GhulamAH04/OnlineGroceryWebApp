@@ -1,7 +1,7 @@
 "use client";
 
 import { useFormik } from "formik";
-import { RegisterSchema } from "@/schemas/register-schema";
+import { RegisterSchema } from "@/schemas/register.schema";
 import { GoogleIcon } from "./icons";
 import { useGoogleLogin } from "@react-oauth/google";
 import Link from "next/link";
@@ -9,7 +9,6 @@ import axios from "axios";
 import { apiUrl } from "@/config";
 
 export default function RegisterForm() {
-
   const formik = useFormik({
     initialValues: {
       name: "",
@@ -21,7 +20,10 @@ export default function RegisterForm() {
       // make api call here
       try {
         await axios.post(`${apiUrl}/api/auth/register`, values);
-        alert("Account created successfully");
+
+        alert(
+          "Account created successfully. We've sent you an email to verify your account."
+        );
       } catch (err) {
         if (axios.isAxiosError(err) && err.response) {
           const errorMessage = err.response.data.message;
@@ -48,9 +50,12 @@ export default function RegisterForm() {
 
         const { name, email } = userInfoResponse.data;
 
-        await axios.post(`${apiUrl}/api/auth/register`, { name, email });
+        await axios.post(`${apiUrl}/api/auth/google/register`, { name, email });
 
-        alert("Account created successfully");
+        alert(
+          "Account created successfully. We've sent you an email to verify your account."
+        );
+        
       } catch (err) {
         if (axios.isAxiosError(err) && err.response) {
           const errorMessage = err.response.data.message;
