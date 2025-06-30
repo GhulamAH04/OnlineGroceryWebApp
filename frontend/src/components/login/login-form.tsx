@@ -1,28 +1,34 @@
 "use client";
 
 import { useFormik } from "formik";
-import { RegisterSchema } from "@/schemas/register.schema";
-import { GoogleIcon } from "./icons";
 import { useGoogleLogin } from "@react-oauth/google";
 import Link from "next/link";
 import axios from "axios";
 import { apiUrl } from "@/config";
+import { EyeIcon, GoogleIcon } from "../register/icons";
+import { useState } from "react";
+import { LoginSchema } from "@/schemas/login.schema";
 
-export default function RegisterForm() {
+export default function LoginForm() {
+  const [showPassword, setShowPassword] = useState(false);
+  const [isCorrectPassword, setIsCorrectPassword] = useState(true);
+
   const formik = useFormik({
     initialValues: {
-      name: "",
       email: "",
+      password: "",
       termsAccepted: false,
     },
-    validationSchema: RegisterSchema,
+    validationSchema: LoginSchema,
     onSubmit: async (values) => {
       // make api call here
       try {
-        await axios.post(`${apiUrl}/api/auth/register`, values);
+        const response = await axios.post(`${apiUrl}/api/auth/login`, values);
+
+        if (response.data.message === "Incorrect Password") setIsCorrectPassword(false);
 
         alert(
-          "Account created successfully. We've sent you an email to verify your account."
+          "Successfully Logged In"
         );
       } catch (err) {
         if (axios.isAxiosError(err) && err.response) {
@@ -35,7 +41,7 @@ export default function RegisterForm() {
     },
   });
 
-  // --- Google Register Logic ---
+  // --- Google Login Logic ---
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
       try {
@@ -50,24 +56,32 @@ export default function RegisterForm() {
 
         const { name, email } = userInfoResponse.data;
 
-        await axios.post(`${apiUrl}/api/auth/google/register`, { name, email });
+        const response = await axios.post(`${apiUrl}/api/auth/google/login`, {
+          name,
+          email,
+        });
 
-        alert(
-          "Account created successfully. We've sent you an email to verify your account."
-        );
-        
+        // The backend should return a token (e.g., JWT) to confirm login
+        const { appToken } = response.data;
+
+        // Store the token and update your app's state to reflect that the user is logged in
+        localStorage.setItem("authToken", appToken);
+        // Example: updateUserState(response.data.user);
+        // Example: navigate("/dashboard");
+
+        alert("Successfully logged in!");
       } catch (err) {
         if (axios.isAxiosError(err) && err.response) {
           const errorMessage = err.response.data.message;
-          alert(`${errorMessage}`);
+          alert(`Login failed: ${errorMessage}`);
         } else {
-          alert("An unexpected error occurred");
+          alert("An unexpected error occurred during login.");
         }
       }
     },
     onError: (errorResponse) => {
       console.error("Google Login Failed:", errorResponse);
-      alert("Google registration failed. Please try again.");
+      alert("Google login failed. Please try again.");
     },
   });
 
@@ -75,29 +89,9 @@ export default function RegisterForm() {
     <div className="bg-gray-100 flex items-center justify-center min-h-screen font-sans py-4 px-4">
       <div className="bg-white p-10 rounded-2xl shadow-lg w-full max-w-md">
         <h1 className="text-3xl font-bold text-center text-gray-800 mb-8">
-          Create Account
+          Login
         </h1>
         <form onSubmit={formik.handleSubmit} className="space-y-4">
-          {/* Name Field */}
-          <div>
-            <div className="relative">
-              <input
-                id="name"
-                type="text"
-                placeholder="Name"
-                {...formik.getFieldProps("name")}
-                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 ${
-                  formik.touched.name && formik.errors.name
-                    ? "border-red-500 focus:ring-red-500"
-                    : "border-gray-300 focus:ring-green-500"
-                }`}
-              />
-            </div>
-            {formik.touched.name && formik.errors.name && (
-              <p className="text-red-500 text-xs mt-1">{formik.errors.name}</p>
-            )}
-          </div>
-
           {/* Email Field */}
           <div>
             <div className="relative">
@@ -115,6 +109,35 @@ export default function RegisterForm() {
             </div>
             {formik.touched.email && formik.errors.email && (
               <p className="text-red-500 text-xs mt-1">{formik.errors.email}</p>
+            )}
+          </div>
+
+          {/* Password Field */}
+          <div>
+            {!isCorrectPassword && (
+              // update later, i should sent an email first
+              <Link href="/reset-password" className="text-red-500 text-xs mt-1 mb-1 hover:text-green-500">
+                Forgot Password?
+              </Link>
+            )}
+            <div className="relative">
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="Password"
+                {...formik.getFieldProps("password")}
+                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 ${
+                  formik.touched.password && formik.errors.password
+                    ? "border-red-500 focus:ring-red-500"
+                    : "border-gray-300 focus:ring-green-500"
+                }`}
+              />
+              <EyeIcon onClick={() => setShowPassword(!showPassword)} />
+            </div>
+            {formik.touched.password && formik.errors.password && (
+              <p className="text-red-500 text-xs mt-1">
+                {formik.errors.password}
+              </p>
             )}
           </div>
 
@@ -159,22 +182,22 @@ export default function RegisterForm() {
           <div className="flex-grow border-t border-gray-300"></div>
         </div>
 
-        {/* --- Google Register Button --- */}
+        {/* --- Google Login Button --- */}
         <button
           type="button"
           onClick={() => googleLogin()}
           className="w-full flex items-center justify-center py-3 px-4 border border-gray-300 rounded-lg bg-white text-gray-700 font-semibold hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition-colors duration-300"
         >
           <GoogleIcon />
-          Register with Google
+          Login with Google
         </button>
         <p className="text-center text-sm text-gray-600 mt-8">
-          Already have an account?
+          Don`t have an account?
           <Link
-            href="/login"
+            href="/register"
             className="font-bold text-gray-800 hover:underline"
           >
-            Login
+            Register
           </Link>
         </p>
       </div>
