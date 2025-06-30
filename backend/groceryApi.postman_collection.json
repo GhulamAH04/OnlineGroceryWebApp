@@ -1,0 +1,113 @@
+{
+    "info": {
+      "name": "Online Grocery API",
+      "_postman_id": "unique-id-123",
+      "description": "Postman collection for testing Online Grocery Backend API",
+      "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+      {
+        "name": "Login",
+        "request": {
+          "method": "POST",
+          "header": [
+            { "key": "Content-Type", "value": "application/json" }
+          ],
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"your_password\"\n}"
+          },
+          "url": {
+            "raw": "{{base_url}}/auth/login",
+            "host": ["{{base_url}}"],
+            "path": ["auth", "login"]
+          }
+        }
+      },
+      {
+        "name": "Get Products",
+        "request": {
+          "method": "GET",
+          "header": [
+            { "key": "Authorization", "value": "Bearer {{token}}" }
+          ],
+          "url": {
+            "raw": "{{base_url}}/products",
+            "host": ["{{base_url}}"],
+            "path": ["products"]
+          }
+        }
+      },
+      {
+        "name": "Get Categories",
+        "request": {
+          "method": "GET",
+          "header": [
+            { "key": "Authorization", "value": "Bearer {{token}}" }
+          ],
+          "url": {
+            "raw": "{{base_url}}/categories",
+            "host": ["{{base_url}}"],
+            "path": ["categories"]
+          }
+        }
+      },
+      {
+        "name": "Get Admin Users",
+        "request": {
+          "method": "GET",
+          "header": [
+            { "key": "Authorization", "value": "Bearer {{token}}" }
+          ],
+          "url": {
+            "raw": "{{base_url}}/admin/users",
+            "host": ["{{base_url}}"],
+            "path": ["admin", "users"]
+          }
+        }
+      },
+      {
+        "name": "Get Inventory",
+        "request": {
+          "method": "GET",
+          "header": [
+            { "key": "Authorization", "value": "Bearer {{token}}" }
+          ],
+          "url": {
+            "raw": "{{base_url}}/inventory",
+            "host": ["{{base_url}}"],
+            "path": ["inventory"]
+          }
+        }
+      },
+      {
+        "name": "Get Discounts",
+        "request": {
+          "method": "GET",
+          "header": [
+            { "key": "Authorization", "value": "Bearer {{token}}" }
+          ],
+          "url": {
+            "raw": "{{base_url}}/discounts",
+            "host": ["{{base_url}}"],
+            "path": ["discounts"]
+          }
+        }
+      },
+      {
+        "name": "Get Report Summary",
+        "request": {
+          "method": "GET",
+          "header": [
+            { "key": "Authorization", "value": "Bearer {{token}}" }
+          ],
+          "url": {
+            "raw": "{{base_url}}/reports/summary",
+            "host": ["{{base_url}}"],
+            "path": ["reports", "summary"]
+          }
+        }
+      }
+    ]
+  }
+  

@@ -1,0 +1,184 @@
+.
+├── generated
+│   └── prisma
+├── groceryApi.postman_collection.json
+├── node_modules
+│   ├── @cspotcode
+│   ├── @cspotcode 2
+│   ├── @jridgewell
+│   ├── @jridgewell 2
+│   ├── @prisma
+│   ├── @prisma 2
+│   ├── @tsconfig
+│   ├── @tsconfig 2
+│   ├── @types
+│   ├── @types 2
+│   ├── accepts
+│   ├── acorn
+│   ├── acorn-walk
+│   ├── anymatch
+│   ├── append-field
+│   ├── arg
+│   ├── balanced-match
+│   ├── bcrypt
+│   ├── binary-extensions
+│   ├── body-parser
+│   ├── brace-expansion
+│   ├── braces
+│   ├── buffer-equal-constant-time
+│   ├── buffer-from
+│   ├── busboy
+│   ├── bytes
+│   ├── call-bind-apply-helpers
+│   ├── call-bound
+│   ├── chokidar
+│   ├── cloudinary
+│   ├── concat-stream
+│   ├── content-disposition
+│   ├── content-type
+│   ├── cookie
+│   ├── cookie-signature
+│   ├── cors
+│   ├── create-require
+│   ├── debug
+│   ├── depd
+│   ├── diff
+│   ├── dotenv
+│   ├── dunder-proto
+│   ├── dynamic-dedupe
+│   ├── ecdsa-sig-formatter
+│   ├── ee-first
+│   ├── encodeurl
+│   ├── es-define-property
+│   ├── es-errors
+│   ├── es-object-atoms
+│   ├── escape-html
+│   ├── etag
+│   ├── express
+│   ├── fill-range
+│   ├── finalhandler
+│   ├── forwarded
+│   ├── fresh
+│   ├── fs.realpath
+│   ├── fsevents
+│   ├── function-bind
+│   ├── get-intrinsic
+│   ├── glob
+│   ├── glob-parent
+│   ├── gopd
+│   ├── has-flag
+│   ├── has-symbols
+│   ├── hasown
+│   ├── http-errors
+│   ├── iconv-lite
+│   ├── ignore-by-default
+│   ├── inflight
+│   ├── inherits
+│   ├── ipaddr.js
+│   ├── is-binary-path
+│   ├── is-core-module
+│   ├── is-extglob
+│   ├── is-glob
+│   ├── is-number
+│   ├── is-promise
+│   ├── jwa
+│   ├── lodash
+│   ├── lodash.includes
+│   ├── lodash.isboolean
+│   ├── lodash.isinteger
+│   ├── lodash.isnumber
+│   ├── lodash.isplainobject
+│   ├── lodash.isstring
+│   ├── lodash.once
+│   ├── make-error
+│   ├── math-intrinsics
+│   ├── media-typer
+│   ├── merge-descriptors
+│   ├── mime-db
+│   ├── mime-types
+│   ├── minimatch
+│   ├── ms
+│   ├── multer
+│   ├── negotiator
+│   ├── node-addon-api
+│   ├── node-gyp-build
+│   ├── nodemon
+│   ├── normalize-path
+│   ├── object-assign
+│   ├── object-inspect
+│   ├── on-finished
+│   ├── once
+│   ├── parseurl
+│   ├── path-is-absolute
+│   ├── path-parse
+│   ├── path-to-regexp
+│   ├── picomatch
+│   ├── prisma
+│   ├── proxy-addr
+│   ├── q
+│   ├── qs
+│   ├── range-parser
+│   ├── raw-body
+│   ├── readdirp
+│   ├── resolve
+│   ├── rimraf
+│   ├── router
+│   ├── safe-buffer
+│   ├── safer-buffer
+│   ├── send
+│   ├── serve-static
+│   ├── setprototypeof
+│   ├── side-channel
+│   ├── side-channel-list
+│   ├── side-channel-map
+│   ├── side-channel-weakmap
+│   ├── simple-update-notifier
+│   ├── source-map-support
+│   ├── statuses
+│   ├── streamsearch
+│   ├── string_decoder
+│   ├── strip-bom
+│   ├── strip-json-comments
+│   ├── supports-color
+│   ├── to-regex-range
+│   ├── toidentifier
+│   ├── touch
+│   ├── tree-kill
+│   ├── ts-node
+│   ├── ts-node-dev
+│   ├── type-is
+│   ├── typescript
+│   ├── undici-types
+│   ├── unpipe
+│   ├── util-deprecate
+│   ├── uuid
+│   ├── v8-compile-cache-lib
+│   ├── vary
+│   ├── wrappy
+│   ├── xtend
+│   └── yn
+├── package-lock.json
+├── package.json
+├── prisma
+│   ├── migrations
+│   └── schema.prisma
+├── public
+│   └── images
+├── src
+│   ├── app.ts
+│   ├── config
+│   ├── controllers
+│   ├── interfaces
+│   ├── lib
+│   ├── middlewares
+│   ├── routes
+│   ├── scripts
+│   ├── services
+│   ├── templates
+│   ├── types
+│   ├── utils
+│   └── validations
+├── tree.txt
+└── tsconfig.json
+
+175 directories, 7 files
