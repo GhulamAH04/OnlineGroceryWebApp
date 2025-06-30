@@ -8,8 +8,10 @@ import { apiUrl } from "@/config";
 import { EyeIcon, GoogleIcon } from "../register/icons";
 import { useState } from "react";
 import { LoginSchema } from "@/schemas/login.schema";
+import { useRouter } from "next/navigation";
 
 export default function LoginForm() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [isCorrectPassword, setIsCorrectPassword] = useState(true);
 
@@ -23,15 +25,16 @@ export default function LoginForm() {
     onSubmit: async (values) => {
       // make api call here
       try {
-        const response = await axios.post(`${apiUrl}/api/auth/login`, values);
-
-        if (response.data.message === "Incorrect Password") setIsCorrectPassword(false);
-
+        await axios.post(`${apiUrl}/api/auth/login`, values);
+        
         alert(
           "Successfully Logged In"
         );
+        
+        router.push("/");
       } catch (err) {
         if (axios.isAxiosError(err) && err.response) {
+          if (err.response.data.message === "Incorrect Password") setIsCorrectPassword(false);
           const errorMessage = err.response.data.message;
           alert(`${errorMessage}`);
         } else {
@@ -56,20 +59,14 @@ export default function LoginForm() {
 
         const { name, email } = userInfoResponse.data;
 
-        const response = await axios.post(`${apiUrl}/api/auth/google/login`, {
+        await axios.post(`${apiUrl}/api/auth/google/login`, {
           name,
           email,
         });
 
-        // The backend should return a token (e.g., JWT) to confirm login
-        const { appToken } = response.data;
-
-        // Store the token and update your app's state to reflect that the user is logged in
-        localStorage.setItem("authToken", appToken);
-        // Example: updateUserState(response.data.user);
-        // Example: navigate("/dashboard");
-
         alert("Successfully logged in!");
+
+        router.push("/");
       } catch (err) {
         if (axios.isAxiosError(err) && err.response) {
           const errorMessage = err.response.data.message;
@@ -171,7 +168,7 @@ export default function LoginForm() {
             disabled={!formik.isValid || !formik.dirty || formik.isSubmitting}
             className="w-full py-3 mt-4 px-4 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
-            {formik.isSubmitting ? "Creating Account..." : "Create Account"}
+            {formik.isSubmitting ? "Logging In..." : "Login"}
           </button>
         </form>
 

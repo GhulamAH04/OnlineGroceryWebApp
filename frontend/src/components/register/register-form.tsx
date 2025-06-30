@@ -7,8 +7,10 @@ import { useGoogleLogin } from "@react-oauth/google";
 import Link from "next/link";
 import axios from "axios";
 import { apiUrl } from "@/config";
+import { useRouter } from "next/navigation";
 
 export default function RegisterForm() {
+  const router = useRouter();
   const formik = useFormik({
     initialValues: {
       name: "",
@@ -53,9 +55,10 @@ export default function RegisterForm() {
         await axios.post(`${apiUrl}/api/auth/google/register`, { name, email });
 
         alert(
-          "Account created successfully. We've sent you an email to verify your account."
+          "Account created successfully. We'll logged you in."
         );
-        
+
+        router.push("/");
       } catch (err) {
         if (axios.isAxiosError(err) && err.response) {
           const errorMessage = err.response.data.message;
