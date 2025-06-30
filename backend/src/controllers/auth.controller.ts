@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { IGoogleRegister, IRegister, RegisterService, RegisterWithGoogleService, SetPasswordService, VerifyAccountService } from "../services/auth.service";
+import { IGoogleLogin, IGoogleRegister, ILogin, IRegister, LoginService, LoginWithGoogleService, RegisterService, RegisterWithGoogleService, SetPasswordService, VerifyAccountService } from "../services/auth.service";
 
 export async function RegisterController(
   req: Request,
@@ -33,6 +33,44 @@ export async function RegisterWithGoogleController(
     res.status(200).send({
       message: `New user register success`,
       data: newUser,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function LoginController(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const userData: ILogin = req.body;
+
+    const user = await LoginService(userData);
+
+    res.status(200).cookie("access_token", user.token).send({
+      message: "Login Success",
+      data: user,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function LoginWithGoogleController(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const userData: IGoogleLogin = req.body;
+
+    const user = await LoginWithGoogleService(userData);
+
+    res.status(200).cookie("access_token", user.token).send({
+      message: "Login Success",
+      data: user,
     });
   } catch (err) {
     next(err);

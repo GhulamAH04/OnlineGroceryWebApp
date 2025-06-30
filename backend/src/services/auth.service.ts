@@ -6,7 +6,7 @@ import handlebars from "handlebars";
 import { FE_URL, JWT_SECRET } from "../config";
 import { JwtPayload, sign, verify } from "jsonwebtoken";
 import { Transporter } from "../utils/nodemailer";
-import { genSaltSync, hash } from "bcrypt";
+import { compare, genSaltSync, hash } from "bcrypt";
 
 
 export interface IRegister {
@@ -17,6 +17,16 @@ export interface IRegister {
 }
 
 export interface IGoogleRegister {
+  name: string;
+  email: string;
+}
+
+export interface ILogin {
+  email: string;
+  password: string;
+}
+
+export interface IGoogleLogin {
   name: string;
   email: string;
 }
@@ -112,7 +122,77 @@ async function RegisterWithGoogle(userData: IGoogleRegister) {
       return registeredUser;
     });
 
-    return newUser;
+    const payload = {
+      id: newUser.id,
+      email: newUser.email,
+      username: newUser.username,
+      role: newUser.role,
+      image: newUser.image,
+    };
+
+    const token = sign(payload, String(JWT_SECRET), { expiresIn: "1h" });
+
+    return { user: payload, token };
+  } catch (err) {
+    throw err;
+  }
+}
+
+async function Login(userData: ILogin) {
+  try {
+    const { email, password } = userData;
+
+    const user = await FindUserByEmail(email);
+
+    if (!user) throw new Error("Email does not exist");
+
+    const checkPass = await compare(password, user.password as string);
+
+    if (!checkPass) throw new Error("Incorrect Password");
+
+    const payload = {
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      role: user.role,
+      image: user.image,
+    };
+
+    const token = sign(payload, String(JWT_SECRET), { expiresIn: "1h" });
+
+    return { user: payload, token };
+  } catch (err) {
+    throw err;
+  }
+}
+
+async function LoginWithGoogle(userData: IGoogleLogin) {
+  try {
+    const { name, email } = userData;
+
+    const user = await FindUserByEmail(email);
+
+    if (!user) throw new Error("Email does not exist");
+
+    if (name !== user.username) await prisma.users.update({
+      where: {
+        email
+      }, data: {
+        username: name,
+      }
+    })
+
+    const payload = {
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      role: user.role,
+      image: user.image,
+    };
+
+    const token = sign(payload, String(JWT_SECRET), { expiresIn: "1h" });
+
+    return { user: payload, token };
   } catch (err) {
     throw err;
   }
@@ -131,6 +211,26 @@ export async function RegisterService(userData: IRegister) {
 export async function RegisterWithGoogleService(userData: IGoogleRegister) {
   try {
     const newUser = await RegisterWithGoogle(userData);
+
+    return newUser;
+  } catch (err) {
+    throw err;
+  }
+}
+
+export async function LoginService(userData: ILogin) {
+  try {
+    const newUser = await Login(userData);
+
+    return newUser;
+  } catch (err) {
+    throw err;
+  }
+}
+
+export async function LoginWithGoogleService(userData: IGoogleLogin) {
+  try {
+    const newUser = await LoginWithGoogle(userData);
 
     return newUser;
   } catch (err) {
