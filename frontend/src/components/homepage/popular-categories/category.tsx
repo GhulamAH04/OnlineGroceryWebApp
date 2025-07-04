@@ -1,11 +1,11 @@
 import { imageUrl } from "@/config";
 
-interface Props {
+interface PageProps {
   image: string;
   name: string;
 }
 
-export default function Category({ image, name }: Props) {
+export default function Category({ image, name }: PageProps) {
   return (
     <div
       className="

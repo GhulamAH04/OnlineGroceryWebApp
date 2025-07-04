@@ -4,13 +4,13 @@ import { EyeIcon, Heart, Star, ShoppingCart } from "lucide-react";
 import { useState } from "react";
 import { imageUrl } from "@/config";
 
-interface Props {
+interface PageProps {
   image: string;
   name: string;
   price: number;
 }
 
-export default function Product({ image, name, price }: Props) {
+export default function Product({ image, name, price }: PageProps) {
   const [isHovered, setIsHovered] = useState(false);
 
   return (

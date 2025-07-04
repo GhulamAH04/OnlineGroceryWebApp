@@ -5,9 +5,9 @@ import NavLinks from "./nav-links";
 export default function Navbar() {
   return (
     <>
-      <SmallOne/>
-      <Middle/>
-      <NavLinks/>
+      <SmallOne />
+      <Middle />
+      <NavLinks />
     </>
   );
 }

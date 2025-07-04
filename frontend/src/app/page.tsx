@@ -5,29 +5,25 @@ import Featured from "@/components/homepage/featured";
 import PopularCategories from "@/components/homepage/popular-categories";
 import CategoriesModal from "@/components/homepage/popular-categories/categories-modal";
 import PopularProducts from "@/components/homepage/popular-products";
-import { ICoordinates } from "@/interfaces/location.interface";
+import { ILocation } from "@/interfaces/location.interface";
+import { IBranchesProducts } from "@/interfaces/product.interface";
 import axios from "axios";
+import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
 import { useEffect, useState } from "react";
-
-interface IProduct {
-  id: number;
-  categoryId: number;
-}
-
-interface IProducts {
-  id: number;
-  name: string;
-  price: number;
-  image: string;
-  products: IProduct;
-}
+import { setCity, setCoordinates } from "@/lib/redux/features/locationSlice";
+import { setCookie } from "cookies-next";
+import sign from "jwt-encode";
+import { jwtSecret } from "@/config";
 
 export default function Homepage() {
-  const [coordinates, setCoordinates] = useState<ICoordinates>({
-    latitude: 0,
-    longitude: 0,
-  });
-  const [products, setProducts] = useState([]);
+  // hook
+  const dispatch = useAppDispatch();
+
+  // state in redux
+  const location = useAppSelector((state) => state.location);
+
+  // local state
+  const [branchesProducts, setBranchesProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(
     null
@@ -38,9 +34,14 @@ export default function Homepage() {
     if (navigator.geolocation)
       navigator.geolocation.getCurrentPosition((position) => {
         const { latitude, longitude } = position.coords;
-        setCoordinates({ latitude, longitude });
+        const locationState: ILocation = {
+          latitude,
+          longitude,
+          city: ""
+        } 
+        dispatch(setCoordinates(locationState));
       });
-  }, []);
+  }, [dispatch]);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -60,16 +61,26 @@ export default function Homepage() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        if (coordinates.latitude !== 0 && coordinates.longitude !== 0) {
+        if (location.latitude !== 0 && location.longitude !== 0) {
           const { data } = await axios.get(
-            `http://localhost:8080/api/products/nearby?latitude=${coordinates.latitude}&longitude=${coordinates.longitude}`
+            `http://localhost:8080/api/products/nearby?latitude=${location.latitude}&longitude=${location.longitude}`
           );
-          setProducts(data.data);
+          setBranchesProducts(data.data);
+          const locationState: ILocation = {
+            latitude: location.latitude,
+            longitude: location.longitude,
+            city: data.data[0].branchs.address.split(",")[1].split(" ")[1],
+          };
+          // set location cookie
+          const token = sign(locationState, `${jwtSecret}`);
+          setCookie("location_token", token)
+
+          dispatch(setCity(locationState));
         } else {
           const { data } = await axios.get(
             `http://localhost:8080/api/products/main`
           );
-          setProducts(data.data);
+          setBranchesProducts(data.data);
         }
       } catch (err) {
         console.error("Error fetching products:", err);
@@ -77,15 +88,15 @@ export default function Homepage() {
     };
 
     fetchProducts();
-  }, [coordinates]);
+  }, [location, dispatch]);
 
   // Filter products based on the selected category
   const filteredProducts = selectedCategoryId
-    ? products.filter(
-        (product: IProducts) =>
+    ? branchesProducts.filter(
+        (product: IBranchesProducts) =>
           product.products.categoryId === selectedCategoryId
       )
-    : products;
+    : branchesProducts;
 
   // Handle category click
   const handleCategoryClick = (categoryId: number) => {

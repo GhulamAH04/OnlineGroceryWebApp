@@ -5,13 +5,18 @@ import { useGoogleLogin } from "@react-oauth/google";
 import Link from "next/link";
 import axios from "axios";
 import { apiUrl } from "@/config";
+import { setCookie } from "cookies-next";
 import { EyeIcon, GoogleIcon } from "../register/icons";
 import { useState } from "react";
 import { LoginSchema } from "@/schemas/login.schema";
 import { useRouter } from "next/navigation";
+import { useAppDispatch } from "@/lib/redux/hooks";
+import { onLogin } from "@/lib/redux/features/authSlice";
 
 export default function LoginForm() {
   const router = useRouter();
+  const dispatch = useAppDispatch();
+
   const [showPassword, setShowPassword] = useState(false);
   const [isCorrectPassword, setIsCorrectPassword] = useState(true);
 
@@ -25,7 +30,27 @@ export default function LoginForm() {
     onSubmit: async (values) => {
       // make api call here
       try {
-        await axios.post(`${apiUrl}/api/auth/login`, values);
+        const { data } = await axios.post(`${apiUrl}/api/auth/login`, values);
+
+        // set token to cookie
+        const { token } = data.data;
+
+        setCookie("access_token", token);
+
+        // update user state on login
+        const { user } = data.data;
+        const userState = {
+          user: {
+            id: user.id,
+            email: user.email,
+            username: user.username,
+            role: user.role,
+            image: user.image
+          },
+          isLogin: true,
+        };
+
+        dispatch(onLogin(userState));
         
         alert(
           "Successfully Logged In"
@@ -59,10 +84,29 @@ export default function LoginForm() {
 
         const { name, email } = userInfoResponse.data;
 
-        await axios.post(`${apiUrl}/api/auth/google/login`, {
+        const { data } = await axios.post(`${apiUrl}/api/auth/google/login`, {
           name,
           email,
         });
+
+        // set token to cookie
+        const { token } = data.data;
+        setCookie("access_token", token);
+
+        // update user state on login
+        const { user } = data.data;
+        const userState = {
+          user: {
+            id: user.id,
+            email: user.email,
+            username: user.username,
+            role: user.role,
+            image: user.image,
+          },
+          isLogin: true,
+        };
+
+        dispatch(onLogin(userState));
 
         alert("Successfully logged in!");
 
@@ -134,30 +178,6 @@ export default function LoginForm() {
             {formik.touched.password && formik.errors.password && (
               <p className="text-red-500 text-xs mt-1">
                 {formik.errors.password}
-              </p>
-            )}
-          </div>
-
-          {/* Terms and Conditions Checkbox*/}
-          <div>
-            <div className="flex items-center">
-              <input
-                id="termsAccepted"
-                type="checkbox"
-                {...formik.getFieldProps("termsAccepted")}
-                checked={formik.values.termsAccepted}
-                className="h-5 w-5 text-green-600 border-gray-300 rounded focus:ring-green-500 cursor-pointer"
-              />
-              <label
-                htmlFor="termsAccepted"
-                className="ml-3 text-sm text-gray-600 cursor-pointer"
-              >
-                Accept all terms & Conditions
-              </label>
-            </div>
-            {formik.touched.termsAccepted && formik.errors.termsAccepted && (
-              <p className="text-red-500 text-xs mt-1">
-                {formik.errors.termsAccepted}
               </p>
             )}
           </div>

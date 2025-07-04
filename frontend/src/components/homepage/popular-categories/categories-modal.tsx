@@ -2,15 +2,9 @@
 
 import { X } from "lucide-react";
 import SmallCategory from "./small-category";
+import { ICategory } from "@/interfaces/category.interface";
 
-interface ICategory {
-  id: number;
-  slug: string;
-  name: string;
-  image: string;
-}
-
-interface Props {
+interface PageProps {
   isVisible: boolean;
   categories: ICategory[];
   onCategoryClick: (categoryId: number) => void;
@@ -22,7 +16,7 @@ export default function CategoriesModal({
   categories,
   onCategoryClick,
   onClose,
-}: Props) {
+}: PageProps) {
   if (!isVisible) return null;
 
   // Close modal when clicking outside

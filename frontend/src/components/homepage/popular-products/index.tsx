@@ -1,21 +1,13 @@
 import { ArrowRight } from "lucide-react";
 import Product from "./product";
 import Link from "next/link";
+import { IBranchesProducts } from "@/interfaces/product.interface";
 
-interface IProduct {
-  id: string;
-  products: {
-    image: string;
-    name: string;
-    price: number;
-  };
+interface PageProps {
+  products: IBranchesProducts[];
 }
 
-interface Props {
-  products: IProduct[];
-}
-
-export default function PopularProducts({ products }: Props) {
+export default function PopularProducts({ products }: PageProps) {
   const displayedProducts = products.slice(0, 10);
 
   return (

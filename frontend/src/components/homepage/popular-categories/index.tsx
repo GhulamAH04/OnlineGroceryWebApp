@@ -1,14 +1,8 @@
 import { ArrowRight } from "lucide-react";
 import Category from "./category";
+import { ICategory } from "@/interfaces/category.interface";
 
-interface ICategory {
-  id: number;
-  slug: string;
-  name: string;
-  image: string;
-}
-
-interface Props {
+interface PageProps {
   categories: ICategory[];
   onCategoryClick: (categoryId: number) => void;
   onViewAllClick: () => void;
@@ -18,7 +12,7 @@ export default function PopularCategories({
   categories,
   onCategoryClick,
   onViewAllClick,
-}: Props) {
+}: PageProps) {
   const displayedCategories = categories.slice(0, 6);
 
   return (
