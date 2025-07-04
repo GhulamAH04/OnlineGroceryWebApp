@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { IGoogleLogin, IGoogleRegister, ILogin, IRegister, LoginService, LoginWithGoogleService, RegisterService, RegisterWithGoogleService, SetPasswordService, VerifyAccountService } from "../services/auth.service";
+import { IGoogleLogin, IGoogleRegister, ILogin, IRegister, LoginService, LoginWithGoogleService, RegisterService, RegisterWithGoogleService, SetPasswordService, VerifyAccountService, VerifyResetService } from "../services/auth.service";
 
 export async function RegisterController(
   req: Request,
@@ -31,7 +31,7 @@ export async function RegisterWithGoogleController(
     const newUser = await RegisterWithGoogleService(userData);
 
     res.status(200).send({
-      message: `New user register success`,
+      message: "Login Success",
       data: newUser,
     });
   } catch (err) {
@@ -49,7 +49,7 @@ export async function LoginController(
 
     const user = await LoginService(userData);
 
-    res.status(200).cookie("access_token", user.token).send({
+    res.status(200).send({
       message: "Login Success",
       data: user,
     });
@@ -68,7 +68,7 @@ export async function LoginWithGoogleController(
 
     const user = await LoginWithGoogleService(userData);
 
-    res.status(200).cookie("access_token", user.token).send({
+    res.status(200).send({
       message: "Login Success",
       data: user,
     });
@@ -105,6 +105,23 @@ export async function SetPasswordController(
 
     res.status(200).send({
       message: `Set password success`,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function VerifyResetController(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const { email } = req.body;
+    await VerifyResetService(email);
+
+    res.status(200).send({
+      message: `Send email success`,
     });
   } catch (err) {
     next(err);

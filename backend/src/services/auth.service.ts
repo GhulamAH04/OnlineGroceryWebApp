@@ -198,6 +198,39 @@ async function LoginWithGoogle(userData: IGoogleLogin) {
   }
 }
 
+async function VerifyReset(email: string) {
+  try {
+    const templatePath = path.join(
+      __dirname,
+      "../templates",
+      "verify-reset-template.hbs"
+    );
+
+    const payload = {
+      email,
+    };
+
+    const token = sign(payload, String(JWT_SECRET), { expiresIn: "2h" });
+
+    const templateSource = fs.readFileSync(templatePath, "utf-8");
+    const compiledTemplate = handlebars.compile(templateSource);
+
+    const html = compiledTemplate({
+      email,
+      fe_url: `${FE_URL}/reset-password/${token}`,
+    });
+
+    await Transporter.sendMail({
+      from: "EOHelper",
+      to: email,
+      subject: "Reset Password",
+      html,
+    });
+  } catch (err) {
+    throw err;
+  }
+}
+
 export async function RegisterService(userData: IRegister) {
   try {
     const newUser = await Register(userData);
@@ -278,3 +311,12 @@ export async function SetPasswordService(password: string, token: string) {
     throw err;
   }
 }
+
+export async function VerifyResetService(email: string) {
+  try {
+    await VerifyReset(email);
+  } catch (err) {
+    throw err;
+  }
+}
+

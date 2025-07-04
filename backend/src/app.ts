@@ -10,17 +10,9 @@ import AuthRouter from "./routers/auth.router"
 const port = PORT;
 const app: Application = express();
 
-app.use(
-  cors({
-    origin: FE_URL,
-    credentials: true,
-  })
-);
-
 app.use(express.json());
 
 // Use CORS middleware
-
 app.use(
   cors({
     origin: FE_URL,
