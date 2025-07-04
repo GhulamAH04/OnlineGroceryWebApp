@@ -157,7 +157,7 @@ export default function LoginForm() {
           <div>
             {!isCorrectPassword && (
               // update later, i should sent an email first
-              <Link href="/reset-password" className="text-red-500 text-xs mt-1 mb-1 hover:text-green-500">
+              <Link href="/verify-reset-password" className="text-red-500 text-xs mt-1 mb-1 hover:text-green-500">
                 Forgot Password?
               </Link>
             )}

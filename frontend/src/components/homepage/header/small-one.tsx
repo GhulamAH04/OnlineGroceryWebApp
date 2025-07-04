@@ -1,5 +1,6 @@
 "use client";
 
+import { imageUrl } from "@/config";
 import { IAuth, IUser } from "@/interfaces/auth.interface";
 import { ILocation } from "@/interfaces/location.interface";
 import { onLogin } from "@/lib/redux/features/authSlice";
@@ -79,7 +80,7 @@ export default function SmallOne() {
           <Link href="/profile">
             {/* eslint-disable-next-line */}
             <img
-              src={userState.user.image}
+              src={`${imageUrl}${userState.user.image}.jpg`}
               alt="profile-picture"
               className="rounded-full w-6 h-6 border-black border-solid border-1"
             />
