@@ -9,12 +9,16 @@ import {
   Settings,
   LogOut,
 } from "lucide-react";
+import { deleteCookie } from "cookies-next";
+import { useRouter } from "next/navigation";
+import { useAppDispatch } from "@/lib/redux/hooks";
+import { onLogout } from "@/lib/redux/features/authSlice";
 
 export default function Sidebar() {
+  const router = useRouter();
+  const dispatch = useAppDispatch();
   // Initialize state from localStorage or default to an empty string
-  const [activeItem, setActiveItem] = useState<string>(() => {
-    return localStorage.getItem("activeMenuItem") || "Dashboard";
-  });
+  const [activeItem, setActiveItem] = useState<string>("");
 
   // Function to handle menu item click
   const handleMenuItemClick = (item: string) => {
@@ -28,7 +32,6 @@ export default function Sidebar() {
     { icon: Heart, label: "Wishlist", link: "wishlist" },
     { icon: ShoppingCart, label: "Shopping Cart", link: "cart" },
     { icon: Settings, label: "Settings", link: "settings" },
-    { icon: LogOut, label: "Log-out", link: "#" },
   ];
 
   // Effect to update state from localStorage on component mount
@@ -64,6 +67,18 @@ export default function Sidebar() {
             );
           })}
         </ul>
+        <button
+          className="flex w-full gap-2 items-center p-3 my-1 rounded-lg transition-colors text-gray-600 hover:bg-gray-100 hover:text-red-500 hover:font-semibold"
+          onClick={() => {
+            deleteCookie("access_token");
+            localStorage.removeItem("activeMenuItem");
+            dispatch(onLogout());
+            router.push("/");
+          }}
+        >
+          <LogOut />
+          <span>Log-out</span>
+        </button>
       </nav>
     </aside>
   );

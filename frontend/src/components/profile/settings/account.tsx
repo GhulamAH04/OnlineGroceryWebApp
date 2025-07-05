@@ -1,10 +1,16 @@
 "use client";
 
+import { apiUrl } from "@/config";
+import { useAppSelector } from "@/lib/redux/hooks";
 import { AccountSettingSchema } from "@/schemas/settings.schema";
+import axios from "axios";
 import { useFormik } from "formik";
 
 // --- FORM SECTION 1: Account Settings ---
 export default function AccountSettings() {
+// state in redux
+  const userState = useAppSelector((state) => state.auth);
+
   const formik = useFormik({
     initialValues: {
       username: "",
@@ -17,6 +23,25 @@ export default function AccountSettings() {
       // In a real app, you would make an API call here.
     },
   });
+
+  const handleChangePasswordClick = async () => {
+    try {
+      const { email } = userState.user;
+
+      await axios.post(`${apiUrl}/api/auth/verifyreset`, {
+        email,
+      });
+
+      alert("We've sent an email to chenge your password.");
+    } catch (err) {
+      if (axios.isAxiosError(err) && err.response) {
+        const errorMessage = err.response.data.message;
+        alert(`${errorMessage}`);
+      } else {
+        alert("An unexpected error occurred");
+      }
+    }
+  }
 
   return (
     <div className="bg-white p-6 md:p-8 rounded-lg shadow-sm">
@@ -95,7 +120,7 @@ export default function AccountSettings() {
         <div className="w-[40%] flex-shrink-0 flex flex-col items-center gap-2">
           {/* eslint-disable-next-line */}
           <img
-            src={formik.values.image}
+            src="#"
             alt="User Avatar"
             className="w-32 h-32 rounded-full object-cover mb-4"
           />
@@ -107,6 +132,7 @@ export default function AccountSettings() {
           </button>
           <button
             type="button"
+            onClick={handleChangePasswordClick}
             className="w-[10rem] px-4 py-2 text-sm bg-yellow-600 text-white font-semibold rounded-full hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 transition-colors duration-300"
           >
             Change Password

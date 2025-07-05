@@ -28,7 +28,7 @@ export const authSlice = createSlice({
       state.user.email = "";
       state.user.username = "";
       state.user.role = "";
-      state.isLogin = true;
+      state.isLogin = false;
     },
   },
 });
