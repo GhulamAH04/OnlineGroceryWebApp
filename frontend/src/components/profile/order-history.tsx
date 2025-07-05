@@ -30,7 +30,7 @@ export default function OrderHistoryTable({ orders }: OrderHistoryTableProps) {
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-left">
-          <thead className="text-xs text-gray-500 uppercase border-b">
+          <thead className="text-xs text-gray-500 uppercase">
             <tr>
               <th className="py-3 px-4">Order ID</th>
               <th className="py-3 px-4">Date</th>
@@ -41,7 +41,7 @@ export default function OrderHistoryTable({ orders }: OrderHistoryTableProps) {
           </thead>
           <tbody>
             {orders.map((order) => (
-              <tr key={order.id} className="border-b last:border-none">
+              <tr key={order.id} className="">
                 <td className="py-4 px-4 font-medium text-gray-800">
                   {order.id}
                 </td>
