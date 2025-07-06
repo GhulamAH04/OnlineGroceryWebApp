@@ -21,6 +21,7 @@ export const authSlice = createSlice({
       state.user.email = action.payload.user.email;
       state.user.username = action.payload.user.username;
       state.user.role = action.payload.user.role;
+      state.user.image = action.payload.user.image;
       state.isLogin = true;
     },
     onLogout: (state: IAuth) => {
@@ -28,6 +29,7 @@ export const authSlice = createSlice({
       state.user.email = "";
       state.user.username = "";
       state.user.role = "";
+      state.user.image = "";
       state.isLogin = false;
     },
   },

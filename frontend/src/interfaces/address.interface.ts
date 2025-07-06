@@ -1,11 +1,26 @@
+interface ICity {
+  id: number;
+  name: string;
+  provinceId: number;
+}
+
+interface IProvince {
+  id: number;
+  name: string;
+}
+
 export interface IAddress {
-  street: string;
-  city: string;
-  state: string;
-  zip: string;
-  email: string;
-  phone: string;
-};
+  id: number;
+  name: string;
+  address: string;
+  provinces: IProvince;
+  cities: ICity;
+  postalCode: string;
+  isPrimary: boolean;
+  userId: number;
+  latitude: number;
+  longitude: number;
+}
 
 export interface IBillingDetails {
   firstName: string;
@@ -17,4 +32,4 @@ export interface IBillingDetails {
   zipCode: string;
   email: string;
   phone: string;
-};
+}

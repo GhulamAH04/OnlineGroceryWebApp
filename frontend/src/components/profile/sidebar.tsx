@@ -18,7 +18,7 @@ export default function Sidebar() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   // Initialize state from localStorage or default to an empty string
-  const [activeItem, setActiveItem] = useState<string>("");
+  const [activeItem, setActiveItem] = useState<string>("Dashboard");
 
   // Function to handle menu item click
   const handleMenuItemClick = (item: string) => {

@@ -36,6 +36,8 @@ export default function SmallOne() {
       dispatch(onLogin(userState));
     }
   }, [dispatch]);
+  
+  console.log(`${imageUrl}${userState.user.image}.jpg`);
 
   useEffect(() => {
     const token = getCookie("location_token") as string;

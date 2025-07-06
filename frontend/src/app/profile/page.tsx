@@ -1,26 +1,7 @@
-import { IUser } from "@/interfaces/auth.interface";
-import { IAddress } from "@/interfaces/address.interface";
 import { IOrder } from "@/interfaces/order.interface";
 import ProfileHeader from "@/components/profile/profile-header";
-import Address from "@/components/profile/addresss";
 import OrderHistoryTable from "@/components/profile/order-history";
-
-const mockUser: IUser = {
-  id: 1,
-  email: "dianne@gmail.com",
-  username: "Dianne Russell",
-  role: "Customer",
-  image: "https://placehold.co/100x100/e2e8f0/4a5568?text=DR", // Placeholder image
-};
-
-const mockAddress: IAddress = {
-  street: "4140 Parker Rd. Allentown, New Mexico",
-  city: "Allentown",
-  state: "New Mexico",
-  zip: "31134",
-  email: "dianne.russell@gmail.com",
-  phone: "(671) 555-0110",
-};
+import MainAddress from "@/components/profile/main-address";
 
 const mockOrders: IOrder[] = [
   {
@@ -71,8 +52,8 @@ export default function ProfilePage() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
       {/* Profile and Billing Cards */}
-      <ProfileHeader user={mockUser} />
-      <Address address={mockAddress} />
+      <ProfileHeader/>
+      <MainAddress />
 
       {/* Order History Table */}
       <div className="col-span-1 lg:col-span-2">

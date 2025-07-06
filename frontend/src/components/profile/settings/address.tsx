@@ -24,7 +24,7 @@ export default function BillingAddressSettings() {
 
   return (
     <div className="bg-white p-6 md:p-8 rounded-lg shadow-sm">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">Billing Address</h2>
+      <h2 className="text-2xl font-bold text-gray-800 mb-6">Main Address</h2>
       <form
         onSubmit={formik.handleSubmit}
         className="grid grid-cols-1 sm:grid-cols-2 gap-6"
