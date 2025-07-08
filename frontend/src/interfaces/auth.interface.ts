@@ -2,6 +2,7 @@ export interface IUser {
   id: number;
   email: string;
   username: string;
+  isVerified: boolean;
   role: string;
   image: string;
 }

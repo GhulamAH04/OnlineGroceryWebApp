@@ -28,6 +28,7 @@ export default function SmallOne() {
           id: userData.id,
           email: userData.email,
           username: userData.username,
+          isVerified: userData.isVerified,
           role: userData.role,
           image: userData.image,
         },

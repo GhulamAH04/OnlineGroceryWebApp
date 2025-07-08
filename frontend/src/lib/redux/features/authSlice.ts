@@ -6,6 +6,7 @@ const initialState: IAuth = {
     id: 0,
     email: "",
     username: "",
+    isVerified: false,
     role: "",
     image: "",
   },
@@ -21,6 +22,7 @@ export const authSlice = createSlice({
       state.user.email = action.payload.user.email;
       state.user.username = action.payload.user.username;
       state.user.role = action.payload.user.role;
+      state.user.isVerified = action.payload.user.isVerified;
       state.user.image = action.payload.user.image;
       state.isLogin = true;
     },
@@ -29,6 +31,7 @@ export const authSlice = createSlice({
       state.user.email = "";
       state.user.username = "";
       state.user.role = "";
+      state.user.isVerified = false;
       state.user.image = "";
       state.isLogin = false;
     },

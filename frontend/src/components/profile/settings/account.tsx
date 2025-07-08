@@ -10,6 +10,7 @@ import { deleteCookie, getCookie, setCookie } from "cookies-next";
 import { useFormik } from "formik";
 import { jwtDecode } from "jwt-decode";
 import sign from "jwt-encode";
+import { Check, X } from "lucide-react";
 import { useState } from "react";
 
 // --- FORM SECTION 1: Account Settings ---
@@ -44,6 +45,7 @@ export default function AccountSettings() {
             id: userData.id,
             email: email || userData.email,
             username: username || userData.username,
+            isVerified: userData.isVerified,
             role: userData.role,
             image: userData.image,
           },
@@ -58,6 +60,7 @@ export default function AccountSettings() {
           id: userData.id,
           email: email || userData.email,
           username: username || userData.username,
+          isVerified: userData.isVerified,
           role: userData.role,
           image: userData.image,
         };
@@ -103,6 +106,26 @@ export default function AccountSettings() {
       }
     }
   };
+
+  const handleUnverifiedClick = async () => {
+    try {
+      await axios.post(`${apiUrl}/api/auth/reverify`, {
+        username: user.user.username,
+        email: user.user.email,
+        subject: "Re-verification"
+      })
+      alert(
+        "We've sent you an email to verify your account."
+      );
+    } catch (err) {
+      if (axios.isAxiosError(err) && err.response) {
+        const errorMessage = err.response.data.message;
+        alert(`${errorMessage}`);
+      } else {
+        alert("An unexpected error occurred");
+      }
+    }
+  }
 
   return (
     <div className="bg-white p-6 md:p-8 rounded-lg shadow-sm">
@@ -209,6 +232,18 @@ export default function AccountSettings() {
             alt="User Avatar"
             className="w-32 h-32 border border-s-2 rounded-full object-cover mb-4"
           />
+          {user.user.isVerified ? (
+            <div className="flex justify-center px-2 items-center gap-1 text-blue-500 font-semibold border border-s-2 rounded-full mb-2">
+              <p>Verified</p> <Check className="w-5 h-5" />
+            </div>
+          ) : (
+            <div className="flex justify-center px-2 items-center gap-1 text-red-500 font-semibold border border-s-2 rounded-full hover:bg-gray-200 cursor-default"
+            onClick={handleUnverifiedClick}>
+              <p>Unverified</p>
+              <X className="w-5 h-5" />
+            </div>
+          )}
+          <p className="text-[10px] mb-2">Click the badge to verify your account</p>
           <button
             type="button"
             className="w-[10rem] px-4 py-2 bg-green-600 text-white font-semibold rounded-full hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-300"

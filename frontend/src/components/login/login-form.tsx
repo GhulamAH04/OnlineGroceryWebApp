@@ -44,6 +44,7 @@ export default function LoginForm() {
             id: user.id,
             email: user.email,
             username: user.username,
+            isVerified: user.isVerified,
             role: user.role,
             image: user.image
           },
@@ -100,6 +101,7 @@ export default function LoginForm() {
             id: user.id,
             email: user.email,
             username: user.username,
+            isVerified: user.isVerified,
             role: user.role,
             image: user.image,
           },
