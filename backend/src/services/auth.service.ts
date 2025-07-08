@@ -66,6 +66,16 @@ async function Register(userData: IRegister) {
 
     if (!newUser) throw new Error("Create account failed")
 
+    SendVerificationEmail(name, email, "Welcome");
+
+    return newUser;
+  } catch (err) {
+    throw err;
+  }
+}
+
+export async function SendVerificationEmail(username: string, email: string, subject: string) {
+  try {
     //send email
     const templatePath = path.join(
       __dirname,
@@ -77,12 +87,12 @@ async function Register(userData: IRegister) {
     const compiledTemplate = handlebars.compile(templateSource);
 
     const payload = {
-      email: newUser.email,
+      email,
     };
 
     const token = sign(payload, String(JWT_SECRET), { expiresIn: "1h" });
     const html = compiledTemplate({
-      name,
+      username,
       email,
       fe_url: `${FE_URL}/verify-email/${token}`,
     });
@@ -90,11 +100,9 @@ async function Register(userData: IRegister) {
     await Transporter.sendMail({
       from: "EOHelper",
       to: email,
-      subject: "Welcome",
+      subject: subject,
       html,
     });
-
-    return newUser;
   } catch (err) {
     throw err;
   }

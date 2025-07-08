@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { GetMainAddressController } from "../controllers/user.controller";
+import { EditUserByIdController, GetMainAddressController } from "../controllers/user.controller";
 const router = Router();
 
-// read
 router.get("/address/main/:userId", GetMainAddressController);
+router.put("/:id", EditUserByIdController);
 
 export default router;
