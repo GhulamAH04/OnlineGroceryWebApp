@@ -162,6 +162,7 @@ async function Login(userData: ILogin) {
       id: user.id,
       email: user.email,
       username: user.username,
+      isVerified: user.isVerified,
       role: user.role,
       image: user.image,
     };
@@ -194,6 +195,7 @@ async function LoginWithGoogle(userData: IGoogleLogin) {
       id: user.id,
       email: user.email,
       username: user.username,
+      isVerified: user.isVerified,
       role: user.role,
       image: user.image,
     };
@@ -323,6 +325,14 @@ export async function SetPasswordService(password: string, token: string) {
 export async function VerifyResetService(email: string) {
   try {
     await VerifyReset(email);
+  } catch (err) {
+    throw err;
+  }
+}
+
+export async function SendVerificationEmailService(username: string, email: string, subject: string) {
+  try {
+    await SendVerificationEmail(username, email, subject);
   } catch (err) {
     throw err;
   }
