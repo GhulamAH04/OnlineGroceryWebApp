@@ -1,6 +1,6 @@
 "use client";
-import { useState } from "react";
-import { User } from "@/interfaces";
+import { useState, useEffect } from "react";
+import { User, Store } from "@/interfaces";
 
 export default function EditUserModal({
   user,
@@ -19,6 +19,18 @@ export default function EditUserModal({
   const [storeId, setStoreId] = useState(user.storeId?.toString() || "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [stores, setStores] = useState<Store[]>([]);
+
+  // Fetch toko untuk dropdown
+  useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/stores`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token") || "dummy"}`,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => setStores(data.data || []));
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,7 +50,7 @@ export default function EditUserModal({
             name,
             email,
             role,
-            storeId: storeId ? Number(storeId) : null,
+            storeId: role === "STORE_ADMIN" ? Number(storeId) : null,
           }),
         }
       );
@@ -93,14 +105,22 @@ export default function EditUserModal({
           <option value="SUPER_ADMIN">Super Admin</option>
         </select>
         {role === "STORE_ADMIN" && (
-          <input
-            className="w-full border rounded p-2"
-            placeholder="Store ID"
-            type="number"
-            value={storeId}
-            onChange={(e) => setStoreId(e.target.value)}
-            required
-          />
+          <>
+            <label className="block text-sm mb-1">Toko</label>
+            <select
+              className="w-full border rounded p-2 mb-2"
+              value={storeId}
+              onChange={(e) => setStoreId(e.target.value)}
+              required
+            >
+              <option value="">Pilih Toko</option>
+              {stores.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          </>
         )}
         <div className="flex justify-between mt-4">
           <button

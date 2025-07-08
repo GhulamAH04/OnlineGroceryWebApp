@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import SalesReportTable from "@/components/SalesReportTable";
-import StockReportTable from "@/components/StockReportTable";
+import SalesReportTable from "@/components/reports/SalesReportTable";
+import StockReportTable from "@/components/reports/StockReportTable";
 import { Store } from "@/interfaces";
 
 export default function ReportsPage() {

@@ -1,27 +1,35 @@
 "use client";
-import { useState } from "react";
-import { Product } from "@/interfaces";
+import { useState, useEffect } from "react";
+import { Category } from "@/interfaces"; // Buat/isi tipe ini di interfaces
 
-export default function EditProductModal({
-  product,
-  onUpdate,
+export default function AddProductModal({
+  onAdd,
   onClose,
   onFeedback,
 }: {
-  product: Product;
-  onUpdate: () => void;
+  onAdd: () => void;
   onClose: () => void;
   onFeedback: (msg: string) => void;
 }) {
-  const [name, setName] = useState(product.name);
-  const [description, setDescription] = useState(product.description || "");
-  const [price, setPrice] = useState(product.price.toString());
-  const [categoryId, setCategoryId] = useState(
-    product.categoryId?.toString() || ""
-  );
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [price, setPrice] = useState("");
+  const [categoryId, setCategoryId] = useState("");
   const [image, setImage] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  // Fetch kategori untuk dropdown
+  useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token") || "dummy"}`,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => setCategories(data.data || []));
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,26 +44,23 @@ export default function EditProductModal({
 
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/products/${product.id}`,
-        {
-          method: "PUT",
-          headers: { Authorization: `Bearer ${token}` },
-          body: formData,
-        }
-      );
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
       const data = await res.json();
       if (data.success) {
-        onUpdate();
-        onFeedback("Produk berhasil diupdate!");
+        onAdd();
+        onFeedback("Produk berhasil ditambahkan!");
         onClose();
       } else {
-        setError(data.message || "Gagal update produk");
-        onFeedback("Gagal update produk.");
+        setError(data.message || "Gagal tambah produk");
+        onFeedback("Gagal tambah produk.");
       }
     } catch {
       setError("Gagal koneksi ke server");
-      onFeedback("Gagal update produk (server error).");
+      onFeedback("Gagal tambah produk (server error).");
     } finally {
       setLoading(false);
     }
@@ -67,7 +72,7 @@ export default function EditProductModal({
         onSubmit={handleSubmit}
         className="bg-white rounded-xl p-6 w-full max-w-md space-y-4"
       >
-        <h2 className="text-xl font-bold text-center">Edit Produk</h2>
+        <h2 className="text-xl font-bold text-center">Tambah Produk</h2>
         {error && <div className="text-red-500 text-center">{error}</div>}
         <input
           className="w-full border rounded p-2"
@@ -91,13 +96,21 @@ export default function EditProductModal({
           onChange={(e) => setPrice(e.target.value)}
           required
         />
-        <input
-          className="w-full border rounded p-2"
-          placeholder="ID Kategori"
+        {/* Dropdown Kategori */}
+        <label className="block text-sm mb-1">Kategori</label>
+        <select
+          className="w-full border rounded p-2 mb-2"
           value={categoryId}
           onChange={(e) => setCategoryId(e.target.value)}
           required
-        />
+        >
+          <option value="">Pilih Kategori</option>
+          {categories.map((cat) => (
+            <option key={cat.id} value={cat.id}>
+              {cat.name}
+            </option>
+          ))}
+        </select>
         <input
           className="w-full"
           type="file"
@@ -117,7 +130,7 @@ export default function EditProductModal({
             className="px-4 py-2 bg-blue-600 text-white rounded"
             disabled={loading}
           >
-            {loading ? "Menyimpan..." : "Simpan Perubahan"}
+            {loading ? "Mengirim..." : "Simpan"}
           </button>
         </div>
       </form>

@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import DiscountTable from "@/components/DiscountTable";
-import AddDiscountModal from "@/components/AddDiscountModal";
-import EditDiscountModal from "@/components/EditDiscountModal";
-import DeleteDiscountModal from "@/components/DeleteDiscountModal";
+import DiscountTable from "@/components/discount/DiscountTable";
+import AddDiscountModal from "@/components/discount/AddDiscountModal";
+import EditDiscountModal from "@/components/discount/EditDiscountModal";
+import DeleteDiscountModal from "@/components/discount/DeleteDiscountModal";
 import { Discount } from "@/interfaces";
 
 export default function DiscountPage() {

@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import InventoryTable from "@/components/InventoryTable";
-import AddInventoryModal from "@/components/AddInventoryModal";
-import EditInventoryModal from "@/components/EditInventoryModal";
-import InventoryJournalModal from "@/components/InventoryJournalModal";
+import InventoryTable from "@/components/inventory/InventoryTable";
+import AddInventoryModal from "@/components/inventory/AddInventoryModal";
+import EditInventoryModal from "@/components/inventory/EditInventoryModal";
+import InventoryJournalModal from "@/components/inventory/InventoryJournalModal";
 import { Inventory } from "@/interfaces";
 
 

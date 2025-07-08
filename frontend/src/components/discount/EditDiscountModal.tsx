@@ -1,7 +1,10 @@
 "use client";
-import { useState } from "react";
-import { Discount } from "@/interfaces";
+import { useState, useEffect } from "react";
+import { Discount, Product, Store } from "@/interfaces";
 
+// =========================
+// EditDiscountModal Component
+// =========================
 export default function EditDiscountModal({
   discount,
   onUpdate,
@@ -13,6 +16,7 @@ export default function EditDiscountModal({
   onClose: () => void;
   onFeedback: (msg: string) => void;
 }) {
+  // --- State Management ---
   const [name, setName] = useState(discount.name);
   const [type, setType] = useState(discount.type);
   const [value, setValue] = useState(discount.value.toString());
@@ -30,6 +34,31 @@ export default function EditDiscountModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // --- State for Dropdown Data ---
+  const [products, setProducts] = useState<Product[]>([]);
+  const [stores, setStores] = useState<Store[]>([]);
+
+  // --- Fetch Produk & Toko saat Modal Dibuka ---
+  useEffect(() => {
+    // Fetch Produk
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/products`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token") || "dummy"}`,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => setProducts(data.data?.data || []));
+    // Fetch Toko
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/stores`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token") || "dummy"}`,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => setStores(data.data || []));
+  }, []);
+
+  // --- Handle Submit Form ---
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -80,6 +109,7 @@ export default function EditDiscountModal({
     }
   };
 
+  // =============== UI RETURN ===============
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
       <form
@@ -88,6 +118,8 @@ export default function EditDiscountModal({
       >
         <h2 className="text-xl font-bold text-center">Edit Diskon</h2>
         {error && <div className="text-red-500 text-center">{error}</div>}
+
+        {/* Input Nama Diskon */}
         <input
           className="w-full border rounded p-2"
           placeholder="Nama Diskon"
@@ -95,22 +127,40 @@ export default function EditDiscountModal({
           onChange={(e) => setName(e.target.value)}
           required
         />
-        <input
-          className="w-full border rounded p-2"
-          placeholder="ID Produk"
-          type="number"
+
+        {/* Dropdown Pilih Produk */}
+        <label className="block text-sm mb-1">Produk</label>
+        <select
+          className="w-full border rounded p-2 mb-2"
           value={productId}
           onChange={(e) => setProductId(e.target.value)}
           required
-        />
-        <input
-          className="w-full border rounded p-2"
-          placeholder="ID Toko"
-          type="number"
+        >
+          <option value="">Pilih Produk</option>
+          {products.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
+        </select>
+
+        {/* Dropdown Pilih Toko */}
+        <label className="block text-sm mb-1">Toko</label>
+        <select
+          className="w-full border rounded p-2 mb-2"
           value={storeId}
           onChange={(e) => setStoreId(e.target.value)}
           required
-        />
+        >
+          <option value="">Pilih Toko</option>
+          {stores.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.name}
+            </option>
+          ))}
+        </select>
+
+        {/* Pilih Tipe Diskon */}
         <select
           className="w-full border rounded p-2"
           value={type}
@@ -122,6 +172,8 @@ export default function EditDiscountModal({
           <option value="MIN_PURCHASE">Min Purchase</option>
           <option value="BUY1GET1">Buy 1 Get 1</option>
         </select>
+
+        {/* Input Nilai Diskon & Opsi */}
         {type === "MANUAL" && (
           <>
             <input
@@ -185,6 +237,8 @@ export default function EditDiscountModal({
             Diskon Buy 1 Get 1 akan otomatis diterapkan pada produk ini
           </div>
         )}
+
+        {/* Periode Diskon */}
         <label className="block text-sm text-gray-600">Periode Diskon</label>
         <div className="flex gap-2">
           <input
@@ -200,6 +254,8 @@ export default function EditDiscountModal({
             onChange={(e) => setEndDate(e.target.value)}
           />
         </div>
+
+        {/* Tombol Submit & Batal */}
         <div className="flex justify-between mt-4">
           <button
             type="button"

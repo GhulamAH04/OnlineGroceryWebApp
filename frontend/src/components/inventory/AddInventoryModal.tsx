@@ -1,6 +1,10 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Product, Store } from "@/interfaces";
 
+// ==============================
+// AddInventoryModal Component
+// ==============================
 export default function AddInventoryModal({
   onAdd,
   onClose,
@@ -10,12 +14,38 @@ export default function AddInventoryModal({
   onClose: () => void;
   onFeedback: (msg: string) => void;
 }) {
+  // --- State untuk form ---
   const [productId, setProductId] = useState("");
   const [storeId, setStoreId] = useState("");
   const [currentStock, setCurrentStock] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // --- State untuk dropdown data ---
+  const [products, setProducts] = useState<Product[]>([]);
+  const [stores, setStores] = useState<Store[]>([]);
+
+  // --- Fetch produk & toko untuk dropdown saat modal muncul ---
+  useEffect(() => {
+    // Fetch produk
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/products`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token") || "dummy"}`,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => setProducts(data.data?.data || []));
+    // Fetch toko
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/stores`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token") || "dummy"}`,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => setStores(data.data || []));
+  }, []);
+
+  // --- Handle submit form tambah inventory ---
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -51,6 +81,7 @@ export default function AddInventoryModal({
     }
   };
 
+  // ================== UI RETURN ==================
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
       <form
@@ -59,22 +90,40 @@ export default function AddInventoryModal({
       >
         <h2 className="text-xl font-bold text-center">Tambah Stok</h2>
         {error && <div className="text-red-500 text-center">{error}</div>}
-        <input
-          className="w-full border rounded p-2"
-          placeholder="ID Produk"
-          type="number"
+
+        {/* Dropdown Produk */}
+        <label className="block text-sm mb-1">Produk</label>
+        <select
+          className="w-full border rounded p-2 mb-2"
           value={productId}
           onChange={(e) => setProductId(e.target.value)}
           required
-        />
-        <input
-          className="w-full border rounded p-2"
-          placeholder="ID Toko"
-          type="number"
+        >
+          <option value="">Pilih Produk</option>
+          {products.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
+        </select>
+
+        {/* Dropdown Toko */}
+        <label className="block text-sm mb-1">Toko</label>
+        <select
+          className="w-full border rounded p-2 mb-2"
           value={storeId}
           onChange={(e) => setStoreId(e.target.value)}
           required
-        />
+        >
+          <option value="">Pilih Toko</option>
+          {stores.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.name}
+            </option>
+          ))}
+        </select>
+
+        {/* Input Stok Awal */}
         <input
           className="w-full border rounded p-2"
           placeholder="Stok Awal"
@@ -83,6 +132,8 @@ export default function AddInventoryModal({
           onChange={(e) => setCurrentStock(e.target.value)}
           required
         />
+
+        {/* Tombol aksi */}
         <div className="flex justify-between mt-4">
           <button
             type="button"

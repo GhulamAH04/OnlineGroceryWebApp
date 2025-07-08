@@ -1,5 +1,6 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Store } from "@/interfaces";
 
 export default function AddUserModal({
   onAdd,
@@ -17,6 +18,18 @@ export default function AddUserModal({
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [stores, setStores] = useState<Store[]>([]);
+
+  // Fetch toko untuk dropdown
+  useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/stores`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token") || "dummy"}`,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => setStores(data.data || []));
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,20 +37,23 @@ export default function AddUserModal({
     setError("");
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/users`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          name,
-          email,
-          role,
-          storeId: storeId ? Number(storeId) : null,
-          password,
-        }),
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/users`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            name,
+            email,
+            role,
+            storeId: role === "STORE_ADMIN" ? Number(storeId) : null,
+            password,
+          }),
+        }
+      );
       const data = await res.json();
       if (data.success) {
         onAdd();
@@ -87,14 +103,22 @@ export default function AddUserModal({
           <option value="SUPER_ADMIN">Super Admin</option>
         </select>
         {role === "STORE_ADMIN" && (
-          <input
-            className="w-full border rounded p-2"
-            placeholder="Store ID"
-            type="number"
-            value={storeId}
-            onChange={(e) => setStoreId(e.target.value)}
-            required
-          />
+          <>
+            <label className="block text-sm mb-1">Toko</label>
+            <select
+              className="w-full border rounded p-2 mb-2"
+              value={storeId}
+              onChange={(e) => setStoreId(e.target.value)}
+              required
+            >
+              <option value="">Pilih Toko</option>
+              {stores.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          </>
         )}
         <input
           className="w-full border rounded p-2"

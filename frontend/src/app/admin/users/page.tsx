@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import UserTable from "@/components/UserTable";
-import AddUserModal from "@/components/AddUserModal";
-import EditUserModal from "@/components/EditUserModal";
-import DeleteUserModal from "@/components/DeleteUserModal";
+import UserTable from "@/components/users/UserTable";
+import AddUserModal from "@/components/users/AddUserModal";
+import EditUserModal from "@/components/users/EditUserModal";
+import DeleteUserModal from "@/components/users/DeleteUserModal";
 import { User } from "@/interfaces";
 
 export default function UserManagementPage() {

@@ -1,5 +1,5 @@
-import Bannar from "@/components/bannar";
-import Bannar2 from "@/components/bannar2";
+import Bannar from "@/components/banner";
+import Bannar2 from "@/components/banner2";
 import Featured from "@/components/featured";
 import HotDeals from "@/components/hot-deals";
 import Navbar from "@/components/navigation";
@@ -18,7 +18,7 @@ export default function Homepage() {
         <Bannar2 />
       </div>
       <div className="px-[300px] py-[60px] bg-[#F7F7F7]">
-        <HotDeals/>
+        <HotDeals />
       </div>
     </>
   );
