@@ -69,7 +69,7 @@ export default function Homepage() {
           const locationState: ILocation = {
             latitude: location.latitude,
             longitude: location.longitude,
-            city: data.data[0].branchs.address.split(",")[1].split(" ")[1],
+            city: data.data[0].branchs.address.split(",")[1].split(" ")[1]
           };
           // set location cookie
           const token = sign(locationState, `${jwtSecret}`);

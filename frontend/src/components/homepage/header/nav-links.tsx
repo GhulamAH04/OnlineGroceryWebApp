@@ -1,4 +1,5 @@
 import { PhoneCall } from "lucide-react";
+import Link from "next/link";
 
 export default function NavLinks() {
   const links = ["Home", "Shop", "About Us", "Contact Us"];
@@ -30,8 +31,8 @@ export default function NavLinks() {
       >
         {links.map((link, index) => (
           <li key={index}>
-            <a
-              href="#"
+            <Link
+              href="/"
               className="
                 hover:text-white
                 active:text-white
@@ -45,7 +46,7 @@ export default function NavLinks() {
               aria-label={link}
             >
               {link}
-            </a>
+            </Link>
           </li>
         ))}
       </ul>
