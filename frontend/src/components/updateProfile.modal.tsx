@@ -34,15 +34,11 @@ const UpdateProfileModal: React.FC<ModalProps> = ({ isVisible, onClose }) => {
       // Get the cookie value
       const token = getCookie("access_token") as string;
 
-      await axios.patch(
-        `${apiUrl}/api/users/avatar`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`, // Use the cookie value in the request
-          },
-        }
-      );
+      await axios.patch(`${apiUrl}/api/users/avatar`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`, // Use the cookie value in the request
+        },
+      });
 
       alert("Upload Profile Image Success");
 
@@ -54,69 +50,77 @@ const UpdateProfileModal: React.FC<ModalProps> = ({ isVisible, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 flex backdrop-filter backdrop-brightness-75 backdrop-blur-md justify-center items-center">
-      <div className="w-[600px] flex flex-col">
-        <button
-          className="text-red-600 bg-black rounded-md text-lg place-self-end"
-          onClick={() => onClose()}
-        >
-          <X />
-        </button>
-        <div className="flex flex-col gap-4 bg-white p-4 w-[600px] h-[275px] rounded-xl text-black border-2 border-black">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-filter backdrop-brightness-75 backdrop-blur-md">
+      <div className="relative w-full max-w-md mx-auto">
+        <div className="flex flex-col gap-4 bg-white p-6 rounded-xl text-black border-2 border-black shadow-lg">
+          <button
+            className="absolute top-3 right-3 text-red-600 bg-black rounded-full p-1 place-self-end hover:bg-red-700 transition-colors"
+            onClick={onClose}
+          >
+            <X size={20} />
+          </button>
           <h2 className="text-2xl font-bold text-[#112D4E]">
             Update Profile Picture
           </h2>
-          {previewUrl ? (
-            <Image
-              src={previewUrl}
-              alt="selected-picture"
-              className="border-black border-solid border-1 rounded-sm"
-              width={100}
-              height={100}
-            />
-          ) : (
-            <Image
-              src={imageUrl + user.image}
-              alt="profile-picture"
-              className="border-black border-solid border-1 rounded-sm"
-              width={100}
-              height={100}
-            />
-          )}
-          <input
-            type="file"
-            accept="image/png, image/jpeg, image/jpg" // Good practice to accept only image types
-            className="file:bg-[#112D4E] file:w-[125px] file:py-1 file:px-3 file:mr-4 file:rounded-md hover:file:bg-amber-300 file:text-white"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1MB in bytes
 
-              if (file) {
-                // Check file size
-                if (file.size > MAX_FILE_SIZE) {
-                  alert("File is too large! Maximum size is 1MB.");
-                  // Reset the input and state
-                  e.target.value = "";
+          <div className="flex items-center gap-4">
+            {previewUrl ? (
+              <Image
+                src={previewUrl}
+                alt="selected-picture"
+                className="border-black border-solid border-2 rounded-full object-cover"
+                width={100}
+                height={100}
+              />
+            ) : (
+              <Image
+                src={
+                  user.image
+                    ? `${imageUrl}${user.image}`
+                    : "/default-avatar.png"
+                }
+                alt="profile-picture"
+                className="border-black border-solid border-2 rounded-full object-cover"
+                width={100}
+                height={100}
+              />
+            )}
+          </div>
+
+          <div className="flex flex-col gap-4">
+            <input
+              type="file"
+              accept="image/png, image/jpeg, image/jpg"
+              className="text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#112D4E] file:text-white hover:file:bg-amber-300"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1MB in bytes
+
+                if (file) {
+                  if (file.size > MAX_FILE_SIZE) {
+                    alert("File is too large! Maximum size is 1MB.");
+                    e.target.value = "";
+                    setSelectedFile(null);
+                    setPreviewUrl("");
+                    return;
+                  }
+
+                  setSelectedFile(file);
+                  setPreviewUrl(URL.createObjectURL(file));
+                } else {
                   setSelectedFile(null);
                   setPreviewUrl("");
-                  return; // Stop further execution
                 }
-
-                // If validation passes, set the file and preview
-                setSelectedFile(file);
-                setPreviewUrl(URL.createObjectURL(file));
-              } else {
-                setSelectedFile(null);
-                setPreviewUrl("");
-              }
-            }}
-          />
-          <button
-            className="text-white bg-yellow-400 w-[125px] rounded-md text-lg hover:bg-red-500"
-            onClick={handleUpload}
-          >
-            Upload
-          </button>
+              }}
+            />
+            <button
+              className="text-white bg-yellow-400 w-full sm:w-auto sm:self-start px-6 py-2 rounded-md text-lg hover:bg-red-500 transition-colors"
+              onClick={handleUpload}
+              disabled={!selectedFile}
+            >
+              Upload
+            </button>
+          </div>
         </div>
       </div>
     </div>
