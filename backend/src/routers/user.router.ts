@@ -8,8 +8,8 @@ import { VerifyToken } from "../middlewares/auth.middleware";
 import { Multer } from "../utils/multer";
 const router = Router();
 
-router.get("/address/main/:userId", GetMainAddressController);
-router.put("/:id", EditUserByIdController);
+router.get("/address/main/:userId", VerifyToken, GetMainAddressController);
+router.put("/:id", VerifyToken, EditUserByIdController);
 router.patch(
   "/avatar",
   VerifyToken,

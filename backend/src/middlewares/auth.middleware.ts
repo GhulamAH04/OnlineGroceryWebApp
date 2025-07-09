@@ -23,7 +23,7 @@ export async function VerifyToken(req: Request, res: Response, next: NextFunctio
 
 export async function EOGuard(req: Request, res: Response, next: NextFunction) {
     try {
-        if (req.user?.role !== "organizer") throw new Error("Restricted");
+        if (req.user?.role !== "STORE ADMIN") throw new Error("Restricted");
 
         next();
     } catch (err) {
