@@ -4,6 +4,7 @@ import { apiUrl } from "@/config";
 import { IAddress } from "@/interfaces/address.interface";
 import { useAppSelector } from "@/lib/redux/hooks";
 import axios from "axios";
+import { getCookie } from "cookies-next";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -15,10 +16,16 @@ export default function MainAddress() {
 
   useEffect(() => {
     const userId = userState.user.id;
+    const token = getCookie("access_token") as string;
     const fetchAddress = async () => {
       // console.log(userState.user.id)
       const { data } = await axios.get(
-        `${apiUrl}/api/users/address/main/${userId}`
+        `${apiUrl}/api/users/address/main/${userId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
       setAddress(data.data[0]);

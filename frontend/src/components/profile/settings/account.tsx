@@ -19,11 +19,12 @@ interface PageProps {
 
 // --- FORM SECTION 1: Account Settings ---
 export default function AccountSettings({ onChangeImageClick } : PageProps) {
+  const token = getCookie("access_token") as string;
   //hook
   const dispatch = useAppDispatch();
   // state in redux
   const user = useAppSelector((state) => state.auth);
-
+  
   const [isEditMode, setIsEditMode] = useState(false);
 
   const formik = useFormik({
@@ -34,15 +35,23 @@ export default function AccountSettings({ onChangeImageClick } : PageProps) {
     validationSchema: AccountSettingSchema,
     onSubmit: async (values) => {
       try {
+
         const { username, email } = values;
 
-        await axios.put(`${apiUrl}/api/user/${user.user.id}`, {
-          username,
-          email,
-        });
+        await axios.put(
+          `${apiUrl}/api/user/${user.user.id}`,
+          {
+            username,
+            email,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
         // update user state in redux to see immidiate changes
-        const token = getCookie("access_token") as string;
         const userData = jwtDecode<IUser>(token);
         const userState: IAuth = {
           user: {
@@ -96,9 +105,17 @@ export default function AccountSettings({ onChangeImageClick } : PageProps) {
     try {
       const { email } = user.user;
 
-      await axios.post(`${apiUrl}/api/auth/verifyreset`, {
-        email,
-      });
+      await axios.post(
+        `${apiUrl}/api/auth/verifyreset`,
+        {
+          email,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       alert("We've sent an email to change your password.");
     } catch (err) {
@@ -113,11 +130,19 @@ export default function AccountSettings({ onChangeImageClick } : PageProps) {
 
   const handleUnverifiedClick = async () => {
     try {
-      await axios.post(`${apiUrl}/api/auth/reverify`, {
-        username: user.user.username,
-        email: user.user.email,
-        subject: "Re-verification"
-      })
+      await axios.post(
+        `${apiUrl}/api/auth/reverify`,
+        {
+          username: user.user.username,
+          email: user.user.email,
+          subject: "Re-verification",
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       alert(
         "We've sent you an email to verify your account."
       );
