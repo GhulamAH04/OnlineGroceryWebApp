@@ -1,159 +1,99 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { UserCog, Package, Percent, BarChart, Boxes } from "lucide-react";
-
-// Sidebar menu config
-const SIDEBAR_MENU = [
-  {
-    label: "Account Management",
-    icon: <UserCog size={20} />,
-    href: "/admin/users",
-  },
-  {
-    label: "Product Management",
-    icon: <Package size={20} />,
-    href: "/admin/dashboard",
-  },
-  {
-    label: "Inventory Management",
-    icon: <Boxes size={20} />,
-    href: "/admin/inventory",
-  },
-  {
-    label: "Discount Management",
-    icon: <Percent size={20} />,
-    href: "/admin/discount",
-  },
-  {
-    label: "Report & Analysis",
-    icon: <BarChart size={20} />,
-    href: "/admin/reports",
-  },
-];
+import AdminLayout from "@/components/features2/dashboard/LayoutAdmin";
 
 export default function AdminDashboardHome() {
-  const pathname = usePathname();
-
   return (
-    <div className="min-h-screen flex bg-green-50">
-      {/* Sidebar */}
-      <aside className="w-64 min-h-screen bg-white shadow-xl p-6 flex flex-col">
-        <h2 className="text-2xl font-bold mb-8 text-green-700 text-center tracking-wider">
-          Admin Panel
-        </h2>
-        <nav className="flex flex-col gap-2 flex-1">
-          {SIDEBAR_MENU.map((menu) => (
-            <Link
-              key={menu.href}
-              href={menu.href}
-              className={`flex items-center gap-3 px-4 py-2 rounded-lg font-medium transition-colors
-                ${
-                  pathname === menu.href
-                    ? "bg-green-100 text-green-700"
-                    : "text-gray-700 hover:bg-green-100 hover:text-green-700"
-                }`}
-            >
-              {menu.icon}
-              {menu.label}
-            </Link>
-          ))}
-        </nav>
-        <div className="mt-12 text-xs text-gray-400 text-center">
-          &copy; {new Date().getFullYear()} Groceria Admin
-        </div>
-      </aside>
+    <AdminLayout>
+      {/* --------- Konten utama --------- */}
+      <h1 className="text-3xl font-bold mb-8 text-green-700">
+        Dashboard Admin
+      </h1>
 
-      {/* Main content */}
-      <main className="flex-1 p-8 flex flex-col">
-        <h1 className="text-3xl font-bold mb-4 text-green-700">
-          Dashboard Admin
-        </h1>
+      {/* Card Menu Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Account Management Card */}
+        <Link
+          href="/admin/users"
+          className="group bg-white border border-green-100 rounded-xl p-6 flex flex-col gap-2 shadow hover:shadow-lg hover:bg-green-50 transition"
+        >
+          <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-green-100 text-green-700 mb-2">
+            <UserCog size={28} />
+          </div>
+          <div className="text-lg font-semibold text-green-700">
+            Admin Account Management
+          </div>
+          <div className="text-gray-500 text-sm">
+            Kelola data user admin, role, dan akses dashboard.
+          </div>
+        </Link>
 
-        {/* Card Menu Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Account Management Card */}
-          <Link
-            href="/admin/users"
-            className="group bg-white border border-green-100 rounded-xl p-6 flex flex-col gap-2 shadow hover:shadow-lg hover:bg-green-50 transition"
-          >
-            <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-green-100 text-green-700 mb-2">
-              <UserCog size={28} />
-            </div>
-            <div className="text-lg font-semibold text-green-700">
-              Admin Account Management
-            </div>
-            <div className="text-gray-500 text-sm">
-              Kelola data user admin, role, dan akses dashboard.
-            </div>
-          </Link>
+        {/* Product Management Card */}
+        <Link
+          href="/admin/dashboard"
+          className="group bg-white border border-green-100 rounded-xl p-6 flex flex-col gap-2 shadow hover:shadow-lg hover:bg-green-50 transition"
+        >
+          <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-green-100 text-green-700 mb-2">
+            <Package size={28} />
+          </div>
+          <div className="text-lg font-semibold text-green-700">
+            Product Management
+          </div>
+          <div className="text-gray-500 text-sm">
+            Tambah, edit, hapus, dan lihat seluruh produk.
+          </div>
+        </Link>
 
-          {/* Product Management Card */}
-          <Link
-            href="/admin/dashboard"
-            className="group bg-white border border-green-100 rounded-xl p-6 flex flex-col gap-2 shadow hover:shadow-lg hover:bg-green-50 transition"
-          >
-            <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-green-100 text-green-700 mb-2">
-              <Package size={28} />
-            </div>
-            <div className="text-lg font-semibold text-green-700">
-              Product Management
-            </div>
-            <div className="text-gray-500 text-sm">
-              Tambah, edit, hapus, dan lihat seluruh produk.
-            </div>
-          </Link>
+        {/* Inventory Management Card */}
+        <Link
+          href="/admin/inventory"
+          className="group bg-white border border-green-100 rounded-xl p-6 flex flex-col gap-2 shadow hover:shadow-lg hover:bg-green-50 transition"
+        >
+          <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-green-100 text-green-700 mb-2">
+            <Boxes size={28} />
+          </div>
+          <div className="text-lg font-semibold text-green-700">
+            Inventory Management
+          </div>
+          <div className="text-gray-500 text-sm">
+            Monitoring & jurnal stok produk per toko.
+          </div>
+        </Link>
 
-          {/* Inventory Management Card */}
-          <Link
-            href="/admin/inventory"
-            className="group bg-white border border-green-100 rounded-xl p-6 flex flex-col gap-2 shadow hover:shadow-lg hover:bg-green-50 transition"
-          >
-            <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-green-100 text-green-700 mb-2">
-              <Boxes size={28} />
-            </div>
-            <div className="text-lg font-semibold text-green-700">
-              Inventory Management
-            </div>
-            <div className="text-gray-500 text-sm">
-              Monitoring & jurnal stok produk per toko.
-            </div>
-          </Link>
+        {/* Discount Management Card */}
+        <Link
+          href="/admin/discount"
+          className="group bg-white border border-green-100 rounded-xl p-6 flex flex-col gap-2 shadow hover:shadow-lg hover:bg-green-50 transition"
+        >
+          <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-green-100 text-green-700 mb-2">
+            <Percent size={28} />
+          </div>
+          <div className="text-lg font-semibold text-green-700">
+            Discount Management
+          </div>
+          <div className="text-gray-500 text-sm">
+            Atur promo, diskon khusus, dan syarat penggunaan.
+          </div>
+        </Link>
 
-          {/* Discount Management Card */}
-          <Link
-            href="/admin/discount"
-            className="group bg-white border border-green-100 rounded-xl p-6 flex flex-col gap-2 shadow hover:shadow-lg hover:bg-green-50 transition"
-          >
-            <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-green-100 text-green-700 mb-2">
-              <Percent size={28} />
-            </div>
-            <div className="text-lg font-semibold text-green-700">
-              Discount Management
-            </div>
-            <div className="text-gray-500 text-sm">
-              Atur promo, diskon khusus, dan syarat penggunaan.
-            </div>
-          </Link>
-
-          {/* Report & Analysis Card */}
-          <Link
-            href="/admin/reports"
-            className="group bg-white border border-green-100 rounded-xl p-6 flex flex-col gap-2 shadow hover:shadow-lg hover:bg-green-50 transition"
-          >
-            <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-green-100 text-green-700 mb-2">
-              <BarChart size={28} />
-            </div>
-            <div className="text-lg font-semibold text-green-700">
-              Report & Analysis
-            </div>
-            <div className="text-gray-500 text-sm">
-              Lihat laporan penjualan & stok lengkap dengan filter toko/bulan.
-            </div>
-          </Link>
-        </div>
-      </main>
-    </div>
+        {/* Report & Analysis Card */}
+        <Link
+          href="/admin/reports"
+          className="group bg-white border border-green-100 rounded-xl p-6 flex flex-col gap-2 shadow hover:shadow-lg hover:bg-green-50 transition"
+        >
+          <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-green-100 text-green-700 mb-2">
+            <BarChart size={28} />
+          </div>
+          <div className="text-lg font-semibold text-green-700">
+            Report & Analysis
+          </div>
+          <div className="text-gray-500 text-sm">
+            Lihat laporan penjualan & stok lengkap dengan filter toko/bulan.
+          </div>
+        </Link>
+      </div>
+    </AdminLayout>
   );
 }

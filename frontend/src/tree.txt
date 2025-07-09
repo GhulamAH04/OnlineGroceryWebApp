@@ -1,0 +1,149 @@
+.
+├── app
+│   ├── admin
+│   │   ├── dashboard
+│   │   ├── discount
+│   │   ├── inventory
+│   │   ├── login
+│   │   ├── page.tsx
+│   │   ├── reports
+│   │   └── users
+│   ├── cart
+│   │   └── page.tsx
+│   ├── checkout
+│   │   └── page.tsx
+│   ├── dashboard
+│   │   ├── admin
+│   │   ├── category
+│   │   ├── discount
+│   │   ├── inventory
+│   │   ├── layout.tsx
+│   │   ├── order
+│   │   ├── product
+│   │   ├── report
+│   │   └── store
+│   ├── favicon.ico
+│   ├── globals.css
+│   ├── layout.tsx
+│   ├── login
+│   │   └── page.tsx
+│   ├── orders
+│   │   └── page.tsx
+│   ├── page.tsx
+│   ├── profile
+│   │   └── page.tsx
+│   ├── register
+│   │   └── page.tsx
+│   ├── reset-password
+│   │   ├── [token]
+│   │   └── page.tsx
+│   └── verify-email
+│       └── [token]
+├── components
+│   ├── banner
+│   │   ├── big-bannar.tsx
+│   │   ├── index.tsx
+│   │   ├── small-bannar1.tsx
+│   │   └── small-bannar2.tsx
+│   ├── banner2
+│   │   ├── index.tsx
+│   │   ├── medium-bannar.tsx
+│   │   └── timer.tsx
+│   ├── button1.tsx
+│   ├── component-admin
+│   │   ├── ActionOrder.tsx
+│   │   ├── AddAdress.tsx
+│   │   ├── Category.tsx
+│   │   ├── ChartBar copy.tsx
+│   │   ├── ChartBar.tsx
+│   │   ├── ChartLine copy.tsx
+│   │   ├── ChartLine.tsx
+│   │   ├── ChartPie.tsx
+│   │   ├── ConfirmModal.tsx
+│   │   ├── DetailOrder.tsx
+│   │   ├── Footer.tsx
+│   │   ├── Header.tsx
+│   │   ├── Navbar.tsx
+│   │   ├── NotificationToast.tsx
+│   │   ├── Pagination.tsx
+│   │   ├── SearchBar.tsx
+│   │   ├── SelectOption.tsx
+│   │   ├── ShowMessage.tsx
+│   │   ├── Sidebar.tsx
+│   │   ├── SidebarProfile.tsx
+│   │   ├── Skeleton.tsx
+│   │   ├── StatusOrder.tsx
+│   │   └── UploadPayment.tsx
+│   ├── dashboard
+│   │   ├── BillingCard.tsx
+│   │   ├── LayoutAdmin.tsx
+│   │   ├── LayoutDashboard.tsx
+│   │   ├── OrderTable.tsx
+│   │   ├── ProfileCard.tsx
+│   │   ├── SidebarAdmin.tsx
+│   │   └── SidebarUser.tsx
+│   ├── discount
+│   │   ├── AddDiscountModal.tsx
+│   │   ├── DeleteDiscountModal.tsx
+│   │   ├── DiscountTable.tsx
+│   │   └── EditDiscountModal.tsx
+│   ├── featured
+│   │   ├── feature.tsx
+│   │   └── index.tsx
+│   ├── features2
+│   │   ├── dashboard
+│   │   ├── discount
+│   │   ├── inventory
+│   │   ├── productManagement
+│   │   ├── reports
+│   │   └── users
+│   ├── hot-deals
+│   │   ├── big-product.tsx
+│   │   └── index.tsx
+│   ├── inventory
+│   │   ├── AddInventoryModal.tsx
+│   │   ├── EditInventoryModal.tsx
+│   │   ├── InventoryJournalModal.tsx
+│   │   └── InventoryTable.tsx
+│   ├── navigation
+│   │   ├── index.tsx
+│   │   ├── middle.tsx
+│   │   ├── nav-links.tsx
+│   │   └── small-one.tsx
+│   ├── popular-categories
+│   │   ├── category.tsx
+│   │   └── index.tsx
+│   ├── popular-products
+│   │   ├── index.tsx
+│   │   └── product.tsx
+│   ├── productManagement
+│   │   ├── AddProductModal.tsx
+│   │   ├── DeleteProductModal.tsx
+│   │   ├── EditProductModal.tsx
+│   │   └── ProductTable.tsx
+│   ├── reports
+│   │   ├── SalesReportTable.tsx
+│   │   └── StockReportTable.tsx
+│   └── users
+│       ├── AddUserModal.tsx
+│       ├── DeleteUserModal.tsx
+│       ├── EditUserModal.tsx
+│       └── UserTable.tsx
+├── hooks
+├── interfaces
+│   ├── category.ts
+│   ├── discount.ts
+│   ├── index.ts
+│   ├── inventory.ts
+│   ├── product.ts
+│   ├── report.ts
+│   ├── store.ts
+│   └── user.ts
+├── lib
+├── services
+├── store
+├── styles
+├── tree.txt
+└── utils
+
+57 directories, 90 files

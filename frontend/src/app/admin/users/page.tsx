@@ -1,41 +1,42 @@
 "use client";
-
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import UserTable from "@/components/users/UserTable";
-import AddUserModal from "@/components/users/AddUserModal";
-import EditUserModal from "@/components/users/EditUserModal";
-import DeleteUserModal from "@/components/users/DeleteUserModal";
+import UserTable from "@/components/features2/users/UserTable";
+import EditUserModal from "@/components/features2/users/EditUserModal";
+import DeleteUserModal from "@/components/features2/users/DeleteUserModal";
+import AddUserModal from "@/components/features2/users/AddUserModal";
+import AdminLayout from "@/components/features2/dashboard/LayoutAdmin";
 import { User } from "@/interfaces";
 
-export default function UserManagementPage() {
-  const router = useRouter();
+export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showAddModal, setShowAddModal] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const [editUser, setEditUser] = useState<User | null>(null);
   const [deleteUser, setDeleteUser] = useState<User | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   const showFeedback = (msg: string) => {
     setFeedback(msg);
     setTimeout(() => setFeedback(null), 2500);
   };
 
+  // Fetch user data
   const fetchUsers = () => {
-    // const token = localStorage.getItem("token");
-    // if (!token) {
-    //   router.push("/admin/login");
-    //   return;
-    // }
     const token = localStorage.getItem("token") || "dummy";
     setLoading(true);
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/users`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    fetch(
+      `${
+        process.env.NEXT_PUBLIC_API_URL
+      }/admin/users?search=${encodeURIComponent(search)}&page=${page}&limit=10`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    )
       .then((res) => res.json())
       .then((data) => {
-        setUsers(data.data || []);
+        setUsers(data.data?.data || []);
+        setTotalPages(data.data?.totalPages || 1);
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -44,63 +45,103 @@ export default function UserManagementPage() {
   useEffect(() => {
     fetchUsers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [router]);
+  }, [search, page]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded-xl shadow-xl w-full max-w-4xl">
-        <h1 className="text-3xl font-bold mb-4 text-center">User Management</h1>
-        <p className="mb-4 text-center">Kelola admin dan store admin toko</p>
+    <AdminLayout>
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="bg-white p-8 rounded-xl shadow-xl w-full max-w-4xl">
+          <h1 className="text-3xl font-bold mb-4 text-center">
+            User Management
+          </h1>
 
-        {feedback && (
-          <div className="mb-4 text-center bg-green-50 border border-green-300 text-green-700 px-4 py-2 rounded">
-            {feedback}
+          {/* Feedback/Notification */}
+          {feedback && (
+            <div className="mb-4 text-center bg-green-50 border border-green-300 text-green-700 px-4 py-2 rounded">
+              {feedback}
+            </div>
+          )}
+
+          {/* Tambah User */}
+          <div className="mb-4 flex justify-end">
+            <button
+              className="bg-green-600 text-white px-4 py-2 rounded"
+              onClick={() => setShowModal(true)}
+            >
+              + Tambah User
+            </button>
           </div>
-        )}
 
-        <div className="mb-4 flex justify-end">
-          <button
-            className="bg-green-600 text-white px-4 py-2 rounded"
-            onClick={() => setShowAddModal(true)}
-          >
-            + Tambah User
-          </button>
+          {/* Search & Pagination Controls */}
+          <div className="flex justify-between mb-4">
+            <input
+              type="text"
+              placeholder="Cari user..."
+              className="border rounded p-2 w-1/3"
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+            />
+            <div>
+              <button
+                className="px-3 py-1 bg-gray-300 rounded mr-2"
+                onClick={() => setPage(page - 1)}
+                disabled={page === 1}
+              >
+                Prev
+              </button>
+              <span className="font-semibold">
+                {page} / {totalPages}
+              </span>
+              <button
+                className="px-3 py-1 bg-gray-300 rounded ml-2"
+                onClick={() => setPage(page + 1)}
+                disabled={page === totalPages}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+
+          {/* Modal */}
+          {showModal && (
+            <AddUserModal
+              onAdd={fetchUsers}
+              onClose={() => setShowModal(false)}
+              onFeedback={showFeedback}
+            />
+          )}
+          {editUser && (
+            <EditUserModal
+              user={editUser}
+              onUpdate={fetchUsers}
+              onClose={() => setEditUser(null)}
+              onFeedback={showFeedback}
+            />
+          )}
+          {deleteUser && (
+            <DeleteUserModal
+              user={deleteUser}
+              onDelete={fetchUsers}
+              onClose={() => setDeleteUser(null)}
+              onFeedback={showFeedback}
+            />
+          )}
+
+          {/* Table */}
+          {loading ? (
+            <p>Loading data user...</p>
+          ) : (
+            <UserTable
+              users={users}
+              onEdit={setEditUser}
+              onDelete={setDeleteUser}
+            />
+          )}
         </div>
-
-        {showAddModal && (
-          <AddUserModal
-            onAdd={fetchUsers}
-            onClose={() => setShowAddModal(false)}
-            onFeedback={showFeedback}
-          />
-        )}
-        {editUser && (
-          <EditUserModal
-            user={editUser}
-            onUpdate={fetchUsers}
-            onClose={() => setEditUser(null)}
-            onFeedback={showFeedback}
-          />
-        )}
-        {deleteUser && (
-          <DeleteUserModal
-            user={deleteUser}
-            onDelete={fetchUsers}
-            onClose={() => setDeleteUser(null)}
-            onFeedback={showFeedback}
-          />
-        )}
-
-        {loading ? (
-          <p>Loading data user...</p>
-        ) : (
-          <UserTable
-            users={users}
-            onEdit={setEditUser}
-            onDelete={setDeleteUser}
-          />
-        )}
       </div>
-    </div>
+    </AdminLayout>
   );
 }
