@@ -13,8 +13,12 @@ import sign from "jwt-encode";
 import { Check, X } from "lucide-react";
 import { useState } from "react";
 
+interface PageProps {
+  onChangeImageClick: () => void;
+}
+
 // --- FORM SECTION 1: Account Settings ---
-export default function AccountSettings() {
+export default function AccountSettings({ onChangeImageClick } : PageProps) {
   //hook
   const dispatch = useAppDispatch();
   // state in redux
@@ -228,7 +232,7 @@ export default function AccountSettings() {
         <div className="w-[40%] flex-shrink-0 flex flex-col items-center gap-2">
           {/* eslint-disable-next-line */}
           <img
-            src={`${imageUrl}${user.user.image}.jpg`}
+            src={ user.user.image ? `${imageUrl}${user.user.image}` : `/no_profile.png`}
             alt="User Avatar"
             className="w-32 h-32 border border-s-2 rounded-full object-cover mb-4"
           />
@@ -246,6 +250,7 @@ export default function AccountSettings() {
           <p className="text-[10px] mb-2">Click the badge to verify your account</p>
           <button
             type="button"
+            onClick={onChangeImageClick}
             className="w-[10rem] px-4 py-2 bg-green-600 text-white font-semibold rounded-full hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-300"
           >
             Change Image

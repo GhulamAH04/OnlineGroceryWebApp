@@ -18,7 +18,7 @@ export default function MainAddress() {
     const fetchAddress = async () => {
       // console.log(userState.user.id)
       const { data } = await axios.get(
-        `${apiUrl}/api/user/address/main/${userId}`
+        `${apiUrl}/api/users/address/main/${userId}`
       );
 
       setAddress(data.data[0]);

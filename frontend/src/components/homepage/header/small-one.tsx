@@ -38,8 +38,6 @@ export default function SmallOne() {
     }
   }, [dispatch]);
   
-  console.log(`${imageUrl}${userState.user.image}.jpg`);
-
   useEffect(() => {
     const token = getCookie("location_token") as string;
     if (token) {
@@ -83,7 +81,7 @@ export default function SmallOne() {
           <Link href="/profile">
             {/* eslint-disable-next-line */}
             <img
-              src={`${imageUrl}${userState.user.image}.jpg`}
+              src={ userState.user.image ? `${imageUrl}${userState.user.image}` : `/no_profile.png`}
               alt="profile-picture"
               className="rounded-full w-6 h-6 border-black border-solid border-1"
             />

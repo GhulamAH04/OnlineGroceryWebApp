@@ -9,15 +9,12 @@ export default function ProfileHeader() {
   const router = useRouter();
   const userState = useAppSelector((state) => state.auth);
 
-  console.log(userState.user.isVerified);
-  console.log(userState.user.username);
-
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm flex flex-col items-center text-center">
       <div className="w-24 h-24 rounded-full border border-s-2 overflow-hidden mb-4">
         {/* eslint-disable-next-line */}
         <img
-          src={`${imageUrl}${userState.user.image}.jpg`}
+          src={ userState.user.image ? `${imageUrl}${userState.user.image}` : `/no_profile.png`}
           alt="User Avatar"
           width={100}
           height={100}

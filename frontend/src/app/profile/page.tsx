@@ -1,3 +1,4 @@
+
 import { IOrder } from "@/interfaces/order.interface";
 import ProfileHeader from "@/components/profile/profile-header";
 import OrderHistoryTable from "@/components/profile/order-history";
@@ -49,16 +50,19 @@ const mockOrders: IOrder[] = [
 ];
 
 export default function ProfilePage() {
+  
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
       {/* Profile and Billing Cards */}
-      <ProfileHeader/>
+      <ProfileHeader />
       <MainAddress />
 
       {/* Order History Table */}
       <div className="col-span-1 lg:col-span-2">
         <OrderHistoryTable orders={mockOrders} />
       </div>
+     
     </div>
   );
 }

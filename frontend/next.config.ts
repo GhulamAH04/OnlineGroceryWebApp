@@ -1,19 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
-  async headers() {
-    return [
+  images: {
+    remotePatterns: [
       {
-        source: "/:path*",
-        headers: [
-          {
-            key: "Cross-Origin-Opener-Policy",
-            value: "same-origin-allow-popups",
-          },
-        ],
+        protocol: "https",
+        hostname: "res.cloudinary.com",
       },
-    ];
+    ],
   },
 };
 
