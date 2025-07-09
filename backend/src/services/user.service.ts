@@ -1,5 +1,6 @@
 import prisma from "../lib/prisma";
-import { SendVerificationEmail } from "./auth.service";
+import { cloudinaryRemove, cloudinaryUpload } from "../utils/cloudinary";
+import { FindUserByEmail, SendVerificationEmail } from "./auth.service";
 
 export async function FindUserById(userId: number) {
   try {
@@ -78,6 +79,36 @@ export async function EditUserByIdService(
 
     return editedUser;
   } catch (err) {
+    throw err;
+  }
+}
+
+export async function UpdateAvatarService(
+  file: Express.Multer.File,
+  email: string
+) {
+  let url = "";
+  try {
+    const checkUser = await FindUserByEmail(email);
+    if (!checkUser) throw new Error("User not found");
+
+    await prisma.$transaction(async (t) => {
+      const { secure_url } = await cloudinaryUpload(file);
+      url = secure_url;
+      const splitUrl = secure_url.split("/");
+      const fileName = splitUrl[splitUrl.length - 1];
+
+      await t.users.update({
+        where: {
+          id: checkUser.id,
+        },
+        data: {
+          image: fileName,
+        },
+      });
+    });
+  } catch (err) {
+    await cloudinaryRemove(url);
     throw err;
   }
 }

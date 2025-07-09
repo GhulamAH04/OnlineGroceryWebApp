@@ -25,7 +25,7 @@ app.use(
 app.use("/api/products", ProductRouter);
 app.use("/api/categories", CategoryRouter);
 app.use("/api/auth", AuthRouter);
-app.use("/api/user", UserRouter);
+app.use("/api/users", UserRouter);
 
 // ERROR HANDLING MIDDLEWARE
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
