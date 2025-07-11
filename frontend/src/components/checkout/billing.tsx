@@ -1,12 +1,39 @@
 "use client";
 
+import { apiUrl } from "@/config";
+import { IAddress } from "@/interfaces/address.interface";
 import { useAppSelector } from "@/lib/redux/hooks";
 import { BillingSchema } from "@/schemas/address.schema";
+import axios from "axios";
 import { useFormik } from "formik";
+import { useEffect, useState } from "react";
 
 export default function BillingInformationForm() {
-// state in redux
+  // state in redux
   const user = useAppSelector((state) => state.auth);
+
+  const [addresses, setAddresses] = useState<IAddress[]>([]);
+  const [selectedAddress, setSelectedAddress] = useState<IAddress>();
+
+  useEffect(() => {
+    const fetchAddresses = async () => {
+      try {
+        const { data } = await axios.get(
+          `${apiUrl}/api/addresses/${user.user.id}`
+        );
+        setAddresses(data.data); // Extracting data from AxiosResponse
+      } catch (error) {
+        console.error("Error fetching addresses:", error);
+      }
+    };
+    fetchAddresses();
+  }, [user.user.id]);
+
+  const handleAddressChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedId = parseInt(event.target.value, 10);
+    const selected = addresses.find((address) => address.id === selectedId);
+    setSelectedAddress(selected);
+  };
 
   // Formik setup
   const formik = useFormik({
@@ -106,11 +133,14 @@ export default function BillingInformationForm() {
           <select
             id="city"
             className="w-full px-3 py-2 border rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 bg-white"
+            onChange={handleAddressChange}
           >
             <option value="">Select</option>
-            <option value="United province">United province</option>
-            <option value="Canada">Canada</option>
-            <option value="Mexico">Mexico</option>
+            {addresses.map((address) => (
+              <option key={address.id} value={address.id}>
+                {address.name}: {address.address}, {address.cities.name}.
+              </option>
+            ))}
           </select>
         </div>
 
@@ -122,22 +152,30 @@ export default function BillingInformationForm() {
           >
             Address
           </label>
-          <input
-            id="address"
-            type="text"
-            placeholder="Address"
-            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 ${
-              formik.touched.address && formik.errors.address
-                ? "border-red-500"
-                : "border-gray-300"
-            }`}
-            {...formik.getFieldProps("address")}
-          />
-          {formik.touched.address && formik.errors.address ? (
-            <div className="text-red-500 text-sm mt-1">
-              {formik.errors.address}
-            </div>
-          ) : null}
+          {!selectedAddress ? (
+            <>
+              <input
+                id="address"
+                type="text"
+                placeholder="Address"
+                className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 ${
+                  formik.touched.address && formik.errors.address
+                    ? "border-red-500"
+                    : "border-gray-300"
+                }`}
+                {...formik.getFieldProps("address")}
+              />
+              {formik.touched.address && formik.errors.address ? (
+                <div className="text-red-500 text-sm mt-1">
+                  {formik.errors.address}
+                </div>
+              ) : null}{" "}
+            </>
+          ) : (
+            <p className="w-full h-10 px-3 py-2 text-gray-700 border border-gray-700 rounded-md shadow-sm cursor-not-allowed">
+              {selectedAddress.address}
+            </p>
+          )}
         </div>
 
         {/* city, province, Zip Code */}
@@ -149,25 +187,33 @@ export default function BillingInformationForm() {
             >
               City
             </label>
-            <select
-              id="city"
-              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 bg-white ${
-                formik.touched.city && formik.errors.city
-                  ? "border-red-500"
-                  : "border-gray-300"
-              }`}
-              {...formik.getFieldProps("city")}
-            >
-              <option value="">Select</option>
-              <option value="United province">United province</option>
-              <option value="Canada">Canada</option>
-              <option value="Mexico">Mexico</option>
-            </select>
-            {formik.touched.city && formik.errors.city ? (
-              <div className="text-red-500 text-sm mt-1">
-                {formik.errors.city}
-              </div>
-            ) : null}
+            {!selectedAddress ? (
+              <>
+                <select
+                  id="city"
+                  className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 bg-white ${
+                    formik.touched.city && formik.errors.city
+                      ? "border-red-500"
+                      : "border-gray-300"
+                  }`}
+                  {...formik.getFieldProps("city")}
+                >
+                  <option value="">Select</option>
+                  <option value="United province">United province</option>
+                  <option value="Canada">Canada</option>
+                  <option value="Mexico">Mexico</option>
+                </select>
+                {formik.touched.city && formik.errors.city ? (
+                  <div className="text-red-500 text-sm mt-1">
+                    {formik.errors.city}
+                  </div>
+                ) : null}
+              </>
+            ) : (
+              <p className="w-full h-10 px-3 py-2 text-gray-700 border border-gray-700 rounded-md shadow-sm cursor-not-allowed">
+                {selectedAddress.cities.name}
+              </p>
+            )}
           </div>
           <div>
             <label
@@ -176,25 +222,33 @@ export default function BillingInformationForm() {
             >
               Province
             </label>
-            <select
-              id="province"
-              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 bg-white ${
-                formik.touched.province && formik.errors.province
-                  ? "border-red-500"
-                  : "border-gray-300"
-              }`}
-              {...formik.getFieldProps("province")}
-            >
-              <option value="">Select</option>
-              <option value="California">California</option>
-              <option value="New York">New York</option>
-              <option value="Texas">Texas</option>
-            </select>
-            {formik.touched.province && formik.errors.province ? (
-              <div className="text-red-500 text-sm mt-1">
-                {formik.errors.province}
-              </div>
-            ) : null}
+            {!selectedAddress ? (
+              <>
+                <select
+                  id="province"
+                  className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 bg-white ${
+                    formik.touched.province && formik.errors.province
+                      ? "border-red-500"
+                      : "border-gray-300"
+                  }`}
+                  {...formik.getFieldProps("province")}
+                >
+                  <option value="">Select</option>
+                  <option value="California">California</option>
+                  <option value="New York">New York</option>
+                  <option value="Texas">Texas</option>
+                </select>
+                {formik.touched.province && formik.errors.province ? (
+                  <div className="text-red-500 text-sm mt-1">
+                    {formik.errors.province}
+                  </div>
+                ) : null}
+              </>
+            ) : (
+              <p className="w-full h-10 px-3 py-2 text-gray-700 border border-gray-700 rounded-md shadow-sm cursor-not-allowed">
+                {selectedAddress.provinces.name}
+              </p>
+            )}
           </div>
           <div>
             <label
@@ -203,22 +257,30 @@ export default function BillingInformationForm() {
             >
               Postal Code
             </label>
-            <input
-              id="postalcode"
-              type="text"
-              placeholder="Zip Code"
-              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 ${
-                formik.touched.postalcode && formik.errors.postalcode
-                  ? "border-red-500"
-                  : "border-gray-300"
-              }`}
-              {...formik.getFieldProps("postalcode")}
-            />
-            {formik.touched.postalcode && formik.errors.postalcode ? (
-              <div className="text-red-500 text-sm mt-1">
-                {formik.errors.postalcode}
-              </div>
-            ) : null}
+            {!selectedAddress ? (
+              <>
+                <input
+                  id="postalcode"
+                  type="text"
+                  placeholder="Postal Code"
+                  className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 ${
+                    formik.touched.postalcode && formik.errors.postalcode
+                      ? "border-red-500"
+                      : "border-gray-300"
+                  }`}
+                  {...formik.getFieldProps("postalcode")}
+                />
+                {formik.touched.postalcode && formik.errors.postalcode ? (
+                  <div className="text-red-500 text-sm mt-1">
+                    {formik.errors.postalcode}
+                  </div>
+                ) : null}
+              </>
+            ) : (
+              <p className="w-full h-10 px-3 py-2 text-gray-700 border border-gray-700 rounded-md shadow-sm cursor-not-allowed">
+                {selectedAddress.postalCode}
+              </p>
+            )}
           </div>
         </div>
 
