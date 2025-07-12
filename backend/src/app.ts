@@ -8,8 +8,9 @@ import CategoryRouter from "./routers/category.router";
 import AuthRouter from "./routers/auth.router"
 import UserRouter from "./routers/user.router"
 import AddressRouter from "./routers/address.router"
+import CityRouter from "./routers/city.router"
+import ProvinceRouter from "./routers/province.router"
 
-const port = PORT;
 const app: Application = express();
 
 app.use(express.json());
@@ -28,6 +29,8 @@ app.use("/api/categories", CategoryRouter);
 app.use("/api/auth", AuthRouter);
 app.use("/api/users", UserRouter);
 app.use("/api/addresses", AddressRouter);
+app.use("/api/cities", CityRouter);
+app.use("/api/provinces", ProvinceRouter);
 
 // ERROR HANDLING MIDDLEWARE
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
