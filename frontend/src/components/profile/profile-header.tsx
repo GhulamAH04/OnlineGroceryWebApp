@@ -3,10 +3,8 @@
 import { imageUrl } from "@/config";
 import { useAppSelector } from "@/lib/redux/hooks";
 import { Check, X } from "lucide-react";
-import { useRouter } from "next/navigation";
 
 export default function ProfileHeader() {
-  const router = useRouter();
   const userState = useAppSelector((state) => state.auth);
 
   return (
@@ -35,14 +33,6 @@ export default function ProfileHeader() {
           <X className="w-5 h-5" />
         </div>
       )}
-      <button
-        className="text-green-600 font-semibold hover:underline"
-        onClick={() => {
-          router.push("/profile/settings");
-        }}
-      >
-        Edit Profile
-      </button>
     </div>
   );
 }
