@@ -1,6 +1,7 @@
+// OnlineGroceryWebApp/backend/src/routers/auth.router.ts
 import { Router } from "express";
-import { LoginController, LoginWithGoogleController, RegisterController, RegisterWithGoogleController, SendVerificationEmailController, SetPasswordController, VerifyAccountController, VerifyResetController } from "../controllers/auth.controller";
-import { VerifyToken } from "../middlewares/auth.middleware";
+import { LoginController, LoginWithGoogleController, RegisterController, RegisterWithGoogleController, SendVerificationEmailController, SetPasswordController, VerifyAccountController, VerifyResetController } from "../controllers/authUser.controller";
+import { VerifyToken } from "../middlewares/authUser.middleware";
 const router = Router();
 
 router.post("/register", RegisterController);

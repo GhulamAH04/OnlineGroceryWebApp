@@ -2,19 +2,18 @@
 
 import Link from "next/link";
 import { UserCog, Package, Percent, BarChart, Boxes } from "lucide-react";
-import AdminLayout from "@/components/features2/dashboard/LayoutAdmin";
 
 export default function AdminDashboardHome() {
   return (
-    <AdminLayout>
-      {/* --------- Konten utama --------- */}
+    <>
+      {/* Judul Halaman */}
       <h1 className="text-3xl font-bold mb-8 text-green-700">
         Dashboard Admin
       </h1>
 
-      {/* Card Menu Grid */}
+      {/* Grid Card Menu */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* Account Management Card */}
+        {/* Account Management */}
         <Link
           href="/admin/users"
           className="group bg-white border border-green-100 rounded-xl p-6 flex flex-col gap-2 shadow hover:shadow-lg hover:bg-green-50 transition"
@@ -30,9 +29,9 @@ export default function AdminDashboardHome() {
           </div>
         </Link>
 
-        {/* Product Management Card */}
+        {/* Product Management */}
         <Link
-          href="/admin/dashboard"
+          href="/admin/products"
           className="group bg-white border border-green-100 rounded-xl p-6 flex flex-col gap-2 shadow hover:shadow-lg hover:bg-green-50 transition"
         >
           <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-green-100 text-green-700 mb-2">
@@ -46,7 +45,7 @@ export default function AdminDashboardHome() {
           </div>
         </Link>
 
-        {/* Inventory Management Card */}
+        {/* Inventory Management */}
         <Link
           href="/admin/inventory"
           className="group bg-white border border-green-100 rounded-xl p-6 flex flex-col gap-2 shadow hover:shadow-lg hover:bg-green-50 transition"
@@ -62,7 +61,7 @@ export default function AdminDashboardHome() {
           </div>
         </Link>
 
-        {/* Discount Management Card */}
+        {/* Discount Management */}
         <Link
           href="/admin/discount"
           className="group bg-white border border-green-100 rounded-xl p-6 flex flex-col gap-2 shadow hover:shadow-lg hover:bg-green-50 transition"
@@ -78,7 +77,7 @@ export default function AdminDashboardHome() {
           </div>
         </Link>
 
-        {/* Report & Analysis Card */}
+        {/* Report & Analysis */}
         <Link
           href="/admin/reports"
           className="group bg-white border border-green-100 rounded-xl p-6 flex flex-col gap-2 shadow hover:shadow-lg hover:bg-green-50 transition"
@@ -94,6 +93,6 @@ export default function AdminDashboardHome() {
           </div>
         </Link>
       </div>
-    </AdminLayout>
+    </>
   );
 }

@@ -1,5 +1,7 @@
+// OnlineGroceryWebApp/backend/src/routers/product.router.ts
+
 import { Router } from "express";
-import { GetMainStoresProductsController, GetNearbyProductsController } from "../controllers/product.controller";
+import { GetMainStoresProductsController, GetNearbyProductsController } from "../controllers/productUser.controller";
 const router = Router();
 
 // read

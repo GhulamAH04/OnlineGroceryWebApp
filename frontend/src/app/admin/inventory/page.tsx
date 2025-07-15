@@ -5,7 +5,6 @@ import AddInventoryModal from "@/components/features2/inventory/AddInventoryModa
 import EditInventoryModal from "@/components/features2/inventory/EditInventoryModal";
 import InventoryJournalModal from "@/components/features2/inventory/InventoryJournalModal";
 import { Inventory } from "@/interfaces";
-import AdminLayout from "@/components/features2/dashboard/LayoutAdmin";
 
 export default function InventoryPage() {
   const [inventory, setInventory] = useState<Inventory[]>([]);
@@ -50,7 +49,6 @@ export default function InventoryPage() {
   }, [search, page]);
 
   return (
-    <AdminLayout>
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="bg-white p-8 rounded-xl shadow-xl w-full max-w-4xl">
           <h1 className="text-3xl font-bold mb-4 text-center">
@@ -145,6 +143,5 @@ export default function InventoryPage() {
           )}
         </div>
       </div>
-    </AdminLayout>
-  );
+   );
 }

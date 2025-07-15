@@ -4,7 +4,6 @@ import UserTable from "@/components/features2/users/UserTable";
 import EditUserModal from "@/components/features2/users/EditUserModal";
 import DeleteUserModal from "@/components/features2/users/DeleteUserModal";
 import AddUserModal from "@/components/features2/users/AddUserModal";
-import AdminLayout from "@/components/features2/dashboard/LayoutAdmin";
 import { User } from "@/interfaces";
 
 export default function UsersPage() {
@@ -48,7 +47,6 @@ export default function UsersPage() {
   }, [search, page]);
 
   return (
-    <AdminLayout>
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="bg-white p-8 rounded-xl shadow-xl w-full max-w-4xl">
           <h1 className="text-3xl font-bold mb-4 text-center">
@@ -142,6 +140,5 @@ export default function UsersPage() {
           )}
         </div>
       </div>
-    </AdminLayout>
   );
 }

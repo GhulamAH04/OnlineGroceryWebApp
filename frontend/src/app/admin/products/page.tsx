@@ -6,7 +6,6 @@ import AddProductModal from "@/components/features2/productManagement/AddProduct
 import EditProductModal from "@/components/features2/productManagement/EditProductModal";
 import DeleteProductModal from "@/components/features2/productManagement/DeleteProductModal";
 import { Product } from "@/interfaces";
-import AdminLayout from "@/components/features2/dashboard/LayoutAdmin";
 
 export default function Dashboard() {
   // ===== State Management =====
@@ -56,7 +55,6 @@ export default function Dashboard() {
 
   // ======= UI RETURN START =======
   return (
-    <AdminLayout>
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="bg-white p-8 rounded-xl shadow-xl w-full max-w-4xl">
           {/* Dashboard Header */}
@@ -158,6 +156,5 @@ export default function Dashboard() {
           )}
         </div>
       </div>
-    </AdminLayout>
   );
 }

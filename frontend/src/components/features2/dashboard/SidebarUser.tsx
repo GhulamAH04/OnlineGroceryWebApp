@@ -1,3 +1,4 @@
+/*
 const SidebarUser = () => {
   const menu = [
     { name: "Dashboard", active: true },
@@ -31,3 +32,4 @@ const SidebarUser = () => {
 };
 
 export default SidebarUser;
+*/

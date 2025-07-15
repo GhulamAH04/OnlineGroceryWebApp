@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import SalesReportTable from "@/components/features2/reports/SalesReportTable";
 import StockReportTable from "@/components/features2/reports/StockReportTable";
 import { Store } from "@/interfaces";
-import AdminLayout from "@/components/features2/dashboard/LayoutAdmin";
 
 export default function ReportsPage() {
   const router = useRouter();
@@ -36,7 +35,6 @@ export default function ReportsPage() {
   }, [router]);
 
   return (
-    <AdminLayout>
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="bg-white p-8 rounded-xl shadow-xl w-full max-w-5xl">
           <h1 className="text-3xl font-bold mb-4 text-center">
@@ -106,6 +104,5 @@ export default function ReportsPage() {
           )}
         </div>
       </div>
-    </AdminLayout>
   );
 }

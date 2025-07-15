@@ -4,7 +4,7 @@ import {
   GetMainAddressController,
   UpdateAvatarController,
 } from "../controllers/user.controller";
-import { VerifyToken } from "../middlewares/auth.middleware";
+import { VerifyToken } from "../middlewares/authUser.middleware";
 import { Multer } from "../utils/multer";
 const router = Router();
 

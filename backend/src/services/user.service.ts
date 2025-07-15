@@ -1,6 +1,7 @@
 import prisma from "../lib/prisma";
-import { cloudinaryRemove, cloudinaryUpload } from "../utils/cloudinary";
-import { FindUserByEmail, SendVerificationEmail } from "./auth.service";
+import { FindUserByEmail, SendVerificationEmail } from "./authUser.service";
+import { cloudinaryRemove, cloudinaryUploadMulter } from "../utils/cloudinary";
+
 
 export async function FindUserById(userId: number) {
   try {
@@ -93,7 +94,7 @@ export async function UpdateAvatarService(
     if (!checkUser) throw new Error("User not found");
 
     await prisma.$transaction(async (t) => {
-      const { secure_url } = await cloudinaryUpload(file);
+      const { secure_url } = await cloudinaryUploadMulter(file);
       url = secure_url;
       const splitUrl = secure_url.split("/");
       const fileName = splitUrl[splitUrl.length - 1];

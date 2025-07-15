@@ -1,5 +1,4 @@
 "use client";
-import AdminLayout from "@/components/features2/dashboard/LayoutAdmin";
 import { useEffect, useState } from "react";
 import DiscountTable from "@/components/features2/discount/DiscountTable";
 import AddDiscountModal from "@/components/features2/discount/AddDiscountModal";
@@ -48,7 +47,6 @@ export default function DiscountPage() {
   }, [search, page]);
 
   return (
-    <AdminLayout>
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="bg-white p-8 rounded-xl shadow-xl w-full max-w-4xl">
           <h1 className="text-3xl font-bold mb-4 text-center">
@@ -142,6 +140,5 @@ export default function DiscountPage() {
           )}
         </div>
       </div>
-    </AdminLayout>
   );
 }

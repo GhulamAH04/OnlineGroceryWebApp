@@ -1,3 +1,5 @@
+/*
+
 const BillingCard = () => (
   <div className="bg-white p-4 rounded shadow">
     <h3 className="font-semibold text-lg mb-2">Billing Address</h3>
@@ -10,3 +12,4 @@ const BillingCard = () => (
 );
 
 export default BillingCard;
+*/
