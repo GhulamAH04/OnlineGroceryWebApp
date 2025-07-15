@@ -11,13 +11,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const menu = [
-  { label: "Dashboard", icon: <Home size={18} />, href: "/admin/dashboard" },
+  { label: "Dashboard", icon: <Home size={18} />, href: "/admin" },
   { label: "User Management", icon: <Users size={18} />, href: "/admin/users" },
   {
     label: "Product Management",
     icon: <ShoppingCart size={18} />,
     href: "/admin/products",
-  },
+  }, 
   { label: "Inventory", icon: <Package size={18} />, href: "/admin/inventory" },
   { label: "Discounts", icon: <Percent size={18} />, href: "/admin/discount" },
   { label: "Reports", icon: <BarChart3 size={18} />, href: "/admin/reports" },
@@ -37,7 +37,7 @@ export default function SidebarAdmin() {
             <div
               className={`flex items-center gap-3 px-3 py-2 my-1 rounded-xl cursor-pointer transition
                 ${
-                  pathname.startsWith(item.href)
+                  pathname === item.href
                     ? "bg-white text-green-600 font-bold shadow"
                     : "hover:bg-green-700/60 text-white"
                 }`}

@@ -1,3 +1,4 @@
+// OnlineGroceryWebApp/backend/src/services/productUser.service.ts
 import axios from "axios";
 import prisma from "../lib/prisma";
 import { API_KEY } from "../config";

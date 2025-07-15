@@ -1,3 +1,4 @@
+/*
 import Image from "next/image";
 
 // Tombol kustom untuk digunakan di beberapa tempat
@@ -10,7 +11,7 @@ const EditButton = ({ children }: { children: React.ReactNode }) => (
 export default function UserInfo() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {/* Kolom Profil */}
+      // Kolom Profil
       <div className="p-6 bg-white rounded-lg shadow-md flex items-center gap-6">
         <Image
           src="/avatar-placeholder.png" // Ganti dengan path ke gambar avatar Anda di folder /public
@@ -30,7 +31,7 @@ export default function UserInfo() {
         </div>
       </div>
 
-      {/* Kolom Alamat Penagihan */}
+      // Kolom Alamat Penagihan
       <div className="p-6 bg-white rounded-lg shadow-md">
         <h4 className="font-bold text-gray-500 text-sm mb-4">
           BILLING ADDRESS
@@ -50,3 +51,4 @@ export default function UserInfo() {
     </div>
   );
 }
+*/

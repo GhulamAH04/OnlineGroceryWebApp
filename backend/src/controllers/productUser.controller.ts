@@ -1,8 +1,9 @@
+// OnlineGroceryWebApp/backend/src/controllers/productUser.controller.ts
 import { Request, Response, NextFunction } from "express";
 import {
   GetMainStoresProductsService,
   GetNearbyProductsService,
-} from "../services/product.service";
+} from "../services/productUser.service";
 
 export async function GetNearbyProductsController(
   req: Request,

@@ -1,3 +1,5 @@
+// OnlineGroceryWebApp/backend/src/middlewares/authUser.middleware.ts
+
 import { Request, Response, NextFunction } from "express";
 import { IUserReqParam } from "../custom";
 import { verify } from "jsonwebtoken";
@@ -23,7 +25,7 @@ export async function VerifyToken(req: Request, res: Response, next: NextFunctio
 
 export async function EOGuard(req: Request, res: Response, next: NextFunction) {
     try {
-        if (req.user?.role !== "STORE ADMIN") throw new Error("Restricted");
+        if (req.user?.role !== "STORE_ADMIN") throw new Error("Restricted");
 
         next();
     } catch (err) {

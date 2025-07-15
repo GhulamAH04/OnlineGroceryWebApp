@@ -1,3 +1,4 @@
+/*
 import SidebarUser from "./SidebarUser";
 
 const LayoutDashboard = ({ children }: { children: React.ReactNode }) => (
@@ -10,3 +11,4 @@ const LayoutDashboard = ({ children }: { children: React.ReactNode }) => (
 );
 
 export default LayoutDashboard;
+*/

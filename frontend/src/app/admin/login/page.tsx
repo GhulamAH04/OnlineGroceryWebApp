@@ -57,7 +57,7 @@ export default function Login() {
         const data = await res.json();
         if (data.success && data.data.token) {
           localStorage.setItem("token", data.data.token);
-          router.push("/admin/dashboard");
+          router.push("/admin/products");
         } else {
           setLoginError(data.message || "Invalid email or password");
         }

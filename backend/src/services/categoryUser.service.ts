@@ -1,3 +1,4 @@
+// OnlineGroceryWebApp/backend/src/services/categoryUser.service.ts
 import prisma from "../lib/prisma";
 
 export async function GetAllCategoryService() {

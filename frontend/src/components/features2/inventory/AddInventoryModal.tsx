@@ -83,10 +83,10 @@ export default function AddInventoryModal({
 
   // ================== UI RETURN ==================
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+    <div className="fixed inset-0 flex items-center justify-center bg-white bg-opacity-40 z-50">
       <form
         onSubmit={handleSubmit}
-        className="bg-white rounded-xl p-6 w-full max-w-md space-y-4"
+        className="bg-white border-2 rounded-xl p-6 w-full max-w-md space-y-4"
       >
         <h2 className="text-xl font-bold text-center">Tambah Stok</h2>
         {error && <div className="text-red-500 text-center">{error}</div>}
