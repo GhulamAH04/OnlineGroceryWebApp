@@ -38,17 +38,27 @@ export default function BillingInformationForm() {
 
   // Formik setup
   const formik = useFormik({
+    enableReinitialize: true, // Enable reinitialization
     initialValues: {
-      address: "",
-      city: "",
-      province: "",
-      postalcode: "",
+      address: address?.address || "",
+      city: address?.cities.id || "",
+      province: address?.provinces.id || "",
+      postalcode: address?.postalCode || "",
     },
     validationSchema: BillingSchema,
-    onSubmit: (values) => {
-      // In a real app, you'd handle form submission here
-      console.log(JSON.stringify(values, null, 2));
-      alert("Order placed! Check the console for form data.");
+    onSubmit: async (values) => {
+      try {
+        await axios.put(`${apiUrl}/api/addresses/${user.user.id}`, { values });
+
+        alert("Edit address success");
+      } catch (err) {
+        if (axios.isAxiosError(err) && err.response) {
+          const errorMessage = err.response.data.message;
+          alert(`${errorMessage}`);
+        } else {
+          alert("An unexpected error occurred");
+        }
+      }
     },
   });
 
@@ -253,18 +263,12 @@ export default function BillingInformationForm() {
               Edit Address
             </div>
           )}
-          <div
-            className="w-[10rem] py-3 mt-4 px-4 text-center bg-green-600 text-white font-semibold rounded-full hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-300 cursor-default"
-            onClick={() => setIsEditMode(true)}
-          >
-            New Address
-          </div>
-          {address?.isPrimary && (
+          {isEditMode && (
             <div
-              className="w-[10rem] py-3 mt-4 px-4 text-center bg-green-600 text-white font-semibold rounded-full hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-300 cursor-default"
-              onClick={() => setIsEditMode(true)}
+              className="w-[11rem] py-3 mt-4 px-4 text-center bg-yellow-600 text-white font-semibold rounded-full hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-300 cursor-default"
+              onClick={() => setIsEditMode(false)}
             >
-              Set Primary
+              Discard Changes
             </div>
           )}
         </div>

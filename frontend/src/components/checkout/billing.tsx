@@ -1,291 +1,174 @@
-"use client";
+// --- MAIN PAGE COMPONENT ---
 
-import { apiUrl } from "@/config";
-import { IAddress } from "@/interfaces/address.interface";
-import { useAppSelector } from "@/lib/redux/hooks";
-import { BillingSchema } from "@/schemas/address.schema";
-import axios from "axios";
+import { useState } from "react";
+import AddressModal, { Address } from "./change-address-modal";
 import { useFormik } from "formik";
-import { useEffect, useState } from "react";
 
+// This would be your page component, e.g., `app/billing/page.tsx`
 export default function BillingInformationForm() {
-  // state in redux
-  const user = useAppSelector((state) => state.auth);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const [addresses, setAddresses] = useState<IAddress[]>([]);
-  const [selectedAddress, setSelectedAddress] = useState<IAddress>();
-
-  useEffect(() => {
-    const fetchAddresses = async () => {
-      try {
-        const { data } = await axios.get(
-          `${apiUrl}/api/addresses/${user.user.id}`
-        );
-        setAddresses(data.data); // Extracting data from AxiosResponse
-      } catch (error) {
-        console.error("Error fetching addresses:", error);
-      }
-    };
-    fetchAddresses();
-  }, [user.user.id]);
-
-  const handleAddressChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedId = parseInt(event.target.value, 10);
-    const selected = addresses.find((address) => address.id === selectedId);
-    setSelectedAddress(selected);
-  };
-
-  // Formik setup
+  // Formik hook for the main billing form
   const formik = useFormik({
     initialValues: {
-      username: "",
-      email: "",
+      username: "nahalil",
       phone: "",
-      address: "",
-      city: "",
-      province: "",
-      postalcode: "",
+      address: "Jl. Aspol Tello No. 6",
+      city: "Makassar",
+      province: "Sulawesi Selatan",
+      postalCode: "90233",
     },
-    validationSchema: BillingSchema,
     onSubmit: (values) => {
-      // In a real app, you'd handle form submission here
-      console.log(JSON.stringify(values, null, 2));
-      alert("Order placed! Check the console for form data.");
+      // This function is called when the form is submitted.
+      // For now, we'll just log the values.
+      alert(JSON.stringify(values, null, 2));
     },
   });
 
+  const handleSelectAddress = (selectedAddress: Address) => {
+    // Update the formik values with the data from the modal
+    formik.setValues({
+      ...formik.values, // Keep existing values like username and phone
+      address: selectedAddress.address,
+      city: selectedAddress.city,
+      province: selectedAddress.province,
+      postalCode: selectedAddress.postalCode,
+    });
+    setIsModalOpen(false); // Close the modal after selection
+  };
+
   return (
-    <div className="bg-white p-6 md:p-8 rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-6 text-gray-800">
-        Billing Information
-      </h2>
+      <div className="w-full rounded-xl p-6 sm:p-8 shadow-lg">
+        <h1 className="mb-6 text-2xl sm:text-3xl font-bold text-gray-800">
+          Billing Information
+        </h1>
 
-      <form onSubmit={formik.handleSubmit} className="space-y-6">
-        {/* Name */}
-        <div>
-          <label
-            htmlFor="username"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Username
-          </label>
-          <input
-            id="username"
-            type="text"
-            placeholder="Your name"
-            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 ${
-              formik.touched.username && formik.errors.username
-                ? "border-red-500"
-                : "border-gray-300"
-            }`}
-            {...formik.getFieldProps("username")}
-          />
-          {formik.touched.username && formik.errors.username ? (
-            <div className="text-red-500 text-sm mt-1">
-              {formik.errors.username}
-            </div>
-          ) : null}
-        </div>
-
-        {/* Email and Phone */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <form onSubmit={formik.handleSubmit} className="w-full">
           <div>
             <label
-              htmlFor="email"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              htmlFor="username"
+              className="mb-1 block text-sm font-medium text-gray-600"
             >
-              Email
+              Username
             </label>
-            <p className="w-full h-10 px-3 py-2 text-gray-700 border border-gray-700 rounded-md shadow-sm cursor-not-allowed">
-              {user.user.email}
-            </p>
+            <input
+              id="username"
+              name="username"
+              type="text"
+              value={formik.values.username}
+              className="w-full rounded-lg border-gray-300 p-3 shadow-sm"
+              readOnly
+            />
           </div>
+
           <div>
             <label
               htmlFor="phone"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="mb-1 block text-sm font-medium text-gray-600"
             >
               Phone
             </label>
             <input
               id="phone"
+              name="phone"
               type="tel"
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              value={formik.values.phone}
               placeholder="Phone number"
-              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 ${
-                formik.touched.phone && formik.errors.phone
-                  ? "border-red-500"
-                  : "border-gray-300"
-              }`}
-              {...formik.getFieldProps("phone")}
+              className="w-full rounded-lg border-gray-300 p-3 shadow-sm focus:border-orange-500 focus:ring-orange-500 transition"
             />
-            {formik.touched.phone && formik.errors.phone ? (
-              <div className="text-red-500 text-sm mt-1">
-                {formik.errors.phone}
-              </div>
-            ) : null}
           </div>
-        </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Select your address
-          </label>
-          <select
-            id="city"
-            className="w-full px-3 py-2 border rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 bg-white"
-            onChange={handleAddressChange}
-          >
-            <option value="">Select</option>
-            {addresses.map((address) => (
-              <option key={address.id} value={address.id}>
-                {address.name}: {address.address}, {address.cities.name}.
-              </option>
-            ))}
-          </select>
-        </div>
+          <div>
+            <label
+              htmlFor="address"
+              className="mb-1 block text-sm font-medium text-gray-600"
+            >
+              Address
+            </label>
+            <input
+              id="address"
+              name="address"
+              type="text"
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              value={formik.values.address}
+              className="w-full rounded-lg border-gray-300 p-3 shadow-sm focus:border-orange-500 focus:ring-orange-500 transition"
+            />
+          </div>
 
-        {/* Street Address */}
-        <div>
-          <label
-            htmlFor="address"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Address
-          </label>
-          {!selectedAddress ? (
-            <>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div>
+              <label
+                htmlFor="city"
+                className="mb-1 block text-sm font-medium text-gray-600"
+              >
+                City
+              </label>
               <input
-                id="address"
+                id="city"
+                name="city"
                 type="text"
-                placeholder="Address"
-                className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 ${
-                  formik.touched.address && formik.errors.address
-                    ? "border-red-500"
-                    : "border-gray-300"
-                }`}
-                {...formik.getFieldProps("address")}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                value={formik.values.city}
+                className="w-full rounded-lg border-gray-300 p-3 shadow-sm focus:border-orange-500 focus:ring-orange-500 transition"
               />
-              {formik.touched.address && formik.errors.address ? (
-                <div className="text-red-500 text-sm mt-1">
-                  {formik.errors.address}
-                </div>
-              ) : null}{" "}
-            </>
-          ) : (
-            <p className="w-full h-10 px-3 py-2 text-gray-700 border border-gray-700 rounded-md shadow-sm cursor-not-allowed">
-              {selectedAddress.address}
-            </p>
-          )}
-        </div>
+            </div>
+            <div>
+              <label
+                htmlFor="province"
+                className="mb-1 block text-sm font-medium text-gray-600"
+              >
+                Province
+              </label>
+              <input
+                id="province"
+                name="province"
+                type="text"
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                value={formik.values.province}
+                className="w-full rounded-lg border-gray-300 p-3 shadow-sm focus:border-orange-500 focus:ring-orange-500 transition"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="postalCode"
+                className="mb-1 block text-sm font-medium text-gray-600"
+              >
+                Postal Code
+              </label>
+              <input
+                id="postalCode"
+                name="postalCode"
+                type="text"
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                value={formik.values.postalCode}
+                className="w-full rounded-lg border-gray-300 p-3 shadow-sm focus:border-orange-500 focus:ring-orange-500 transition"
+              />
+            </div>
+          </div>
 
-        {/* city, province, Zip Code */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div>
-            <label
-              htmlFor="city"
-              className="block text-sm font-medium text-gray-700 mb-1"
+          <div className="pt-2">
+            <button
+              type="button"
+              onClick={() => setIsModalOpen(true)}
+              className="text-sm font-semibold text-orange-600 hover:text-orange-500 transition-colors duration-200"
             >
-              City
-            </label>
-            {!selectedAddress ? (
-              <>
-                <select
-                  id="city"
-                  className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 bg-white ${
-                    formik.touched.city && formik.errors.city
-                      ? "border-red-500"
-                      : "border-gray-300"
-                  }`}
-                  {...formik.getFieldProps("city")}
-                >
-                  <option value="">Select</option>
-                  <option value="United province">United province</option>
-                  <option value="Canada">Canada</option>
-                  <option value="Mexico">Mexico</option>
-                </select>
-                {formik.touched.city && formik.errors.city ? (
-                  <div className="text-red-500 text-sm mt-1">
-                    {formik.errors.city}
-                  </div>
-                ) : null}
-              </>
-            ) : (
-              <p className="w-full h-10 px-3 py-2 text-gray-700 border border-gray-700 rounded-md shadow-sm cursor-not-allowed">
-                {selectedAddress.cities.name}
-              </p>
-            )}
+              Shipping to other address?
+            </button>
           </div>
-          <div>
-            <label
-              htmlFor="province"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Province
-            </label>
-            {!selectedAddress ? (
-              <>
-                <select
-                  id="province"
-                  className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 bg-white ${
-                    formik.touched.province && formik.errors.province
-                      ? "border-red-500"
-                      : "border-gray-300"
-                  }`}
-                  {...formik.getFieldProps("province")}
-                >
-                  <option value="">Select</option>
-                  <option value="California">California</option>
-                  <option value="New York">New York</option>
-                  <option value="Texas">Texas</option>
-                </select>
-                {formik.touched.province && formik.errors.province ? (
-                  <div className="text-red-500 text-sm mt-1">
-                    {formik.errors.province}
-                  </div>
-                ) : null}
-              </>
-            ) : (
-              <p className="w-full h-10 px-3 py-2 text-gray-700 border border-gray-700 rounded-md shadow-sm cursor-not-allowed">
-                {selectedAddress.provinces.name}
-              </p>
-            )}
-          </div>
-          <div>
-            <label
-              htmlFor="postalcode"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Postal Code
-            </label>
-            {!selectedAddress ? (
-              <>
-                <input
-                  id="postalcode"
-                  type="text"
-                  placeholder="Postal Code"
-                  className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 ${
-                    formik.touched.postalcode && formik.errors.postalcode
-                      ? "border-red-500"
-                      : "border-gray-300"
-                  }`}
-                  {...formik.getFieldProps("postalcode")}
-                />
-                {formik.touched.postalcode && formik.errors.postalcode ? (
-                  <div className="text-red-500 text-sm mt-1">
-                    {formik.errors.postalcode}
-                  </div>
-                ) : null}
-              </>
-            ) : (
-              <p className="w-full h-10 px-3 py-2 text-gray-700 border border-gray-700 rounded-md shadow-sm cursor-not-allowed">
-                {selectedAddress.postalCode}
-              </p>
-            )}
-          </div>
-        </div>
+        </form>
+        {/* --- RENDER THE MODAL --- */}
+        <AddressModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onSelectAddress={handleSelectAddress}
+        />
+      </div>
 
-        {/* The submit button for the form is now in the OrderSummary component */}
-      </form>
-    </div>
   );
 }

@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { GetAllAddressByUserIdService } from "../services/address.service";
+import { EditAddressByIdService, GetAllAddressByUserIdService } from "../services/address.service";
 
 export async function GetAllAddressByUserIdController(
   req: Request,
@@ -14,6 +14,26 @@ export async function GetAllAddressByUserIdController(
     res.status(200).send({
       message: `Get all user addresses success`,
       data: addresses,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function EditAddressByIdController(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const id = parseInt(req.params.id);
+    const bodyData = req.body;
+
+    const editedAddress = await EditAddressByIdService(id, bodyData);
+
+    res.status(200).send({
+      message: `Edit address by ${id} success`,
+      data: editedAddress,
     });
   } catch (err) {
     next(err);

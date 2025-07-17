@@ -1,12 +1,11 @@
-"use client"
+"use client";
 
 import AdditionalInfo from "@/components/checkout/additional-info";
 import BillingInformationForm from "@/components/checkout/billing";
 import OrderSummary from "@/components/checkout/order-summary";
 
 export default function CheckoutPage() {
-    const handlePlaceOrder = () => {
-    };
+  const handlePlaceOrder = () => {};
   return (
     <div className="2xl:px-[300px] xl:px-[150px] 2xl:pb-8 xl:pb-4">
       <div className="min-h-screen font-sans">
@@ -15,8 +14,8 @@ export default function CheckoutPage() {
             {/* Left Column: Billing and Additional Info */}
             <div className="lg:col-span-3">
               {/* We pass a ref to the form component to be able to trigger submit from the parent */}
-              <BillingInformationForm/>
-              <AdditionalInfo/>
+              <BillingInformationForm />
+              <AdditionalInfo />
             </div>
 
             {/* Right Column: Order Summary */}
