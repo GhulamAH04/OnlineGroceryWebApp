@@ -1,0 +1,17 @@
+export type DiscountType = "MANUAL" | "MIN_PURCHASE" | "BUY1GET1";
+
+export interface Discount {
+  id: number;
+  name: string;
+  type: DiscountType;
+  value: number;
+  percentage?: boolean;
+  minPurchase?: number;
+  maxDiscount?: number;
+  productId: number;
+  productName?: string;
+  storeId: number;
+  storeName?: string;
+  startDate?: string;
+  endDate?: string;
+}
