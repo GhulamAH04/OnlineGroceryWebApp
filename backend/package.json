@@ -25,7 +25,8 @@
     "nodemailer": "^7.0.3",
     "streamifier": "^0.1.1",
     "uuid": "^11.1.0",
-    "zod": "^3.25.57"
+    "zod": "^3.25.57",
+    "zustand": "^5.0.6"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",

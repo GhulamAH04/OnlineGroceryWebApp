@@ -8,7 +8,11 @@ import { signJwt } from "../utils/jwt";
 const prisma = new PrismaClient();
 
 // === LOGIN ADMIN (SUPER_ADMIN & STORE_ADMIN) ===
-export const loginAdmin = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const loginAdmin = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
     const { email, password } = req.body;
 
@@ -23,7 +27,11 @@ export const loginAdmin = async (req: Request, res: Response, next: NextFunction
 
     const user = await prisma.users.findUnique({ where: { email } });
 
-    if (!user || !user.password || !(await bcrypt.compare(password, user.password))) {
+    if (
+      !user ||
+      !user.password ||
+      !(await bcrypt.compare(password, user.password))
+    ) {
       res.status(401).json({
         success: false,
         message: "Invalid credentials",
