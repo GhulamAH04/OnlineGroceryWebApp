@@ -1,14 +1,15 @@
 // File: backend/src/custom.d.ts
 
-import { Role } from '@prisma/client'; // jika kamu pakai enum Role dari Prisma
+import { Role } from "@prisma/client"; // jika kamu pakai enum Role dari Prisma
+import { User } from "@prisma/client";
 
 export interface IUserReqParam {
-  id: number;                      // tambahkan properti ini
-  role: Role;                      // atau: 'SUPER_ADMIN' | 'STORE_ADMIN' | 'USER'
+  id: number; // tambahkan properti ini
+  role: Role; // atau: 'SUPER_ADMIN' | 'STORE_ADMIN' | 'USER'
   email?: string;
   username?: string;
 }
-  
+
 declare global {
   namespace Express {
     export interface Request {
@@ -16,7 +17,6 @@ declare global {
     }
   }
 }
-
 
 /*
 export interface IUserReqParam {

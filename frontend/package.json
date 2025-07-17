@@ -23,7 +23,8 @@
     "react-dom": "^19.0.0",
     "react-redux": "^9.2.0",
     "sonner": "^2.0.6",
-    "yup": "^1.6.1"
+    "yup": "^1.6.1",
+    "zustand": "^5.0.6"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -31,6 +32,7 @@
     "@types/js-cookie": "^3.0.6",
     "@types/jwt-decode": "^2.2.1",
     "@types/jwt-encode": "^1.0.3",
+    "@types/lodash": "^4.17.20",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
