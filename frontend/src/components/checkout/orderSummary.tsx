@@ -1,27 +1,28 @@
-"use client"
+"use client";
 
 import { useState } from "react";
+import ProductItem from "./productItem";
 
 interface PageProps {
-    onPlaceOrder: () => void
+  onPlaceOrder: () => void;
 }
 
 interface CartItem {
   id: number;
+  storeName: string;
   name: string;
   details: string;
   price: number;
   quantity: number;
   imageUrl: string;
-};
+}
 
-export default function OrderSummary({
-  onPlaceOrder,
-}: PageProps) {
+export default function OrderSummary({ onPlaceOrder }: PageProps) {
   // Mock data for cart items
   const cartItems: CartItem[] = [
     {
       id: 1,
+      storeName: "Bahlil",
       name: "Green Capsicum",
       details: "x5",
       price: 70.0,
@@ -30,6 +31,7 @@ export default function OrderSummary({
     },
     {
       id: 2,
+      storeName: "Red Velvet",
       name: "Red Capsicum",
       details: "xl",
       price: 14.0,
@@ -45,27 +47,23 @@ export default function OrderSummary({
 
   return (
     <div className="bg-white p-6 md:p-8 rounded-lg shadow-md w-full">
-      <h2 className="text-2xl font-bold mb-6 text-gray-800">Order Summery</h2>
+      <div className="hidden md:grid grid-cols-12 gap-4 text-sm text-gray-500">
+        <h2 className="text-2xl col-span-6 font-bold mb-6 text-gray-800">
+          Order Summary
+        </h2>
+        <div className="col-span-2 text-center">Harga Satuan</div>
+        <div className="col-span-2 text-center">Jumlah</div>
+        <div className="col-span-2 text-right">Subtotal Produk</div>
+      </div>
       <div className="space-y-4">
         {cartItems.map((item) => (
-          <div key={item.id} className="flex items-center justify-between">
-            <div className="flex items-center">
-              {/* eslint-disable-next-line */}
-              <img
-                src={item.imageUrl}
-                alt={item.name}
-                className="w-16 h-16 rounded-md object-cover mr-4"
-              />
-              <div>
-                <p className="font-semibold text-gray-800">
-                  {item.name} {item.details}
-                </p>
-              </div>
-            </div>
-            <p className="font-semibold text-gray-600">
-              ${item.price.toFixed(2)}
-            </p>
-          </div>
+          <ProductItem
+            key={item.id}
+            image={item.imageUrl}
+            storeName={item.storeName}
+            name={item.name}
+            price={item.price}
+          />
         ))}
       </div>
 
@@ -78,9 +76,7 @@ export default function OrderSummary({
         </div>
         <div className="flex justify-between">
           <p>Shipping:</p>
-          <p className="font-semibold">
-            {`$${shipping.toFixed(2)}`}
-          </p>
+          <p className="font-semibold">{`$${shipping.toFixed(2)}`}</p>
         </div>
       </div>
 
@@ -159,4 +155,4 @@ export default function OrderSummary({
       </button>
     </div>
   );
-};
+}
