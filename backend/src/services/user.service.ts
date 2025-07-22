@@ -22,10 +22,6 @@ async function getMainAddressByUserId(userId: number) {
       userId,
       isPrimary: true,
     },
-    include: {
-      cities: true,
-      provinces: true,
-    },
   });
 
   return address;

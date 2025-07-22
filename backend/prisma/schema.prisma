@@ -9,22 +9,19 @@ datasource db {
 }
 
 model addresses {
-  id         Int       @id @default(autoincrement())
+  id         Int      @id @default(autoincrement())
   name       String
   address    String
-  provinceId Int
-  cityId     Int
   postalCode String
-  isPrimary  Boolean   @default(false)
+  isPrimary  Boolean  @default(false)
   userId     Int
-  latitude   Float
-  longitude  Float
-  isDeleted  Boolean   @default(false)
-  createdAt  DateTime  @default(now())
+  isDeleted  Boolean  @default(false)
+  createdAt  DateTime @default(now())
   updatedAt  DateTime
-  cities     cities    @relation(fields: [cityId], references: [id])
-  provinces  provinces @relation(fields: [provinceId], references: [id])
-  users      users     @relation(fields: [userId], references: [id])
+  district   String   @db.VarChar(50)
+  city       String?  @db.VarChar(50)
+  province   String?  @db.VarChar(50)
+  users      users    @relation(fields: [userId], references: [id])
   orders     orders[]
 }
 
@@ -72,12 +69,11 @@ model categories {
 }
 
 model cities {
-  id         Int         @id
+  id         Int       @id
   name       String
   provinceId Int
-  addresses  addresses[]
   branchs    branchs[]
-  provinces  provinces   @relation(fields: [provinceId], references: [id])
+  provinces  provinces @relation(fields: [provinceId], references: [id])
 }
 
 model journal_mutations {
@@ -195,11 +191,10 @@ model products {
 }
 
 model provinces {
-  id        Int         @id
-  name      String
-  addresses addresses[]
-  branchs   branchs[]
-  cities    cities[]
+  id      Int       @id
+  name    String
+  branchs branchs[]
+  cities  cities[]
 }
 
 model samples {
@@ -210,7 +205,7 @@ model samples {
 
 model users {
   id         Int         @id @default(autoincrement())
-  username   String      @unique
+  username   String?     @unique
   email      String      @unique
   password   String?
   isVerified Boolean     @default(false)

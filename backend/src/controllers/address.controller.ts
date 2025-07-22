@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { EditAddressByIdService, GetAllAddressByUserIdService } from "../services/address.service";
+import { AddNewAddressService, EditAddressByIdService, GetAllAddressByUserIdService } from "../services/address.service";
 
 export async function GetAllAddressByUserIdController(
   req: Request,
@@ -34,6 +34,25 @@ export async function EditAddressByIdController(
     res.status(200).send({
       message: `Edit address by ${id} success`,
       data: editedAddress,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function AddNewAddressController(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const bodyData = req.body;
+
+    const newAddress = await AddNewAddressService(bodyData);
+
+    res.status(200).send({
+      message: `Add new address success`,
+      data: newAddress,
     });
   } catch (err) {
     next(err);

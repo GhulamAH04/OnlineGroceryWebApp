@@ -7,11 +7,11 @@ export async function GetAllProvincesController(
   next: NextFunction
 ) {
   try {
-    const cities = await GetAllProvincesService();
+    const provinces = await GetAllProvincesService();
 
     res.status(200).send({
-      message: `Get all cities success`,
-      data: cities,
+      message: `Get all provinces success`,
+      data: provinces,
     });
   } catch (err) {
     next(err);

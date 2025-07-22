@@ -1,16 +1,18 @@
 import { Request, Response, NextFunction } from "express";
-import { GetAllCitiesService } from "../services/city.service";
+import { GetCitiesByProvinceService } from "../services/city.service";
 
-export async function GetAllCitiesController(
+export async function GetCitiesByProvinceController(
   req: Request,
   res: Response,
   next: NextFunction
 ) {
   try {
-    const cities = await GetAllCitiesService();
+    const { province } = req.params;
+
+    const cities = await GetCitiesByProvinceService(province);
 
     res.status(200).send({
-      message: `Get all cities success`,
+      message: `Get cities by province success`,
       data: cities,
     });
   } catch (err) {

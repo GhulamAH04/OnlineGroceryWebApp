@@ -33,10 +33,11 @@ export const createStoreAdmin = async (
   next: NextFunction
 ) => {
   try {
-    const { email, password, role } = req.body;
+    const { username, email, password, role } = req.body;
 
     const user = await prisma.users.create({
       data: {
+        username,
         email,
         password, // ⚠️ Harusnya di-hash sebelum simpan ke DB
         role,
