@@ -1,7 +1,7 @@
 "use client";
 
 import { apiUrl } from "@/config";
-import { IAddress } from "@/interfaces/address.interface";
+import { IExistingAddress } from "@/interfaces/address.interface";
 import { useAppSelector } from "@/lib/redux/hooks";
 import axios from "axios";
 import { getCookie } from "cookies-next";
@@ -10,7 +10,7 @@ import { useEffect, useState } from "react";
 export default function MainAddress() {
   const userState = useAppSelector((state) => state.auth);
 
-  const [address, setAddress] = useState<IAddress>();
+  const [address, setAddress] = useState<IExistingAddress>();
 
   useEffect(() => {
     const userId = userState.user.id;
@@ -36,7 +36,7 @@ export default function MainAddress() {
         Main Address
       </h3>
       <address className="not-italic text-gray-700 space-y-2">
-        <p>{address?.address}, {address?.cities.name}</p>
+        <p>{address?.address}, {address?.city}</p>
         <p>{userState.user.email}</p>
         <p>{address?.postalCode}</p>
       </address>

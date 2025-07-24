@@ -1,6 +1,7 @@
 export interface IExistingAddress {
   id: number;
   name: string;
+  phone: string;
   address: string;
   province: string;
   city: string;
@@ -31,4 +32,19 @@ export interface IBillingDetails {
   zipCode: string;
   email: string;
   phone: string;
+}
+
+export interface IProvince {
+  id: number;
+  name: string;
+}
+
+export interface ICity {
+  id: number;
+  name: string;
+}
+
+export interface IDistrict {
+  id: number;
+  name: string;
 }
