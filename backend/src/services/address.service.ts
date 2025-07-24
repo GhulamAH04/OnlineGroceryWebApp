@@ -1,4 +1,4 @@
-import { INewAddressFormData } from "../interfaces/address.interface";
+import { INewAddress } from "../interfaces/address.interface";
 import prisma from "../lib/prisma";
 
 export async function GetAllAddressByUserIdService(userId: number) {
@@ -15,7 +15,7 @@ export async function GetAllAddressByUserIdService(userId: number) {
 
 export async function EditAddressByIdService(
   id: number,
-  bodyData: INewAddressFormData
+  bodyData: INewAddress
 ) {
   try {
     const { address, city, province, postalCode } = bodyData;
@@ -40,10 +40,15 @@ export async function EditAddressByIdService(
   }
 }
 
-export async function AddNewAddressService(bodyData: INewAddressFormData) {
+export async function AddNewAddressService(bodyData: INewAddress) {
   try {
-    const { name, address, city, province, postalCode, userId, district } =
+    const { name, address, city, province, postalCode, isPrimary, userId, district, phone } =
       bodyData;
+
+      await prisma.addresses.updateMany({
+        where: { userId },
+        data: { isPrimary: false },
+      });
 
     // Use Prisma to create a new address record in the database
     const newAddress = await prisma.addresses.create({
@@ -54,7 +59,9 @@ export async function AddNewAddressService(bodyData: INewAddressFormData) {
         province,
         postalCode,
         userId,
+        isPrimary,
         district,
+        phone,
         updatedAt: new Date()
       },
     });

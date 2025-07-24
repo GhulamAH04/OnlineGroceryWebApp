@@ -7,6 +7,11 @@ async function CalculateShippingCost(
   weight: number
 ) {
   try {
+    // const mockData = [
+    //   { id: 1, name: "jnt", cost: 10000, etd: "5 days" },
+    //   { id: 2, name: "jne", cost: 15000, etd: "5 days" },
+    // ];
+
     const data = {
       origin: originId,
       destination: destinationId,
@@ -29,6 +34,7 @@ async function CalculateShippingCost(
     );
 
     return response.data.data;
+    // return mockData;
   } catch (err) {
     throw err;
   }

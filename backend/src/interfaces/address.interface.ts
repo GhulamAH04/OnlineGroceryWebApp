@@ -1,4 +1,4 @@
-export interface INewAddressFormData {
+export interface INewAddress {
   name: string;
   address: string;
   province: string;
@@ -7,6 +7,7 @@ export interface INewAddressFormData {
   isPrimary: boolean;
   userId: number;
   district: string;
+  phone: string;
 }
 
 export interface IShippingAddress {

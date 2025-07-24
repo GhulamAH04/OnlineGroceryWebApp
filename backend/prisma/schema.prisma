@@ -21,6 +21,7 @@ model addresses {
   district   String   @db.VarChar(50)
   city       String?  @db.VarChar(50)
   province   String?  @db.VarChar(50)
+  phone      String?  @db.VarChar(30)
   users      users    @relation(fields: [userId], references: [id])
   orders     orders[]
 }
