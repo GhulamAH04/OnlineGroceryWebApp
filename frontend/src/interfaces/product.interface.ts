@@ -1,4 +1,4 @@
-import { IExistingAddress } from "./address.interface";
+import { IBranch } from "./store.interface";
 
 interface IProduct {
   id: number;
@@ -9,11 +9,7 @@ interface IProduct {
   categoryId: number;
 }
 
-interface IBranch {
-  id: number;
-  name: string;
-  addresses: IExistingAddress;
-}
+
 
 export interface ICartItems {
   id: number;

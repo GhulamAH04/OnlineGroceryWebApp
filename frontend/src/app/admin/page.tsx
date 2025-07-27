@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { UserCog, Package, Percent, BarChart, Boxes } from "lucide-react";
+import { UserCog, Package, Percent, BarChart, Boxes, Store } from "lucide-react";
 
 export default function AdminDashboardHome() {
   return (
@@ -26,6 +26,22 @@ export default function AdminDashboardHome() {
           </div>
           <div className="text-gray-500 text-sm">
             Kelola data user admin, role, dan akses dashboard.
+          </div>
+        </Link>
+
+        {/* Store Management */}
+        <Link
+          href="/admin/stores"
+          className="group bg-white border border-green-100 rounded-xl p-6 flex flex-col gap-2 shadow hover:shadow-lg hover:bg-green-50 transition"
+        >
+          <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-green-100 text-green-700 mb-2">
+            <Store size={28} />
+          </div>
+          <div className="text-lg font-semibold text-green-700">
+            Store Management
+          </div>
+          <div className="text-gray-500 text-sm">
+            Kelola data toko.
           </div>
         </Link>
 
