@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { AddNewStoreService, getAllStoresService } from "../services/store.service";
+import { AddNewStoreService, DeleteStoreService, getAllStoresService } from "../services/store.service";
 import { INewStore } from "../interfaces/store.interface";
 
 export async function getAllStoresController(
@@ -32,6 +32,25 @@ export async function AddNewStoreController(
     res.status(200).send({
       message: `create new store success`,
       data: newStore,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function DeleteStoreController(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const storeId: number = parseInt(req.params.id);
+
+    const deletedStore = await DeleteStoreService(storeId);
+
+    res.status(200).send({
+      message: `delete store success`,
+      data: deletedStore,
     });
   } catch (err) {
     next(err);

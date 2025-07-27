@@ -55,3 +55,15 @@ export async function AddNewStoreService(newStoreData: INewStore) {
     throw err;
   }
 }
+
+export async function DeleteStoreService(storeId: number) {
+  try {
+    const deletedStore = await prisma.branchs.delete({
+      where: { id: storeId },
+    });
+
+    return deletedStore;
+  } catch (err) {
+    throw err;
+  }
+}
