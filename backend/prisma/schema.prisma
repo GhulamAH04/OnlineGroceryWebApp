@@ -12,38 +12,42 @@ model addresses {
   id         Int       @id @default(autoincrement())
   name       String
   address    String
-  provinceId Int
-  cityId     Int
   postalCode String
   isPrimary  Boolean   @default(false)
   userId     Int
-  latitude   Float
-  longitude  Float
   isDeleted  Boolean   @default(false)
   createdAt  DateTime  @default(now())
   updatedAt  DateTime
-  cities     cities    @relation(fields: [cityId], references: [id])
-  provinces  provinces @relation(fields: [provinceId], references: [id])
+  phone      String?   @db.VarChar(30)
+  provinceId Int
+  cityId     Int
+  districtId Int
   users      users     @relation(fields: [userId], references: [id])
+  cities     cities    @relation(fields: [cityId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_city")
+  districts  districts @relation(fields: [districtId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_district")
+  provinces  provinces @relation(fields: [provinceId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_province")
   orders     orders[]
 }
 
 model branchs {
   id                                               Int                 @id @default(autoincrement())
   name                                             String
-  address                                          String
   provinceId                                       Int
   cityId                                           Int
   postalCode                                       String
-  latitude                                         Float
-  longitude                                        Float
   userId                                           Int?                @unique
   createdAt                                        DateTime            @default(now())
   updatedAt                                        DateTime
+  districtId                                       Int?
+  phone                                            String?             @db.VarChar(30)
+  address                                          String?             @db.VarChar(100)
+  latitude                                         Decimal             @db.Decimal(9, 6)
+  longitude                                        Decimal             @db.Decimal(9, 6)
   Discount                                         Discount[]
   cities                                           cities              @relation(fields: [cityId], references: [id])
   provinces                                        provinces           @relation(fields: [provinceId], references: [id])
   users                                            users?              @relation(fields: [userId], references: [id])
+  districts                                        districts?          @relation(fields: [districtId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_district")
   journal_mutations                                journal_mutations[]
   mutations_mutations_destinationBranchIdTobranchs mutations[]         @relation("mutations_destinationBranchIdTobranchs")
   mutations_mutations_sourceBranchIdTobranchs      mutations[]         @relation("mutations_sourceBranchIdTobranchs")
@@ -78,6 +82,7 @@ model cities {
   addresses  addresses[]
   branchs    branchs[]
   provinces  provinces   @relation(fields: [provinceId], references: [id])
+  districts  districts[]
 }
 
 model journal_mutations {
@@ -253,6 +258,15 @@ model Discount {
   updatedAt    DateTime
   branchs      branchs      @relation(fields: [branchId], references: [id])
   products     products?    @relation(fields: [productId], references: [id])
+}
+
+model districts {
+  id        Int         @id @default(autoincrement())
+  name      String      @unique @db.VarChar(50)
+  cityId    Int
+  addresses addresses[]
+  branchs   branchs[]
+  cities    cities      @relation(fields: [cityId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_city")
 }
 
 enum CancellationSource {

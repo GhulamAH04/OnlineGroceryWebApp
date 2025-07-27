@@ -4,10 +4,11 @@ import { Role } from "@prisma/client"; // jika kamu pakai enum Role dari Prisma
 import { User } from "@prisma/client";
 
 export interface IUserReqParam {
-  id: number; // tambahkan properti ini
+  id: number; 
   role: Role; // atau: 'SUPER_ADMIN' | 'STORE_ADMIN' | 'USER'
   email?: string;
   username?: string;
+  branchId?: number; 
 }
 
 declare global {

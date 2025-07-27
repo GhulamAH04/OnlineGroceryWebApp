@@ -1,23 +1,24 @@
-// File: src/routes/categoryAdmin.routes.ts
+// File: backend/src/routes/categoryAdmin.routes.ts
 
-import express from 'express';
+import { Router } from "express";
 import {
   getAllCategories,
   createCategory,
   updateCategory,
   deleteCategory,
-} from '../controllers/categoryProductAdmin';  
-import { authMiddleware } from '../middlewares/authAdmin.middleware';
-import { authorizeRoles } from '../middlewares/authorizeRoles.middleware';
+} from "../controllers/categoryProductAdmin.controller";
+import { authMiddleware } from "../middlewares/authAdmin.middleware";
+import { authorizeRoles } from "../middlewares/authorizeRoles.middleware";
 
+const router = Router();
 
-const router = express.Router();
+// Terapkan middleware untuk semua route di bawah ini
+router.use(authMiddleware, authorizeRoles(["SUPER_ADMIN"]));
 
-router.use(authMiddleware, authorizeRoles(['SUPER_ADMIN']));
-
-router.get('/', getAllCategories);
-router.post('/', createCategory);
-router.put('/:id', updateCategory);
-router.delete('/:id', deleteCategory);
+// === Routes ===
+router.get("/", getAllCategories);
+router.post("/", createCategory);
+router.put("/:id", updateCategory);
+router.delete("/:id", deleteCategory);
 
 export default router;

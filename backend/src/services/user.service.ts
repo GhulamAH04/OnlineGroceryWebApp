@@ -21,14 +21,11 @@ async function getAddressByUserId(userId: number) {
     where: {
       userId: userId,
     },
-    include: {
-      cities: true,
-      provinces: true,
-    },
   });
 
   return address;
 }
+
 
 export async function GetMainAddressService(userId: number) {
   try {
