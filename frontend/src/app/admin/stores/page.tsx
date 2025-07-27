@@ -1,21 +1,20 @@
 "use client";
 import { useEffect, useState } from "react";
-import { User } from "@/interfaces";
 import StoreTable from "@/components/features2/storeManagement/StoreTable";
 import AddStoreModal from "@/components/features2/storeManagement/AddStoreModal";
 import EditStoreModal from "@/components/features2/storeManagement/EditStoreModal";
 import DeleteStoreModal from "@/components/features2/storeManagement/DeleteStoreModal";
+import { IStore } from "@/interfaces";
+import axios from "axios";
+import { apiUrl } from "@/config";
 
 export default function StoresPage() {
-  const [users, setUsers] = useState<User[]>([]);
+  const [stores, setStores] = useState<IStore[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [editUser, setEditUser] = useState<User | null>(null);
-  const [deleteUser, setDeleteUser] = useState<User | null>(null);
+  const [editStore, setEditStore] = useState<IStore | null>(null);
+  const [deleteStore, setDeleteStore] = useState<IStore | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
-  const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
 
   const showFeedback = (msg: string) => {
     setFeedback(msg);
@@ -23,28 +22,21 @@ export default function StoresPage() {
   };
 
   // Fetch user data
-  const fetchUsers = () => {
-    const token = localStorage.getItem("token") || "dummy";
-    setLoading(true);
-    fetch(
-      `${
-        process.env.NEXT_PUBLIC_API_URL
-      }/admin/users?search=${encodeURIComponent(search)}&page=${page}&limit=10`,
-      { headers: { Authorization: `Bearer ${token}` } }
-    )
-      .then((res) => res.json())
-      .then((data) => {
-        setUsers(data.data?.data || []);
-        setTotalPages(data.data?.totalPages || 1);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+  const fetchStores = async () => {
+    try {
+      setLoading(true);
+      const { data } = await axios.get(`${apiUrl}/api/stores`);
+      setStores(data.data || []);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching stores:", error);
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    fetchUsers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, page]);
+    fetchStores();
+  }, []);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -53,14 +45,7 @@ export default function StoresPage() {
           Store Management
         </h1>
 
-        {/* Feedback/Notification */}
-        {feedback && (
-          <div className="mb-4 text-center bg-green-50 border border-green-300 text-green-700 px-4 py-2 rounded">
-            {feedback}
-          </div>
-        )}
-
-        {/* Tambah User */}
+        {/* Tambah Toko */}
         <div className="mb-4 flex justify-end">
           <button
             className="bg-green-600 text-white px-4 py-2 rounded"
@@ -70,7 +55,7 @@ export default function StoresPage() {
           </button>
         </div>
 
-        {/* Search & Pagination Controls */}
+        {/* Search & Pagination Controls
         <div className="flex justify-between mb-4">
           <input
             type="text"
@@ -101,7 +86,7 @@ export default function StoresPage() {
               Next
             </button>
           </div>
-        </div>
+        </div> */}
 
         {/* Modal */}
         {showModal && (
@@ -110,31 +95,29 @@ export default function StoresPage() {
             onClose={() => setShowModal(false)}
           />
         )}
-        {editUser && (
+        {/* {editstores && (
           <EditStoreModal
-            user={editUser}
-            onUpdate={fetchUsers}
-            onClose={() => setEditUser(null)}
-            onFeedback={showFeedback}
+            store={editstore}
+            onUpdate={fetchStores}
+            onClose={() => setEditStore(null)}
           />
-        )}
-        {deleteUser && (
+        )} */}
+        {deleteStore && (
           <DeleteStoreModal
-            user={deleteUser}
-            onDelete={fetchUsers}
-            onClose={() => setDeleteUser(null)}
-            onFeedback={showFeedback}
+            store={deleteStore}
+            onDelete={fetchStores}
+            onClose={() => setDeleteStore(null)}
           />
         )}
 
         {/* Table */}
         {loading ? (
-          <p>Loading data user...</p>
+          <p>Loading data toko...</p>
         ) : (
           <StoreTable
-            users={users}
-            onEdit={setEditUser}
-            onDelete={setDeleteUser}
+            stores={stores}
+            onEdit={setEditStore}
+            onDelete={setDeleteStore}
           />
         )}
       </div>

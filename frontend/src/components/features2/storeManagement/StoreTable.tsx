@@ -1,14 +1,14 @@
 "use client";
-import { User } from "@/interfaces";
+import { IStore } from "@/interfaces";
 
 export default function StoreTable({
-  users,
+  stores,
   onEdit,
   onDelete,
 }: {
-  users: User[];
-  onEdit: (user: User) => void;
-  onDelete: (user: User) => void;
+  stores: IStore[];
+  onEdit: (store: IStore) => void;
+  onDelete: (store: IStore) => void;
 }) {
   return (
     <div className="overflow-x-auto">
@@ -22,22 +22,21 @@ export default function StoreTable({
           </tr>
         </thead>
         <tbody>
-          {users.map((u) => (
-            <tr key={u.id} className="hover:bg-gray-100">
-              <td className="p-3 border">{u.name}</td>
-              <td className="p-3 border">{u.email}</td>
-              <td className="p-3 border">{u.role.replace("_", " ")}</td>
-              <td className="p-3 border">{u.storeId ?? "-"}</td>
+          {stores.map((store) => (
+            <tr key={store.id} className="hover:bg-gray-100">
+              <td className="p-3 border">{store.name}</td>
+              <td className="p-3 border">{store.userId}</td>
+              <td className="p-3 border">{store.address}</td>
               <td className="p-3 border">
                 <button
                   className="bg-yellow-400 hover:bg-yellow-500 text-white px-2 py-1 rounded mr-2"
-                  onClick={() => onEdit(u)}
+                  onClick={() => onEdit(store)}
                 >
                   Edit
                 </button>
                 <button
                   className="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded"
-                  onClick={() => onDelete(u)}
+                  onClick={() => onDelete(store)}
                 >
                   Hapus
                 </button>

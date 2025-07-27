@@ -18,3 +18,17 @@ export interface INewStore {
     latitude: number;
     longitude: number;
 }
+
+export interface IStore {
+  id: number
+  userId: number;
+  name: string;
+  phone: string;
+  address: string;
+  provinceId: number;
+  cityId: number;
+  districtId: number;
+  postalCode: string;
+  latitude: number;
+  longitude: number;
+}

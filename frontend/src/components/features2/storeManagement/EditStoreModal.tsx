@@ -1,25 +1,23 @@
 "use client";
 import { useState, useEffect } from "react";
-import { User, Store } from "@/interfaces";
+import { IStore } from "@/interfaces";
 
 export default function EditStoreModal({
-  user,
+  store,
   onUpdate,
   onClose,
   onFeedback,
 }: {
-  user: User;
+  store: IStore;
   onUpdate: () => void;
   onClose: () => void;
   onFeedback: (msg: string) => void;
 }) {
-  const [name, setName] = useState(user.name);
-  const [email, setEmail] = useState(user.email);
-  const [role, setRole] = useState(user.role);
-  const [storeId, setStoreId] = useState(user.storeId?.toString() || "");
+  const [name, setName] = useState(store.name);
+  const [storeId, setStoreId] = useState(store.id?.toString() || "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [stores, setStores] = useState<Store[]>([]);
+  const [stores, setStores] = useState<IStore[]>([]);
 
   // Fetch toko untuk dropdown
   useEffect(() => {
@@ -39,7 +37,7 @@ export default function EditStoreModal({
     try {
       const token = localStorage.getItem("token");
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/users/${user.id}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/users/${store.id}`,
         {
           method: "PUT",
           headers: {
@@ -60,12 +58,12 @@ export default function EditStoreModal({
         onFeedback("User berhasil diupdate!");
         onClose();
       } else {
-        setError(data.message || "Gagal update user");
-        onFeedback("Gagal update user.");
+        setError(data.message || "Gagal update store");
+        onFeedback("Gagal update store.");
       }
     } catch {
       setError("Gagal koneksi ke server");
-      onFeedback("Gagal update user (server error).");
+      onFeedback("Gagal update store (server error).");
     } finally {
       setLoading(false);
     }
