@@ -1,15 +1,13 @@
-// OnlineGroceryWebApp/backend/src/services/productUser.service.ts
 import axios from "axios";
 import prisma from "../lib/prisma";
 import { API_KEY } from "../config";
 
+// === Get Produk Per Cabang ===
 async function getProductBranchesByStoreId(storeId: number) {
   try {
     const productBranches = await prisma.product_branchs.findMany({
       where: {
-        branchs: {
-          id: storeId,
-        },
+        branchs: { id: storeId },
       },
       include: {
         products: true,
@@ -22,12 +20,12 @@ async function getProductBranchesByStoreId(storeId: number) {
   }
 }
 
+// === Ambil Kota dari API Berdasarkan LatLong ===
 async function getCity(latitude: number, longitude: number) {
-  //Make API Call
-  const { data } = await axios.get(
-    `https://api.opencagedata.com/geocode/v1/json?q=${latitude}%2C+${longitude}&key=${API_KEY}`
-  );
   try {
+    const { data } = await axios.get(
+      `https://api.opencagedata.com/geocode/v1/json?q=${latitude}%2C+${longitude}&key=${API_KEY}`
+    );
     const city: string = data.results[0].components.city;
     return city;
   } catch (err) {
@@ -35,13 +33,12 @@ async function getCity(latitude: number, longitude: number) {
   }
 }
 
+// === Ambil Semua Cabang di Kota Tertentu ===
 async function getStoresByCity(city: string) {
   try {
     const branches = await prisma.branchs.findMany({
       where: {
-        cities: {
-          name: city,
-        },
+        cities: { name: city },
       },
     });
     return branches;
@@ -50,85 +47,83 @@ async function getStoresByCity(city: string) {
   }
 }
 
+// === Hitung Jarak Store dengan Haversine Formula ===
 async function calculateStoreDistances(lat1: number, lon1: number) {
   try {
-    let storeDistances = [];
-
-    const userCity: string = await getCity(lat1, lon1);
+    const userCity = await getCity(lat1, lon1);
     const stores = await getStoresByCity(userCity);
+    const storeDistances: { storeId: number; distance: number }[] = [];
 
-    for (let i = 0; i < stores.length; i++) {
-      const lat2 = stores[i].latitude;
-      const lon2 = stores[i].longitude;
+    for (const store of stores) {
+      const lat2 = Number(store.latitude);
+      const lon2 = Number(store.longitude);
 
       const R = 6371; // Earth's radius in km
       const dLat = ((lat2 - lat1) * Math.PI) / 180;
       const dLon = ((lon2 - lon1) * Math.PI) / 180;
 
       const a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.sin(dLat / 2) ** 2 +
         Math.cos((lat1 * Math.PI) / 180) *
           Math.cos((lat2 * Math.PI) / 180) *
-          Math.sin(dLon / 2) *
-          Math.sin(dLon / 2);
+          Math.sin(dLon / 2) ** 2;
 
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      if (R * c <= 15)
-        storeDistances.push({ storeId: stores[i].id, distance: R * c });
+      const distance = R * c;
+
+      if (distance <= 15) {
+        storeDistances.push({ storeId: store.id, distance });
+      }
     }
-    storeDistances.sort((a, b) => a.distance - b.distance);
-    return storeDistances;
+
+    return storeDistances.sort((a, b) => a.distance - b.distance);
   } catch (err) {
     throw err;
   }
 }
 
+// === Get Produk dari Store Terdekat (User Side) ===
 export async function GetNearbyProductsService(
   latitude: number,
   longitude: number
 ) {
   try {
-    let productBranches = [];
-
+    const productBranches = [];
     const storeDistances = await calculateStoreDistances(latitude, longitude);
-    for (let i = 0; i < storeDistances.length; i++) {
-      const storeId = storeDistances[i].storeId;
+
+    for (const { storeId } of storeDistances) {
       const product = await getProductBranchesByStoreId(storeId);
       productBranches.push(product);
     }
 
-    const allProducts = productBranches.flat();
-
-    return allProducts;
+    return productBranches.flat();
   } catch (err) {
     throw err;
   }
 }
 
+// === Get Produk dari Store di Jakarta (Main Store) ===
 export async function GetMainStoresProductsService() {
   try {
-    let productBranches = [];
+    const productBranches = [];
 
     const mainStores = await prisma.branchs.findMany({
       where: {
         cities: {
           name: {
             contains: "Jakarta",
-            mode: "insensitive"
+            mode: "insensitive",
           },
         },
       },
     });
 
-    for (let i = 0; i < mainStores.length; i++) {
-      const storeId = mainStores[i].id;
-      const product = await getProductBranchesByStoreId(storeId);
+    for (const store of mainStores) {
+      const product = await getProductBranchesByStoreId(store.id);
       productBranches.push(product);
     }
 
-    const allProducts = productBranches.flat();
-
-    return allProducts;
+    return productBranches.flat();
   } catch (err) {
     throw err;
   }

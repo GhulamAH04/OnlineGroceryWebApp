@@ -1,3 +1,5 @@
+// OnlineGroceryWebApp/frontend/src/components/features2/dashboard/LayoutAdmin.tsx
+
 "use client";
 import SidebarAdmin from "./SidebarAdmin";
 

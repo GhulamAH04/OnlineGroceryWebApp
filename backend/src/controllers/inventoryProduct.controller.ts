@@ -1,3 +1,4 @@
+// OnlineGroceryWebApp/backend/src/controllers/inventoryProduct.controller.ts
 import { Request, Response, NextFunction } from 'express';
 import { inventoryService } from '../services/inventoryAdmin.service';
 

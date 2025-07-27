@@ -1,160 +1,212 @@
+// === PRODUCT MANAGEMENT PAGE ===
+// OnlineGroceryWebApp/frontend/src/app/admin/products/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
-import ProductTable from "@/components/features2/productManagement/ProductTable";
-import AddProductModal from "@/components/features2/productManagement/AddProductModal";
-import EditProductModal from "@/components/features2/productManagement/EditProductModal";
-import DeleteProductModal from "@/components/features2/productManagement/DeleteProductModal";
-import { Product } from "@/interfaces";
+import axios from "axios";
+import Image from "next/image";
+import { toast } from "sonner";
 
-export default function Dashboard() {
-  // ===== State Management =====
+import ConfirmModal from "@/components/features2/common/ConfirmModal";
+import ProductModal from "@/components/features2/productManagement/ProductModal";
+import { useDebounceSearch } from "@/hooks/useDebounceSearch";
+import { Product } from "@/interfaces/productAdmin.interface";
+
+export default function ProductPage() {
+  // === STATE ===
   const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
   const [editProduct, setEditProduct] = useState<Product | null>(null);
-  const [deleteProduct, setDeleteProduct] = useState<Product | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
+  const [confirmId, setConfirmId] = useState<number | null>(null);
   const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [stores, setStores] = useState<{ id: number; name: string }[]>([]);
+  const [categories, setCategories] = useState<{ id: number; name: string }[]>(
+    []
+  );
 
-  // ===== Notifikasi Feedback =====
-  // codingan untuk feedback/toast notification
-  const showFeedback = (msg: string) => {
-    setFeedback(msg);
-    setTimeout(() => setFeedback(null), 2500);
+  const debouncedSearch = useDebounceSearch(search);
+
+  // === FETCH PRODUCTS ===
+  const fetchProducts = async () => {
+    try {
+      const res = await axios.get("/admin/products", {
+        params: { search: debouncedSearch },
+      });
+      setProducts(res.data?.data || []);
+    } catch {
+      toast.error("Gagal memuat produk");
+    }
   };
 
-  // ===== Fetching Product Data (dengan search & pagination) =====
-  // codingan untuk fetching product
-  const fetchProduk = () => {
-    // Untuk backend yang butuh token, bisa isi dengan token dummy/hasil login
-    const token = localStorage.getItem("token") || "dummy";
-    setLoading(true);
-    fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/products?search=${encodeURIComponent(
-        search
-      )}&page=${page}&limit=10`,
-      { headers: { Authorization: `Bearer ${token}` } }
-    )
-      .then((res) => res.json())
-      .then((data) => {
-        setProducts(data.data?.data || []);
-        setTotalPages(data.data?.totalPages || 1); // Backend wajib return totalPages
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+  // === FETCH STORES ===
+  const fetchStores = async () => {
+    try {
+      const res = await axios.get("/admin/branches");
+      setStores(res.data || []);
+    } catch {
+      toast.error("Gagal memuat data toko");
+    }
   };
 
-  // ===== Re-fetch Produk Setiap Kali Search/Page Berubah =====
+  // === FETCH CATEGORIES ===
+  const fetchCategories = async () => {
+    try {
+      const res = await axios.get("/admin/categories");
+      setCategories(res.data?.data || []);
+    } catch {
+      toast.error("Gagal memuat kategori");
+    }
+  };
+
+  // === USE EFFECT ===
   useEffect(() => {
-    fetchProduk();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, page]);
+    fetchProducts();
+  }, [debouncedSearch]);
 
-  // ======= UI RETURN START =======
+  useEffect(() => {
+    fetchStores();
+    fetchCategories();
+  }, []);
+
+  // === HANDLE TAMBAH PRODUK ===
+  const handleAdd = () => {
+    setEditProduct(null);
+    setIsModalOpen(true);
+  };
+
+  // === HANDLE EDIT PRODUK ===
+  const handleEdit = (product: Product) => {
+    setEditProduct(product);
+    setIsModalOpen(true);
+  };
+
+  // === HANDLE DELETE ===
+  const handleDelete = async () => {
+    try {
+      await axios.delete(`/admin/products/${confirmId}`);
+      toast.success("Produk dihapus");
+      setConfirmId(null);
+      fetchProducts();
+    } catch {
+      toast.error("Gagal menghapus produk");
+    }
+  };
+
+  // === HANDLE SUBMIT FORM ===
+  const handleSubmit = async (formData: FormData) => {
+    try {
+      if (editProduct) {
+        await axios.put(`/admin/products/${editProduct.id}`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        toast.success("Produk berhasil diperbarui!");
+      } else {
+        await axios.post("/admin/products", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        toast.success("Produk berhasil ditambahkan!");
+      }
+
+      setIsModalOpen(false);
+      setEditProduct(null);
+      fetchProducts();
+    } catch {
+      toast.error("Gagal menyimpan produk");
+    }
+  };
+
+  // === RENDER ===
   return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="bg-white p-8 rounded-xl shadow-xl w-full max-w-4xl">
-          {/* Dashboard Header */}
-          <h1 className="text-3xl font-bold mb-4 text-center">
-            Dashboard Admin
-          </h1>
-          <p className="mb-4 text-center">Selamat datang di dashboard admin!</p>
+    <div className="p-6 space-y-4">
+      <h1 className="text-2xl font-bold text-green-700">Product Management</h1>
 
-          {/* Notifikasi Feedback */}
-          {feedback && (
-            <div className="mb-4 text-center bg-green-50 border border-green-300 text-green-700 px-4 py-2 rounded">
-              {feedback}
-            </div>
-          )}
-
-          {/* Tombol Tambah Produk */}
-          <div className="mb-4 flex justify-end">
-            <button
-              className="bg-green-600 text-white px-4 py-2 rounded"
-              onClick={() => setShowModal(true)}
-            >
-              + Tambah Produk
-            </button>
-          </div>
-
-          {/* Search Bar & Pagination */}
-          <div className="flex justify-between mb-4">
-            {/* Input Search */}
-            <input
-              type="text"
-              placeholder="Cari produk..."
-              className="border rounded p-2 w-1/3"
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1); // Reset ke halaman 1 saat search berubah
-              }}
-            />
-            {/* Pagination Button */}
-            <div>
-              <button
-                className="px-3 py-1 bg-gray-300 rounded mr-2"
-                onClick={() => setPage(page - 1)}
-                disabled={page === 1}
-              >
-                Prev
-              </button>
-              <span className="font-semibold">
-                {page} / {totalPages}
-              </span>
-              <button
-                className="px-3 py-1 bg-gray-300 rounded ml-2"
-                onClick={() => setPage(page + 1)}
-                disabled={page === totalPages}
-              >
-                Next
-              </button>
-            </div>
-          </div>
-
-          {/* Modal Tambah Produk */}
-          {showModal && (
-            <AddProductModal
-              onAdd={fetchProduk}
-              onClose={() => setShowModal(false)}
-              onFeedback={showFeedback}
-            />
-          )}
-
-          {/* Modal Edit Produk */}
-          {editProduct && (
-            <EditProductModal
-              product={editProduct}
-              onUpdate={fetchProduk}
-              onClose={() => setEditProduct(null)}
-              onFeedback={showFeedback}
-            />
-          )}
-
-          {/* Modal Delete Produk */}
-          {deleteProduct && (
-            <DeleteProductModal
-              product={deleteProduct}
-              onDelete={fetchProduk}
-              onClose={() => setDeleteProduct(null)}
-              onFeedback={showFeedback}
-            />
-          )}
-
-          {/* Product Table */}
-          {loading ? (
-            <p>Loading data produk...</p>
-          ) : (
-            <ProductTable
-              products={products}
-              onEdit={setEditProduct}
-              onDelete={setDeleteProduct}
-            />
-          )}
-        </div>
+      {/* === SEARCH & ADD === */}
+      <div className="flex justify-between items-center mb-4">
+        <input
+          className="border px-4 py-2 rounded w-full max-w-sm"
+          placeholder="Cari produk..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <button
+          onClick={handleAdd}
+          className="ml-4 bg-green-600 text-white px-4 py-2 rounded"
+        >
+          + Tambah Produk
+        </button>
       </div>
+
+      {/* === PRODUCT TABLE === */}
+      <table className="w-full border text-sm">
+        <thead className="bg-green-100 text-left">
+          <tr>
+            <th className="p-2 border">Gambar</th>
+            <th className="p-2 border">Nama</th>
+            <th className="p-2 border">Harga</th>
+            <th className="p-2 border">Stok</th>
+            <th className="p-2 border">Toko</th>
+            <th className="p-2 border">Kategori</th>
+            <th className="p-2 border">Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          {products.map((p) => (
+            <tr key={p.id} className="hover:bg-green-50">
+              <td className="p-2 border">
+                <Image
+                  src={p.image || "/default.png"}
+                  alt={p.name}
+                  width={56}
+                  height={56}
+                  className="object-cover rounded"
+                />
+              </td>
+              <td className="p-2 border">{p.name}</td>
+              <td className="p-2 border">Rp {p.price.toLocaleString()}</td>
+              <td className="p-2 border">{p.stock}</td>
+              <td className="p-2 border">
+                {stores.find((s) => s.id === p.storeId)?.name || "-"}
+              </td>
+              <td className="p-2 border">{p.categoryName || "-"}</td>
+              <td className="p-2 border space-x-2">
+                <button
+                  onClick={() => handleEdit(p)}
+                  className="text-blue-600 hover:underline"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => setConfirmId(p.id)}
+                  className="text-red-600 hover:underline"
+                >
+                  Hapus
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {/* === MODAL FORM === */}
+      <ProductModal
+        open={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleSubmit}
+        selectedProduct={editProduct}
+        stores={stores}
+        categories={categories}
+      />
+
+      {/* === MODAL DELETE CONFIRMATION === */}
+      <ConfirmModal
+        open={!!confirmId}
+        onCancel={() => setConfirmId(null)}
+        onConfirm={handleDelete}
+        title="Hapus Produk"
+        description="Yakin ingin menghapus produk ini?"
+        confirmText="Hapus"
+        cancelText="Batal"
+      />
+    </div>
   );
 }

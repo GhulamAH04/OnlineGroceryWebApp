@@ -1,3 +1,4 @@
+// OnlineGroceryWebApp/backend/src/controllers/discountProduct.controller.ts
 import { Request, Response, NextFunction } from 'express';
 import { discountService } from '../services/discountAdmin.service';
 

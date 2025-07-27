@@ -1,4 +1,4 @@
-// File: src/middlewares/authAdmin.middleware.ts
+// OnlineGroceryWebApp/backend/src/middlewares/authAdmin.middleware.ts
 
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
@@ -12,21 +12,20 @@ export const authMiddleware = async (
   req: Request,
   res: Response,
   next: NextFunction
-): Promise<void> => {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader?.startsWith('Bearer ')) {
-    res.status(401).json({
-      success: false,
-      message: 'Unauthorized: No token provided',
-      data: null,
-    });
-    return; // ✅ penting
-  }
-
-  const token = authHeader.split(' ')[1];
-
+) => {
   try {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader?.startsWith("Bearer ")) {
+      res.status(401).json({
+        success: false,
+        message: "Unauthorized: No token provided",
+        data: null,
+      });
+      return;
+    }
+
+    const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
 
     const user = await prisma.users.findUnique({
@@ -36,20 +35,15 @@ export const authMiddleware = async (
     if (!user) {
       res.status(401).json({
         success: false,
-        message: 'Unauthorized: User not found',
+        message: "Unauthorized: User not found",
         data: null,
       });
       return;
     }
 
     req.user = { id: user.id, role: user.role };
-    next(); // ✅ tetap lanjut
+    next(); // ✅ lanjut ke route
   } catch (error) {
-    res.status(401).json({
-      success: false,
-      message: 'Unauthorized: Invalid token',
-      data: null,
-    });
-    return;
+    next(error); // ✅ kirim ke global error handler Express
   }
 };
