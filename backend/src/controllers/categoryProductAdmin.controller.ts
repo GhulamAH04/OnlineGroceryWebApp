@@ -1,17 +1,13 @@
-
-// === FILE: OnlineGroceryWebApp/backend/src/controllers/categoryProductAdmin.controller.ts ===
+// File: OnlineGroceryWebApp/backend/src/controllers/categoryProductAdmin.controller.ts
 
 import { Request, Response, NextFunction } from "express";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { categoryService } from "../services/categoryProductAdmin"; // <-- 1. Impor service
 
 // === GET ALL CATEGORIES ===
 export const getAllCategories = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const categories = await prisma.categories.findMany({
-      orderBy: { createdAt: "desc" },
-    });
+    // 2. Panggil service untuk mengambil data
+    const categories = await categoryService.getAll();
 
     res.status(200).json({
       success: true,
@@ -26,19 +22,11 @@ export const getAllCategories = async (req: Request, res: Response, next: NextFu
 // === CREATE CATEGORY ===
 export const createCategory = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { name, slug } = req.body;
+    // Service Anda membuat slug dari nama, jadi kita hanya butuh 'name'
+    const { name } = req.body;
 
-    const existing = await prisma.categories.findUnique({ where: { slug } });
-    if (existing) {
-      return res.status(400).json({
-        success: false,
-        message: "Slug kategori sudah digunakan",
-      });
-    }
-
-    const newCategory = await prisma.categories.create({
-      data: { name, slug, updatedAt: new Date() },
-    });
+    // 3. Panggil service untuk membuat kategori
+    const newCategory = await categoryService.create(name);
 
     res.status(201).json({
       success: true,
@@ -46,6 +34,7 @@ export const createCategory = async (req: Request, res: Response, next: NextFunc
       data: newCategory,
     });
   } catch (error) {
+    // Service akan melempar error jika kategori sudah ada, yang akan ditangkap di sini
     next(error);
   }
 };
@@ -54,20 +43,10 @@ export const createCategory = async (req: Request, res: Response, next: NextFunc
 export const updateCategory = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const { name, slug } = req.body;
+    const { name } = req.body; // Service hanya butuh 'name' untuk update
 
-    const existing = await prisma.categories.findUnique({ where: { id: Number(id) } });
-    if (!existing) {
-      return res.status(404).json({
-        success: false,
-        message: "Kategori tidak ditemukan",
-      });
-    }
-
-    const updatedCategory = await prisma.categories.update({
-      where: { id: Number(id) },
-      data: { name, slug, updatedAt: new Date() },
-    });
+    // 4. Panggil service untuk update
+    const updatedCategory = await categoryService.update(Number(id), name);
 
     res.status(200).json({
       success: true,
@@ -84,15 +63,8 @@ export const deleteCategory = async (req: Request, res: Response, next: NextFunc
   try {
     const { id } = req.params;
 
-    const existing = await prisma.categories.findUnique({ where: { id: Number(id) } });
-    if (!existing) {
-      return res.status(404).json({
-        success: false,
-        message: "Kategori tidak ditemukan",
-      });
-    }
-
-    await prisma.categories.delete({ where: { id: Number(id) } });
+    // 5. Panggil service untuk menghapus
+    await categoryService.delete(Number(id));
 
     res.status(200).json({
       success: true,
@@ -102,107 +74,3 @@ export const deleteCategory = async (req: Request, res: Response, next: NextFunc
     next(error);
   }
 };
-
-/*
-import { Request, Response, NextFunction } from "express";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
-
-// === GET ALL CATEGORIES ===
-export const getAllCategories = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const categories = await prisma.categories.findMany({
-      orderBy: { createdAt: "desc" },
-    });
-
-    res.status(200).json({
-      success: true,
-      message: "Berhasil mengambil data kategori",
-      data: categories,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// === CREATE CATEGORY ===
-export const createCategory = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { name, slug } = req.body;
-
-    const existing = await prisma.categories.findUnique({ where: { slug } });
-    if (existing) {
-      return res.status(400).json({
-        success: false,
-        message: "Slug kategori sudah digunakan",
-      });
-    }
-
-    const newCategory = await prisma.categories.create({
-      data: { name, slug, updatedAt: new Date() },
-    });
-
-    res.status(201).json({
-      success: true,
-      message: "Kategori berhasil dibuat",
-      data: newCategory,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// === UPDATE CATEGORY ===
-export const updateCategory = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { id } = req.params;
-    const { name, slug } = req.body;
-
-    const existing = await prisma.categories.findUnique({ where: { id: Number(id) } });
-    if (!existing) {
-      return res.status(404).json({
-        success: false,
-        message: "Kategori tidak ditemukan",
-      });
-    }
-
-    const updatedCategory = await prisma.categories.update({
-      where: { id: Number(id) },
-      data: { name, slug,updatedAt: new Date(), },
-    });
-
-    res.status(200).json({
-      success: true,
-      message: "Kategori berhasil diupdate",
-      data: updatedCategory,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// === DELETE CATEGORY ===
-export const deleteCategory = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { id } = req.params;
-
-    const existing = await prisma.categories.findUnique({ where: { id: Number(id) } });
-    if (!existing) {
-      return res.status(404).json({
-        success: false,
-        message: "Kategori tidak ditemukan",
-      });
-    }
-
-    await prisma.categories.delete({ where: { id: Number(id) } });
-
-    res.status(200).json({
-      success: true,
-      message: "Kategori berhasil dihapus",
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-*/
