@@ -3,7 +3,7 @@ import { redis } from "../lib/redis";
 import { RAJAONGKIR_API_KEY, RAJAONGKIR_BASE_URL } from "../config";
 import { getProvinceId } from "./province.service";
 
-async function fetchCitiesByProvince(province: string) {
+export async function fetchCitiesByProvince(province: string) {
   try {
     const provinceId = await getProvinceId(province);
 

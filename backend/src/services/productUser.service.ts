@@ -58,8 +58,8 @@ async function calculateStoreDistances(lat1: number, lon1: number) {
     const stores = await getStoresByCity(userCity);
 
     for (let i = 0; i < stores.length; i++) {
-      const lat2 = stores[i].latitude;
-      const lon2 = stores[i].longitude;
+      const lat2 = Number(stores[i].latitude);
+      const lon2 = Number(stores[i].longitude);
 
       const R = 6371; // Earth's radius in km
       const dLat = ((lat2 - lat1) * Math.PI) / 180;

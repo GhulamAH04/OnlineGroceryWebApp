@@ -3,7 +3,7 @@ import axios from "axios";
 import { RAJAONGKIR_API_KEY, RAJAONGKIR_BASE_URL } from "../config";
 import { redis } from "../lib/redis";
 
-async function fetchProvince() {
+export async function fetchProvince() {
   try {
     const cachedValue = await redis.get("provinces");
 

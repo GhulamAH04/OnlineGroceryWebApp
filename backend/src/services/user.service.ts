@@ -81,6 +81,17 @@ export async function EditUserByIdService(
   }
 }
 
+export async function getAllUsersService(
+) {
+  try {
+    const users = await prisma.users.findMany();
+
+    return users;
+  } catch (err) {
+    throw err;
+  }
+}
+
 export async function UpdateAvatarService(
   file: Express.Multer.File,
   email: string

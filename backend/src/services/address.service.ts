@@ -18,7 +18,7 @@ export async function EditAddressByIdService(
   bodyData: INewAddress
 ) {
   try {
-    const { address, city, province, postalCode } = bodyData;
+    const { address, cityId, provinceId, postalCode } = bodyData;
 
     const existedAddress = await prisma.addresses.findFirst({
       where: { id },
@@ -28,8 +28,8 @@ export async function EditAddressByIdService(
       where: { id },
       data: {
         address: address || existedAddress?.address,
-        city: city || existedAddress?.city,
-        province: province || existedAddress?.province,
+        cityId: cityId || existedAddress?.cityId,
+        provinceId: provinceId || existedAddress?.provinceId,
         postalCode: postalCode || existedAddress?.postalCode,
       },
     });
@@ -42,7 +42,7 @@ export async function EditAddressByIdService(
 
 export async function AddNewAddressService(bodyData: INewAddress) {
   try {
-    const { name, address, city, province, postalCode, isPrimary, userId, district, phone } =
+    const { name, address, cityId, provinceId, postalCode, isPrimary, userId, districtId, phone } =
       bodyData;
 
       await prisma.addresses.updateMany({
@@ -55,12 +55,12 @@ export async function AddNewAddressService(bodyData: INewAddress) {
       data: {
         name,
         address,
-        city,
-        province,
+        cityId,
+        provinceId,
         postalCode,
         userId,
         isPrimary,
-        district,
+        districtId,
         phone,
         updatedAt: new Date()
       },

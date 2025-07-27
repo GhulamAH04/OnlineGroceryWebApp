@@ -21,6 +21,7 @@ import CityRouter from "./routes/city.routes";
 import ProvinceRouter from "./routes/province.routes";
 import AddressRouter from "./routes/address.routes";
 import DistrictRouter from "./routes/district.routes";
+import StoreRouter from "./routes/store.routes";
 import ShippingCostRouter from "./routes/shippingCost.routes"
 
 // Routes - ADMIN
@@ -60,6 +61,7 @@ app.use("/api/cities", CityRouter);
 app.use("/api/provinces", ProvinceRouter);
 app.use("/api/districts", DistrictRouter);
 app.use("/api/addresses", AddressRouter);
+app.use("/api/stores", StoreRouter); // will add authorization later
 app.use("/api/shipping-cost", ShippingCostRouter);
 
 // === ADMIN ROUTES ===

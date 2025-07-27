@@ -1,6 +1,24 @@
 import { Request, Response, NextFunction } from "express";
-import { EditUserByIdService, GetMainAddressService, UpdateAvatarService } from "../services/user.service";
+import { EditUserByIdService, getAllUsersService, GetMainAddressService, UpdateAvatarService } from "../services/user.service";
 import { IUserReqParam } from "../custom";
+
+
+export async function GetAllUsersController(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const users = await getAllUsersService();
+
+    res.status(200).send({
+      message: `Get all users success`,
+      data: users,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
 
 export async function GetMainAddressController(
   req: Request,

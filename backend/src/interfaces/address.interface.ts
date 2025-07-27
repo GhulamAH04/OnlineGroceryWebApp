@@ -1,17 +1,17 @@
 export interface INewAddress {
   name: string;
   address: string;
-  province: string;
-  city: string;
+  provinceId: number;
+  cityId: number;
   postalCode: string;
   isPrimary: boolean;
   userId: number;
-  district: string;
+  districtId: number;
   phone: string;
 }
 
 export interface IShippingAddress {
   province: string;
   city: string;
-  district: string
+  district: string;
 }
