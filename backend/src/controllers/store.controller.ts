@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { AddNewStoreService, DeleteStoreService, getAllStoresService } from "../services/store.service";
+import { AddNewStoreService, AssignStoreAdminService, DeleteStoreService, getAllStoresService, UpdateStoreService } from "../services/store.service";
 import { INewStore } from "../interfaces/store.interface";
 
 export async function getAllStoresController(
@@ -51,6 +51,45 @@ export async function DeleteStoreController(
     res.status(200).send({
       message: `delete store success`,
       data: deletedStore,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function UpdateStoreController(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const storeId: number = parseInt(req.params.id);
+
+    const updatedStore = await UpdateStoreService(storeId, req.body);
+
+    res.status(200).send({
+      message: `update store success`,
+      data: updatedStore,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function AssignStoreAdminController(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const storeId: number = parseInt(req.params.id);
+    const { userId } = req.body;
+
+    const updatedStore = await AssignStoreAdminService(storeId, parseInt(userId));
+
+    res.status(200).send({
+      message: `assign store admin success`,
+      data: updatedStore,
     });
   } catch (err) {
     next(err);
