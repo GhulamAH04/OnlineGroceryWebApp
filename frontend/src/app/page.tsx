@@ -12,8 +12,9 @@ import { useEffect, useState } from "react";
 import { setCity, setCoordinates } from "@/lib/redux/features/locationSlice";
 import { setCookie } from "cookies-next";
 import sign from "jwt-encode";
-import { jwtSecret } from "@/config";
-import { getCategories, getMainProducts, getNearbyProducts } from "@/lib/data";
+import { apiUrl, jwtSecret } from "@/config";
+import { getCategories } from "@/lib/data";
+import axios from "axios";
 
 export default function Homepage() {
   // hook
@@ -60,21 +61,25 @@ export default function Homepage() {
     const fetchProducts = async () => {
       try {
         if (location.latitude !== 0 && location.longitude !== 0) {
-          const data = await getNearbyProducts(location.latitude, location.longitude);
-          setBranchesProducts(data.products);
+          const { data } = await axios.get(
+            `${apiUrl}/api/products/nearby?latitude=${location.latitude}&longitude=${location.longitude}`
+          );
+          setBranchesProducts(data.data.products);
           const locationState: ILocation = {
             latitude: location.latitude,
             longitude: location.longitude,
-            city: data.data.userCity
+            city: data.data.userCity,
           };
           // set location cookie
           const token = sign(locationState, `${jwtSecret}`);
-          setCookie("location_token", token)
+          setCookie("location_token", token);
 
           dispatch(setCity(locationState));
         } else {
-          const data = await getMainProducts()
-          setBranchesProducts(data.data);
+          const { data } = await axios.get(
+            `${apiUrl}/api/products/main`
+          );
+          setBranchesProducts(data.data.products);
         }
       } catch (err) {
         console.error("Error fetching products:", err);
@@ -92,6 +97,7 @@ export default function Homepage() {
       )
     : branchesProducts;
 
+    console.log(branchesProducts);
   // Handle category click
   const handleCategoryClick = (categoryId: number) => {
     setSelectedCategoryId(categoryId);

@@ -2,20 +2,6 @@ import { apiUrl } from "@/config";
 import { IExistingAddress } from "@/interfaces/address.interface";
 import axios from "axios";
 
-export async function getNearbyProducts(latitude: number, longitude: number) {
-  const { data } = await axios.get(
-    `${apiUrl}/api/products/nearby?latitude=${latitude}&longitude=${longitude}`
-  );
-  if (!data) throw new Error("Error fetching nearby products");
-  return data.data;
-}
-
-export async function getMainProducts() {
-  const { data } = await axios.get(`${apiUrl}/api/products/main`);
-  if (!data) throw new Error("Error fetching main products");
-  return data.data;
-}
-
 export async function getCategories() {
   const data = await axios.get(`${apiUrl}/api/categories/`);
   if (!data) throw new Error("Error fetching main products");

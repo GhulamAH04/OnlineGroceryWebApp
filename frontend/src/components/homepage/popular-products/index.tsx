@@ -8,8 +8,6 @@ interface PageProps {
 }
 
 export default function PopularProducts({ products }: PageProps) {
-  const displayedProducts = products.slice(0, 10);
-
   return (
     <section className="w-full max-w-[1320px] mx-auto mt-12 lg:mt-[60px] px-2">
       {/* Header Section */}
@@ -42,7 +40,7 @@ export default function PopularProducts({ products }: PageProps) {
 
       {/* Products Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6">
-        {displayedProducts.map((product) => (
+        {products.map((product) => (
           <Product
             key={product.id}
             image={product.products.image}
