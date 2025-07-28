@@ -8,9 +8,12 @@ import { JwtPayload, sign, verify } from "jsonwebtoken";
 import { Transporter } from "../utils/nodemailer";
 import { compare, genSaltSync, hash } from "bcrypt";
 import { Role } from "@prisma/client";
-import { IGoogleLogin, IGoogleRegister, ILogin, IRegister } from "../interfaces/auth.interface";
-
-
+import {
+  IGoogleLogin,
+  IGoogleRegister,
+  ILogin,
+  IRegister,
+} from "../interfaces/auth.interface";
 
 export async function FindUserByEmail(email: string) {
   try {
@@ -25,19 +28,24 @@ export async function FindUserByEmail(email: string) {
   }
 }
 
+// add password hashing
 async function Register(userData: IRegister) {
   try {
-    const { name, email } = userData;
+    const { name, email, password } = userData;
 
     const user = await FindUserByEmail(email);
 
     if (user) throw new Error("Email already registered");
+
+    const salt = genSaltSync(10);
+    const hashedPassword = await hash(password, salt);
 
     const newUser = await prisma.$transaction(async (t) => {
       const registeredUser = await t.users.create({
         data: {
           username: name,
           email: email,
+          password: hashedPassword,
           updatedAt: new Date(),
         },
       });
@@ -45,7 +53,7 @@ async function Register(userData: IRegister) {
       return registeredUser;
     });
 
-    if (!newUser) throw new Error("Create account failed")
+    if (!newUser) throw new Error("Create account failed");
 
     SendVerificationEmail(name, email, "Welcome");
 
@@ -55,7 +63,11 @@ async function Register(userData: IRegister) {
   }
 }
 
-export async function SendVerificationEmail(username: string, email: string, subject: string) {
+export async function SendVerificationEmail(
+  username: string,
+  email: string,
+  subject: string
+) {
   try {
     //send email
     const templatePath = path.join(
@@ -164,13 +176,15 @@ async function LoginWithGoogle(userData: IGoogleLogin) {
 
     if (!user) throw new Error("Email does not exist");
 
-    if (name !== user.username) await prisma.users.update({
-      where: {
-        email
-      }, data: {
-        username: name,
-      }
-    })
+    if (name !== user.username)
+      await prisma.users.update({
+        where: {
+          email,
+        },
+        data: {
+          username: name,
+        },
+      });
 
     const payload = {
       id: user.id,
@@ -311,11 +325,14 @@ export async function VerifyResetService(email: string) {
   }
 }
 
-export async function SendVerificationEmailService(username: string, email: string, subject: string) {
+export async function SendVerificationEmailService(
+  username: string,
+  email: string,
+  subject: string
+) {
   try {
     await SendVerificationEmail(username, email, subject);
   } catch (err) {
     throw err;
   }
 }
-
