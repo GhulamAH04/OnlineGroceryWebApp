@@ -2,34 +2,14 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { MapPin, Truck, ShoppingCart, CreditCard, Plus } from "lucide-react";
-import AddressModal, { Address } from "./addressModal";
+import AddressModal from "./addressModal";
 import { useAppSelector } from "@/lib/redux/hooks";
-import axios from "axios";
-import { apiUrl } from "@/config";
 import { getCookie } from "cookies-next";
-import { ICartItems } from "@/interfaces/product.interface";
+import { ICartItems, IGroupedItem } from "@/interfaces/product.interface";
+import { IShippingOption } from "@/interfaces/shipping.interface";
+import { getMainAddress, getShippingOptions, getUserAddresses } from "@/lib/data";
 import { IExistingAddress } from "@/interfaces/address.interface";
 
-// --- TIPE DATA (TYPESCRIPT) ---
-interface IGroupedItem {
-  id: number;
-  name: string;
-  price: number;
-  quantity: number;
-  weightInGrams: number;
-  storeName: string;
-  storeAddress: IExistingAddress; // ID kota asal untuk API RajaOngkir
-  imageUrl: string;
-}
-
-interface ShippingOption {
-  name: string;
-  code: string;
-  service: string;
-  description: string;
-  cost: number;
-  etd: string;
-}
 
 // --- DATA DUMMY / MOCK DATA ---
 // Data ini seharusnya datang dari state global (Redux/Context) atau props
@@ -44,9 +24,9 @@ const initialCartItems: ICartItems[] = [
         name: "Jl. Raya No. 1",
         phone: "08123456789",
         address: "Jl. Raya No. 1",
-        district: "Kenjeran",
-        city: "Surabaya",
-        province: "Jawa Timur",
+        districts: { id: 1, name: "kenjeran" },
+        cities: { id: 1, name: "Surabaya" },
+        provinces: {id: 1, name: "Jawa Timur"},
         postalCode: "12345",
         isPrimary: true,
         userId: 1,
@@ -62,62 +42,6 @@ const initialCartItems: ICartItems[] = [
     },
     quantity: 1,
   },
-  {
-    id: 2,
-    branchs: {
-      id: 1,
-      name: "Toko Segar Jaya",
-      addresses: {
-        id: 1,
-        name: "Jl. Raya No. 1",
-        phone: "08123456789",
-        address: "Jl. Raya No. 1",
-        district: "Kenjeran",
-        city: "Surabaya",
-        province: "Jawa Timur",
-        postalCode: "12345",
-        isPrimary: true,
-        userId: 1,
-      },
-    },
-    products: {
-      id: 2,
-      name: "Apel Jepang",
-      price: 25000,
-      weight: 1000,
-      image: "https://placehold.co/100x100/a8e6cf/333?text=Apel",
-      categoryId: 1,
-    },
-    quantity: 2,
-  },
-  {
-    id: 3,
-    branchs: {
-      id: 2,
-      name: "Fresh Jaya",
-      addresses: {
-        id: 1,
-        name: "Jl. Raya No. 1",
-        phone: "08123456789",
-        address: "Jl. Raya No. 1",
-        district: "Woha",
-        city: "Bima",
-        province: "Nusa Tenggara Barat (NTB)",
-        postalCode: "12345",
-        isPrimary: true,
-        userId: 2,
-      },
-    },
-    products: {
-      id: 3,
-      name: "Apel Gunung",
-      price: 22000,
-      weight: 1000,
-      image: "https://placehold.co/100x100/a8e6cf/333?text=Apel",
-      categoryId: 1,
-    },
-    quantity: 1,
-  },
 ];
 
 // Komponen Utama Checkout
@@ -127,15 +51,15 @@ export default function Checkout() {
 
   /* eslint-disable-next-line */
   const [cartItems, setCartItems] = useState<ICartItems[]>(initialCartItems);
-  const [userAddresses, setUserAddresses] = useState<Address[]>([]);
-  const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
+  const [userAddresses, setUserAddresses] = useState<IExistingAddress[]>([]);
+  const [selectedAddress, setSelectedAddress] = useState<IExistingAddress | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [shippingOptions, setShippingOptions] = useState<{
-    [storeName: string]: { loading: boolean; data: ShippingOption[] };
+    [storeName: string]: { loading: boolean; data: IShippingOption[] };
   }>({});
   const [selectedShipping, setSelectedShipping] = useState<{
-    [storeName: string]: ShippingOption;
+    [storeName: string]: IShippingOption;
   }>({});
 
   // Mengelompokkan produk berdasarkan toko
@@ -181,14 +105,10 @@ export default function Checkout() {
 
         const fetchShippingOptionsForStore = async () => {
           try {
-            const response = await axios.post(`${apiUrl}/api/shipping-cost`, {
-              origin: originAddress,
-              destination: selectedAddress,
-              weight: totalWeight,
-            });
+            const data = await getShippingOptions(originAddress, selectedAddress, totalWeight);
 
             // API response might not have data, default to an empty array.
-            const fetchedOptions = response.data.data || [];
+            const fetchedOptions = data || [];
 
             setShippingOptions((prev) => ({
               ...prev,
@@ -218,13 +138,8 @@ export default function Checkout() {
     try {
       const token = getCookie("access_token") as string;
       const fetchMainAddress = async () => {
-        const response = await axios.get(
-          `${apiUrl}/api/users/address/main/${user.user.id}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        setSelectedAddress(response.data.data[0] || null);
+        const data = await getMainAddress(user.user.id, token)
+        setSelectedAddress(data || null);
       };
       fetchMainAddress();
     } catch (err) {
@@ -235,10 +150,8 @@ export default function Checkout() {
   useEffect(() => {
     try {
       const fetchUserAddresses = async () => {
-        const response = await axios.get(
-          `${apiUrl}/api/addresses/${user.user.id}`
-        );
-        setUserAddresses(response.data.data);
+        const data = await getUserAddresses(user.user.id)
+        setUserAddresses(data);
       };
       fetchUserAddresses();
     } catch (err) {
@@ -246,13 +159,13 @@ export default function Checkout() {
     }
   }, [user.user.id]);
 
-  const handleSelectAddress = (address: Address) => {
+  const handleSelectAddress = (address: IExistingAddress) => {
     setSelectedAddress(address);
     setIsModalOpen(false);
   };
 
-  const handleAddNewAddress = (newAddressData: Omit<Address, "id">) => {
-    const newAddress: Address = {
+  const handleAddNewAddress = (newAddressData: Omit<IExistingAddress, "id">) => {
+    const newAddress: IExistingAddress = {
       id: Date.now(), // temporary ID
       ...newAddressData,
     };
@@ -326,7 +239,7 @@ export default function Checkout() {
                 <div>
                   <p className="font-bold">{selectedAddress.name}</p>
                   <p className="text-gray-600">{selectedAddress.phone}</p>
-                  <p className="text-gray-600 mt-1">{`${selectedAddress.address}, ${selectedAddress.district}, ${selectedAddress.city}, ${selectedAddress.province} ${selectedAddress.postalCode}`}</p>
+                  <p className="text-gray-600 mt-1">{`${selectedAddress.address}, ${selectedAddress.districts.name}, ${selectedAddress.cities.name}, ${selectedAddress.provinces.name} ${selectedAddress.postalCode}`}</p>
                   <button
                     onClick={() => setIsModalOpen(true)}
                     className="mt-3 text-sm font-semibold text-green-600 hover:text-green-800"
@@ -355,7 +268,7 @@ export default function Checkout() {
                   className="mb-6 last:mb-0 border border-gray-200 rounded-lg p-4"
                 >
                   <h3 className="font-bold text-md text-gray-700 mb-3">
-                    Dikirim dari: {storeName + " - " + `(${products[0].storeAddress.city})`}
+                    Dikirim dari: {storeName + " - " + `(${products[0].storeAddress.cities.name})`}
                   </h3>
                   {products.map((product) => (
                     <div

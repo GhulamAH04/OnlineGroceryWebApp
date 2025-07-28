@@ -1,10 +1,10 @@
 import { ArrowRight } from "lucide-react";
 import Product from "./product";
 import Link from "next/link";
-import { IBranchesProducts } from "@/interfaces/product.interface";
+import { IProductBranch } from "@/interfaces/product.interface";
 
 interface PageProps {
-  products: IBranchesProducts[];
+  products: IProductBranch[];
 }
 
 export default function PopularProducts({ products }: PageProps) {

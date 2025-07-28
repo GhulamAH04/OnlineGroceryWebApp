@@ -1,6 +1,7 @@
 "use client";
 
 import { apiUrl } from "@/config";
+import { IExistingAddress } from "@/interfaces/address.interface";
 import { useAppSelector } from "@/lib/redux/hooks";
 import { AddNewAddressSchema } from "@/schemas/address.schema";
 import axios from "axios";
@@ -8,21 +9,6 @@ import { getCookie } from "cookies-next";
 import { useFormik } from "formik";
 import { CheckCircle, Plus, X } from "lucide-react";
 import { useEffect, useState } from "react";
-
-// --- TIPE DATA (TYPESCRIPT) ---
-export interface Address {
-  id: number;
-  name: string;
-  phone: string;
-  address: string;
-  province: { id: string; name: string };
-  city: { id: string; name: string };
-  district: { id: string; name: string };
-  postalCode: string;
-  isPrimary: boolean;
-}
-
-// --- KOMPONEN ---
 
 // Komponen Modal untuk memilih atau menambah alamat
 const AddressModal = ({
@@ -35,8 +21,8 @@ const AddressModal = ({
 }: {
   isOpen: boolean;
   onClose: () => void;
-  addresses: Address[];
-  onSelectAddress: (address: Address) => void;
+  addresses: IExistingAddress[];
+  onSelectAddress: (address: IExistingAddress) => void;
   /* eslint-disable-next-line */
   onAddNewAddress: (values: any) => void;
   selectedAddressId: number | null;
@@ -373,7 +359,7 @@ const AddressModal = ({
                     <div>
                       <p className="font-bold text-gray-800">{address.name}</p>
                       <p className="text-sm text-gray-600">{address.phone}</p>
-                      <p className="text-sm text-gray-500 mt-1">{`${address.address}, ${address.district}, ${address.city}, ${address.province}`}</p>
+                      <p className="text-sm text-gray-500 mt-1">{`${address.address}, ${address.districts.name}, ${address.cities.name}, ${address.provinces.name}`}</p>
                     </div>
                     {address.isPrimary && (
                       <p className="text-xs w-[125px] h-6 text-center rounded-sm text-green-500 border-1 border-green-500 p-1">

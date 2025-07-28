@@ -1,15 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
-import { IStore } from "@/interfaces";
+import { IStore, IUser } from "@/interfaces";
 import axios from "axios";
 import { apiUrl } from "@/config";
-
-interface IUser {
-  id: number;
-  username: string;
-  email: string;
-  role: string;
-}
 
 export default function AssignStoreModal({
   store,

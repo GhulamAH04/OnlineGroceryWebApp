@@ -3,12 +3,12 @@ export interface IExistingAddress {
   name: string;
   phone: string;
   address: string;
-  province: string;
-  city: string;
+  provinces: ILocation;
+  cities: ILocation;
   postalCode: string;
   isPrimary: boolean;
   userId: number;
-  district: string;
+  districts: ILocation;
 }
 
 export interface INewAddressFormData {

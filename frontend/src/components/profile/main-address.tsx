@@ -36,7 +36,7 @@ export default function MainAddress() {
         Main Address
       </h3>
       <address className="not-italic text-gray-700 space-y-2">
-        <p>{address?.address}, {address?.city}</p>
+        <p>{address?.address}, {address?.cities.name}</p>
         <p>{userState.user.email}</p>
         <p>{address?.postalCode}</p>
       </address>

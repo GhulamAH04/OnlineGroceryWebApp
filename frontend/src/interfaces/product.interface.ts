@@ -1,4 +1,12 @@
+import { IExistingAddress } from "./address.interface";
 import { IBranch } from "./store.interface";
+
+export interface IProductBranch {
+  id: number;
+  stock: number;
+  branchs: IBranch;
+  products: IProduct;
+}
 
 interface IProduct {
   id: number;
@@ -9,11 +17,28 @@ interface IProduct {
   categoryId: number;
 }
 
-
-
 export interface ICartItems {
   id: number;
   branchs: IBranch;
   products: IProduct;
   quantity: number;
 }
+
+export interface IProductCart {
+  id: number;
+  quantity: number;
+  cartId: number;
+  productBranches: IProductBranch;
+}
+
+export interface IGroupedItem {
+  id: number;
+  name: string;
+  price: number;
+  quantity: number;
+  weightInGrams: number;
+  storeName: string;
+  storeAddress: IExistingAddress; // ID kota asal untuk API RajaOngkir
+  imageUrl: string;
+}
+

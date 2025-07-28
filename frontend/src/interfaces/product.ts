@@ -7,4 +7,3 @@ export interface Product {
     currentStock?: number | null;
     image?: string;
   }
-  

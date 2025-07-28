@@ -33,7 +33,7 @@ const EditStoreModal = ({
   );
 
   useEffect(() => {
-    if (store) {
+    if (store.provinces && store.cities && store.districts) {
       setSelectedProvince(store.provinces);
       setSelectedCity(store.cities);
       setSelectedDistrict(store.districts);

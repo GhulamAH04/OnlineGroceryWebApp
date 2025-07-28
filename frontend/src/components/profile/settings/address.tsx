@@ -1,7 +1,7 @@
 "use client";
 
 import { apiUrl } from "@/config";
-import { IAddress, ICity, IProvince } from "@/interfaces/address.interface";
+import { IExistingAddress, ILocation } from "@/interfaces/address.interface";
 import { useAppSelector } from "@/lib/redux/hooks";
 import { BillingSchema } from "@/schemas/address.schema";
 import axios from "axios";
@@ -14,9 +14,9 @@ export default function BillingInformationForm() {
   const user = useAppSelector((state) => state.auth);
   // local state
   const [isEditMode, setIsEditMode] = useState(false);
-  const [cities, setCities] = useState<ICity[]>([]);
-  const [provinces, setProvinces] = useState<IProvince[]>([]);
-  const [address, setAddress] = useState<IAddress>();
+  const [cities, setCities] = useState<ILocation[]>([]);
+  const [provinces, setProvinces] = useState<ILocation[]>([]);
+  const [address, setAddress] = useState<IExistingAddress>();
 
   useEffect(() => {
     const userId = user.user.id;
