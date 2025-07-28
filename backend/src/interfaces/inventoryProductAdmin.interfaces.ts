@@ -1,5 +1,6 @@
 // File: src/interfaces/inventory.interface.ts
 
+
 import { Role, TransactionType } from '@prisma/client';
 
 export interface UpdateStockInput {

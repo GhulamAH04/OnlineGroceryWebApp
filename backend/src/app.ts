@@ -1,4 +1,4 @@
-// === FILE: src/app.ts ===
+// === FILE: OnlineGroceryWebApp/backend/src/app.ts ===
 
 import express, { Application, Request, Response, NextFunction } from "express";
 import cors from "cors";
@@ -31,14 +31,15 @@ import CategoryAdminRouter from "./routes/categoryAdmin.routes";
 import ProductAdminRouter from "./routes/productAdmin.routes";
 import DiscountAdminRouter from "./routes/discountAdmin.routes";
 import ReportAdminRouter from "./routes/reportSalesAdmin";
+import InventoryJournalRouter from "./routes/inventoryJournal.routes";
+import InventoryRouter from "./routes/inventoryAdmin.routes";
 
 // Load environment variables
 dotenv.config();
 
-
 // Express Init
 const app: Application = express();
-const port = PORT || 3002;
+const port = PORT || 8080;
 
 // Middleware
 app.use(express.json());
@@ -71,6 +72,8 @@ app.use("/admin/categories", CategoryAdminRouter);
 app.use("/admin/products", ProductAdminRouter);
 app.use("/admin/discounts", DiscountAdminRouter);
 app.use("/admin/reports", ReportAdminRouter);
+app.use("/admin/inventory", InventoryRouter);
+app.use("/admin/inventory-journal", InventoryJournalRouter);
 
 // === Static File
 app.use("/images", express.static("public/images"));
@@ -87,55 +90,3 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 app.listen(port, () => {
   console.log(`🚀 Server ready at http://localhost:${port}`);
 });
-
-
-/*
-======App.ts milik mas Darhan =======
-
-
-import express, { Application, Request, Response, NextFunction } from "express";
-import cors from "cors";
-
-import { FE_URL, PORT } from "./config";
-
-import ProductRouter from "./routers/product.router";
-import CategoryRouter from "./routers/category.router";
-import AuthRouter from "./routers/auth.router"
-import UserRouter from "./routers/user.router"
-import AddressRouter from "./routers/address.router"
-import CityRouter from "./routers/city.router"
-import ProvinceRouter from "./routers/province.router"
-
-const app: Application = express();
-
-app.use(express.json());
-
-// Use CORS middleware
-app.use(
-  cors({
-    origin: FE_URL,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
-    credentials: true, // (if using cookies/auth)
-  })
-);
-
-app.use("/api/products", ProductRouter);
-app.use("/api/categories", CategoryRouter);
-app.use("/api/auth", AuthRouter);
-app.use("/api/users", UserRouter);
-app.use("/api/addresses", AddressRouter);
-app.use("/api/cities", CityRouter);
-app.use("/api/provinces", ProvinceRouter);
-
-// ERROR HANDLING MIDDLEWARE
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  res.status(400).json({
-    success: false,
-    message: err.message,
-  });
-});
-
-app.listen(PORT, () => {
-  console.log(`Server started on port ${PORT}`);
-});
-*/

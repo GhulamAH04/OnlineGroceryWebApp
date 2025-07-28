@@ -1,17 +1,26 @@
 "use client";
 
 import Link from "next/link";
+<<<<<<< HEAD
 import { UserCog, Package, Percent, BarChart, Boxes, Store } from "lucide-react";
+=======
+import {
+  UserCog,
+  Package,
+  Percent,
+  BarChart,
+  Boxes,
+  RotateCcw,
+} from "lucide-react";
+>>>>>>> 14ecee8d3fd2d5bd07a05c728a65525c68d9ef31
 
 export default function AdminDashboardHome() {
   return (
     <>
-      {/* Judul Halaman */}
       <h1 className="text-3xl font-bold mb-8 text-green-700">
-        Dashboard Admin
+        Dashboard Super Admin
       </h1>
 
-      {/* Grid Card Menu */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* Account Management */}
         <Link
@@ -61,19 +70,51 @@ export default function AdminDashboardHome() {
           </div>
         </Link>
 
-        {/* Inventory Management */}
+        {/* Category Management */}
         <Link
-          href="/admin/inventory"
+          href="/admin/categories"
           className="group bg-white border border-green-100 rounded-xl p-6 flex flex-col gap-2 shadow hover:shadow-lg hover:bg-green-50 transition"
         >
           <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-green-100 text-green-700 mb-2">
             <Boxes size={28} />
           </div>
           <div className="text-lg font-semibold text-green-700">
+            Category Management
+          </div>
+          <div className="text-gray-500 text-sm">
+            Kelola kategori produk untuk pengelompokan dan pencarian.
+          </div>
+        </Link>
+
+        {/* Inventory Management */}
+        <Link
+          href="/admin/inventory"
+          className="group bg-white border border-green-100 rounded-xl p-6 flex flex-col gap-2 shadow hover:shadow-lg hover:bg-green-50 transition"
+        >
+          <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-green-100 text-green-700 mb-2">
+            <Package size={28} />
+          </div>
+          <div className="text-lg font-semibold text-green-700">
             Inventory Management
           </div>
           <div className="text-gray-500 text-sm">
             Monitoring & jurnal stok produk per toko.
+          </div>
+        </Link>
+
+        {/* Inventory Journal */}
+        <Link
+          href="/admin/inventory-journal"
+          className="group bg-white border border-green-100 rounded-xl p-6 flex flex-col gap-2 shadow hover:shadow-lg hover:bg-green-50 transition"
+        >
+          <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-green-100 text-green-700 mb-2">
+            <RotateCcw size={28} />
+          </div>
+          <div className="text-lg font-semibold text-green-700">
+            Inventory Journal
+          </div>
+          <div className="text-gray-500 text-sm">
+            Riwayat mutasi stok produk (IN/OUT) tiap toko.
           </div>
         </Link>
 

@@ -1,147 +1,101 @@
+// === INVENTORY MANAGEMENT PAGE ===
+// OnlineGroceryWebApp/frontend/src/app/admin/inventory/page.tsx
 "use client";
+
 import { useEffect, useState } from "react";
-import InventoryTable from "@/components/features2/inventory/InventoryTable";
-import AddInventoryModal from "@/components/features2/inventory/AddInventoryModal";
-import EditInventoryModal from "@/components/features2/inventory/EditInventoryModal";
-import InventoryJournalModal from "@/components/features2/inventory/InventoryJournalModal";
-import { Inventory } from "@/interfaces";
+import axios from "axios";
+import Image from "next/image";
+import { Inventory } from "@/interfaces/inventoryAdmin";
+import { useDebounceSearch } from "@/hooks/useDebounceSearch";
 
 export default function InventoryPage() {
-  const [inventory, setInventory] = useState<Inventory[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [editInventory, setEditInventory] = useState<Inventory | null>(null);
-  const [journalInventory, setJournalInventory] = useState<Inventory | null>(
-    null
-  );
-  const [feedback, setFeedback] = useState<string | null>(null);
+  // === STATE ===
+  const [inventoryList, setInventoryList] = useState<Inventory[]>([]);
   const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const debouncedSearch = useDebounceSearch(search);
 
-  const showFeedback = (msg: string) => {
-    setFeedback(msg);
-    setTimeout(() => setFeedback(null), 2500);
+  // === FETCH DATA INVENTORY ===
+  const fetchInventory = async () => {
+    try {
+      const res = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/inventory`,
+        {
+          params: { search: debouncedSearch },
+        }
+      );
+      setInventoryList(res.data.data);
+    } catch {
+      console.error("Gagal mengambil data inventory");
+    }
   };
 
-  // Fetch inventory
-  const fetchInventory = () => {
-    const token = localStorage.getItem("token") || "dummy";
-    setLoading(true);
-    fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/inventory?search=${encodeURIComponent(
-        search
-      )}&page=${page}&limit=10`,
-      { headers: { Authorization: `Bearer ${token}` } }
-    )
-      .then((res) => res.json())
-      .then((data) => {
-        setInventory(data.data?.data || []);
-        setTotalPages(data.data?.totalPages || 1);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  };
-
+  // === TRIGGER FETCH SETIAP SEARCH ===
   useEffect(() => {
     fetchInventory();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, page]);
+  }, [debouncedSearch]);
 
+  // === RENDER ===
   return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="bg-white p-8 rounded-xl shadow-xl w-full max-w-4xl">
-          <h1 className="text-3xl font-bold mb-4 text-center">
-            Inventory Management
-          </h1>
-          <p className="mb-4 text-center">
-            Kelola stok produk per toko dan history perubahan stok
-          </p>
+    <div className="min-h-screen p-4 bg-gray-50">
+      <div className="bg-white p-6 rounded-xl shadow-lg max-w-6xl mx-auto">
+        <h1 className="text-2xl font-bold mb-4 text-center text-green-700">
+          Stok Terkini
+        </h1>
 
-          {/* Feedback */}
-          {feedback && (
-            <div className="mb-4 text-center bg-green-50 border border-green-300 text-green-700 px-4 py-2 rounded">
-              {feedback}
-            </div>
-          )}
+        {/* === SEARCH DAN LINK TAMBAH === */}
+        <div className="flex justify-between mb-4">
+          <input
+            type="text"
+            placeholder="Cari produk..."
+            className="border rounded p-2 w-1/3"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
 
-          {/* Tambah Stok */}
-          <div className="mb-4 flex justify-end">
-            <button
-              className="bg-green-600 text-white px-4 py-2 rounded"
-              onClick={() => setShowAddModal(true)}
-            >
-              + Tambah Stok
-            </button>
-          </div>
-
-          {/* Search & Pagination */}
-          <div className="flex justify-between mb-4">
-            <input
-              type="text"
-              placeholder="Cari produk/toko..."
-              className="border rounded p-2 w-1/3"
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
-              }}
-            />
-            <div>
-              <button
-                className="px-3 py-1 bg-gray-300 rounded mr-2"
-                onClick={() => setPage(page - 1)}
-                disabled={page === 1}
-              >
-                Prev
-              </button>
-              <span className="font-semibold">
-                {page} / {totalPages}
-              </span>
-              <button
-                className="px-3 py-1 bg-gray-300 rounded ml-2"
-                onClick={() => setPage(page + 1)}
-                disabled={page === totalPages}
-              >
-                Next
-              </button>
-            </div>
-          </div>
-
-          {/* Modals */}
-          {showAddModal && (
-            <AddInventoryModal
-              onAdd={fetchInventory}
-              onClose={() => setShowAddModal(false)}
-              onFeedback={showFeedback}
-            />
-          )}
-          {editInventory && (
-            <EditInventoryModal
-              inventory={editInventory}
-              onUpdate={fetchInventory}
-              onClose={() => setEditInventory(null)}
-              onFeedback={showFeedback}
-            />
-          )}
-          {journalInventory && (
-            <InventoryJournalModal
-              inventory={journalInventory}
-              onClose={() => setJournalInventory(null)}
-            />
-          )}
-
-          {/* Table */}
-          {loading ? (
-            <p>Loading data inventory...</p>
-          ) : (
-            <InventoryTable
-              inventory={inventory}
-              onEdit={setEditInventory}
-              onViewJournal={setJournalInventory}
-            />
-          )}
+          <a
+            href="/admin/inventory-journal"
+            className="bg-green-600 text-white px-4 py-2 rounded"
+          >
+            ➕ Tambah Mutasi Stok
+          </a>
         </div>
+
+        {/* === TABEL INVENTORY === */}
+        <table className="w-full text-sm border">
+          <thead className="bg-green-100">
+            <tr>
+              <th className="p-2 border">Gambar</th>
+              <th className="p-2 border">Produk</th>
+              <th className="p-2 border">Toko</th>
+              <th className="p-2 border">Stok</th>
+            </tr>
+          </thead>
+          <tbody>
+            {inventoryList.map((item) => (
+              <tr key={item.id} className="border">
+                <td className="p-2">
+                  {item.productImage ? (
+                    <Image
+                      src={item.productImage}
+                      alt={item.productName}
+                      width={50}
+                      height={50}
+                      className="rounded"
+                    />
+                  ) : (
+                    <span>-</span>
+                  )}
+                </td>
+                <td className="p-2">{item.productName}</td>
+                <td className="p-2">{item.branchName}</td>
+                <td className="p-2 font-semibold text-green-700">
+                  {item.currentStock}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
-   );
+    </div>
+  );
 }

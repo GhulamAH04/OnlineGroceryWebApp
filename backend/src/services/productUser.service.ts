@@ -1,15 +1,13 @@
-// OnlineGroceryWebApp/backend/src/services/productUser.service.ts
 import axios from "axios";
 import prisma from "../lib/prisma";
 import { API_KEY } from "../config";
 
+// === Get Produk Per Cabang ===
 async function getProductBranchesByStoreId(storeId: number) {
   try {
     const productBranches = await prisma.product_branchs.findMany({
       where: {
-        branchs: {
-          id: storeId,
-        },
+        branchs: { id: storeId },
       },
       include: {
         products: true,
@@ -22,12 +20,12 @@ async function getProductBranchesByStoreId(storeId: number) {
   }
 }
 
+// === Ambil Kota dari API Berdasarkan LatLong ===
 async function getCity(latitude: number, longitude: number) {
-  //Make API Call
-  const { data } = await axios.get(
-    `https://api.opencagedata.com/geocode/v1/json?q=${latitude}%2C+${longitude}&key=${API_KEY}`
-  );
   try {
+    const { data } = await axios.get(
+      `https://api.opencagedata.com/geocode/v1/json?q=${latitude}%2C+${longitude}&key=${API_KEY}`
+    );
     const city: string = data.results[0].components.city;
     return city;
   } catch (err) {
@@ -35,6 +33,7 @@ async function getCity(latitude: number, longitude: number) {
   }
 }
 
+// === Ambil Semua Cabang di Kota Tertentu ===
 async function getStoresByCity(city: string) {
   try {
     const branches = await prisma.branchs.findMany({
@@ -72,9 +71,10 @@ export async function GetNearbyProductsService(
   }
 }
 
+// === Get Produk dari Store di Jakarta (Main Store) ===
 export async function GetMainStoresProductsService() {
   try {
-    let productBranches = [];
+    const productBranches = [];
 
     const mainStores = await prisma.branchs.findMany({
       where: {
@@ -87,15 +87,12 @@ export async function GetMainStoresProductsService() {
       },
     });
 
-    for (let i = 0; i < mainStores.length; i++) {
-      const storeId = mainStores[i].id;
-      const product = await getProductBranchesByStoreId(storeId);
+    for (const store of mainStores) {
+      const product = await getProductBranchesByStoreId(store.id);
       productBranches.push(product);
     }
 
-    const allProducts = productBranches.flat();
-
-    return allProducts;
+    return productBranches.flat();
   } catch (err) {
     throw err;
   }

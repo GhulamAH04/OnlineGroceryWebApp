@@ -1,4 +1,4 @@
-// File: src/controllers/admin.controller.ts
+// === FILE: src/controllers/admin.controller.ts ===
 
 import { Request, Response, NextFunction } from "express";
 import { PrismaClient } from "@prisma/client";
@@ -11,7 +11,7 @@ export const getAllAdmins = async (
   req: Request,
   res: Response,
   next: NextFunction
-) => {
+): Promise<void> => {
   try {
     const users = await prisma.users.findMany({
       where: {
@@ -19,20 +19,34 @@ export const getAllAdmins = async (
           in: ["SUPER_ADMIN", "STORE_ADMIN"],
         },
       },
+      include: {
+        branchs: {
+          select: { name: true },
+        },
+      },
     });
 
-    res.json({ success: true, message: "OK", data: users });
+    const result = users.map((u) => ({
+      id: u.id,
+      email: u.email,
+      username: u.username,
+      branchName: u.branchs?.name || null,
+      role: u.role,
+    }));
+
+    res.json({ success: true, message: "OK", data: result });
   } catch (err) {
     next(err);
   }
 };
 
 // === CREATE STORE ADMIN ===
+// === CREATE STORE ADMIN ===
 export const createStoreAdmin = async (
   req: Request,
   res: Response,
   next: NextFunction
-) => {
+): Promise<void> => {
   try {
     const { username, email, password, role } = req.body;
 
@@ -90,16 +104,17 @@ export const updateStoreAdmin = async (
   req: Request,
   res: Response,
   next: NextFunction
-) => {
+): Promise<void> => {
   try {
     const id = +req.params.id;
-    const { email, role } = req.body;
+    const { email, role, username } = req.body;
 
     const user = await prisma.users.update({
       where: { id },
       data: {
         email,
         role,
+        username,
         updatedAt: new Date(),
       },
     });
@@ -115,7 +130,7 @@ export const deleteStoreAdmin = async (
   req: Request,
   res: Response,
   next: NextFunction
-) => {
+): Promise<void> => {
   try {
     const id = +req.params.id;
 
@@ -124,6 +139,26 @@ export const deleteStoreAdmin = async (
     });
 
     res.json({ success: true, message: "Deleted", data: null });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// === GET ALL BRANCHES ===
+export const getAllBranches = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const branches = await prisma.branchs.findMany({
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+
+    res.json({ success: true, data: branches });
   } catch (err) {
     next(err);
   }

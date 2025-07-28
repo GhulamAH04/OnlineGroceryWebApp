@@ -1,10 +1,12 @@
 // File: src/interfaces/product.interface.ts
+// === INTERFACE: PRODUCT ADMIN ===
 
 export interface CreateProductInput {
-    name: string;
-    slug?: string;  // opsional kalau Prisma auto-gen
-    description?: string;
-    price: number;
-    categoryId: number;
-  }
-  
+  name: string;
+  slug?: string; // auto-generate dari name
+  description?: string;
+  price: number;
+  stock: number;
+  categoryId: number;
+  branchId: number;
+}
