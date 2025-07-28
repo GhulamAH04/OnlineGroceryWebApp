@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 
 export class CartController {
   /**
-   * Uhuy Mengambil semua item di keranjang aktif milik pengguna.
+   * Mengambil semua item di keranjang aktif milik pengguna.
    */
   async getCart(req: Request, res: Response) {
     try {
