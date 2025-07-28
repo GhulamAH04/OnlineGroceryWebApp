@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 
 export class CartController {
   /**
-   * Mengambil semua item di keranjang aktif milik pengguna.
+   * Uhuy Mengambil semua item di keranjang aktif milik pengguna.
    */
   async getCart(req: Request, res: Response) {
     try {
@@ -15,9 +15,7 @@ export class CartController {
         where: { userId, isActive: true },
         include: {
           product_carts: {
-            include: {
-              products: true,
-            },
+            include: {},
             orderBy: {
               createdAt: "asc",
             },
@@ -76,19 +74,21 @@ export class CartController {
         return;
       }
 
-      // ... logika haversine ...
+      const userLat = -6.2;
+      const userLong = 106.816666;
+
       let closestBranch = allBranches.reduce((prev, curr) =>
         haversineDistance(
-          userAddress.latitude,
-          userAddress.longitude,
-          prev.latitude,
-          prev.longitude
+          userLat,
+          userLong,
+          Number(prev.latitude),
+          Number(prev.longitude)
         ) <
         haversineDistance(
-          userAddress.latitude,
-          userAddress.longitude,
-          curr.latitude,
-          curr.longitude
+          userLat,
+          userLong,
+          Number(curr.latitude),
+          Number(curr.longitude)
         )
           ? prev
           : curr
@@ -108,7 +108,6 @@ export class CartController {
               await prisma.carts.findMany({ where: { userId, isActive: true } })
             ).map((c) => c.id),
           },
-          productId,
         },
       });
 
@@ -145,13 +144,16 @@ export class CartController {
         const updatedItem = await prisma.product_carts.update({
           where: { id: existingCartItem.id },
           data: { quantity: { increment: quantity } },
-          include: { products: true },
         });
         res.status(200).json(updatedItem);
       } else {
         const newItem = await prisma.product_carts.create({
-          data: { cartId: cart.id, productId, quantity, updatedAt: new Date() },
-          include: { products: true },
+          data: {
+            cartId: cart.id,
+            productBranchId: productInBranch.id,
+            quantity,
+            updatedAt: new Date(),
+          },
         });
         res.status(201).json(newItem);
       }
@@ -195,7 +197,6 @@ export class CartController {
       const updatedItem = await prisma.product_carts.update({
         where: { id: parseInt(productCartId) },
         data: { quantity },
-        include: { products: true },
       });
       // DIUBAH: 'return' dihapus
       res.status(200).json(updatedItem);
@@ -230,7 +231,7 @@ export class CartController {
         where: { id: parseInt(productCartId) },
       });
       // DIUBAH: 'return' dihapus
-      res.status(204).send(); // No Content
+      res.status(204).send(); // Mengirim status 204 No Content
     } catch (error) {
       // DIUBAH: 'return' dihapus
       res.status(500).json({ message: "Terjadi kesalahan pada server", error });
