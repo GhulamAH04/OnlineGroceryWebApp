@@ -8,7 +8,6 @@ import { Role } from "@prisma/client";
 const cartRouter = Router();
 const cartController = new CartController();
 
-// Penggunaan verifyToken sudah benar, hanya cara impornya yang perlu diubah.
 const userMiddleware = verifyToken([Role.USER]);
 
 const addToCartSchema = z.object({

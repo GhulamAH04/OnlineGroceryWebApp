@@ -33,6 +33,7 @@ import DiscountAdminRouter from "./routes/discountAdmin.routes";
 import ReportAdminRouter from "./routes/reportSalesAdmin";
 import InventoryJournalRouter from "./routes/inventoryJournal.routes";
 import InventoryRouter from "./routes/inventoryAdmin.routes";
+import cartRouter from "./routes/cart.router";
 
 // Load environment variables
 dotenv.config();
@@ -64,6 +65,7 @@ app.use("/api/districts", DistrictRouter);
 app.use("/api/addresses", AddressRouter);
 app.use("/api/stores", StoreRouter); // will add authorization later
 app.use("/api/shipping-cost", ShippingCostRouter);
+app.use("/api/cart", cartRouter);
 
 // === ADMIN ROUTES ===
 app.use("/admin/auth", AuthAdminRouter); // POST /admin/auth/login
