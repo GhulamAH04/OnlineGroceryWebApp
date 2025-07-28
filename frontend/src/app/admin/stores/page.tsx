@@ -7,6 +7,7 @@ import DeleteStoreModal from "@/components/features2/storeManagement/DeleteStore
 import { IStore } from "@/interfaces";
 import axios from "axios";
 import { apiUrl } from "@/config";
+import AssignStoreModal from "@/components/features2/storeManagement/AssignStoreModal";
 
 export default function StoresPage() {
   const [stores, setStores] = useState<IStore[]>([]);
@@ -14,14 +15,8 @@ export default function StoresPage() {
   const [showModal, setShowModal] = useState(false);
   const [editStore, setEditStore] = useState<IStore | null>(null);
   const [deleteStore, setDeleteStore] = useState<IStore | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
+  const [assignStore, setAssignStore] = useState<IStore | null>(null);
 
-  const showFeedback = (msg: string) => {
-    setFeedback(msg);
-    setTimeout(() => setFeedback(null), 2500);
-  };
-
-  // Fetch user data
   const fetchStores = async () => {
     try {
       setLoading(true);
@@ -92,21 +87,29 @@ export default function StoresPage() {
         {showModal && (
           <AddStoreModal
             isOpen={showModal}
+            onAdd={fetchStores}
             onClose={() => setShowModal(false)}
           />
         )}
-        {/* {editstores && (
+        {editStore && (
           <EditStoreModal
-            store={editstore}
-            onUpdate={fetchStores}
+            store={editStore}
+            onEdit={fetchStores}
             onClose={() => setEditStore(null)}
           />
-        )} */}
+        )}
         {deleteStore && (
           <DeleteStoreModal
             store={deleteStore}
             onDelete={fetchStores}
             onClose={() => setDeleteStore(null)}
+          />
+        )}
+        {assignStore && (
+          <AssignStoreModal
+            store={assignStore}
+            onAssign={fetchStores}
+            onClose={() => setAssignStore(null)}
           />
         )}
 
@@ -117,6 +120,7 @@ export default function StoresPage() {
           <StoreTable
             stores={stores}
             onEdit={setEditStore}
+            onAssign={setAssignStore}
             onDelete={setDeleteStore}
           />
         )}

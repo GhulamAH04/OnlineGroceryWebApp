@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Store } from "@/interfaces";
+import { IStore } from "@/interfaces";
 import { apiUrl } from "@/config";
 
 export default function AddUserModal({
@@ -19,7 +19,7 @@ export default function AddUserModal({
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [stores, setStores] = useState<Store[]>([]);
+  const [stores, setStores] = useState<IStore[]>([]);
 
   // Fetch toko untuk dropdown
   useEffect(() => {

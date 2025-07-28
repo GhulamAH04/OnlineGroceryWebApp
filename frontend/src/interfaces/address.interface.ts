@@ -34,17 +34,7 @@ export interface IBillingDetails {
   phone: string;
 }
 
-export interface IProvince {
-  id: number;
-  name: string;
-}
-
-export interface ICity {
-  id: number;
-  name: string;
-}
-
-export interface IDistrict {
+export interface ILocation {
   id: number;
   name: string;
 }

@@ -4,10 +4,12 @@ import { IStore } from "@/interfaces";
 export default function StoreTable({
   stores,
   onEdit,
+  onAssign,
   onDelete,
 }: {
   stores: IStore[];
   onEdit: (store: IStore) => void;
+  onAssign: (store: IStore) => void;
   onDelete: (store: IStore) => void;
 }) {
   return (
@@ -25,7 +27,18 @@ export default function StoreTable({
           {stores.map((store) => (
             <tr key={store.id} className="hover:bg-gray-100">
               <td className="p-3 border">{store.name}</td>
-              <td className="p-3 border">{store.userId}</td>
+              <td className="p-3 border">
+                {store.userId ? (
+                  `${store.userId}`
+                ) : (
+                  <button
+                    className="bg-yellow-400 hover:bg-yellow-500 text-white px-2 py-1 rounded mr-2"
+                    onClick={() => onAssign(store)}
+                  >
+                    Assign admin
+                  </button>
+                )}
+              </td>
               <td className="p-3 border">{store.address}</td>
               <td className="p-3 border">
                 <button

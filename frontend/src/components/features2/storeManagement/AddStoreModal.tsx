@@ -1,7 +1,7 @@
 "use client";
 
 import { apiUrl } from "@/config";
-import { AddNewAddressSchema } from "@/schemas/address.schema";
+import { AddNewStoreSchema } from "@/schemas/store.schema";
 import axios from "axios";
 import { getCookie } from "cookies-next";
 import { useFormik } from "formik";
@@ -10,9 +10,11 @@ import { useEffect, useState } from "react";
 
 const AddStoreModal = ({
   isOpen,
+  onAdd,
   onClose,
 }: {
   isOpen: boolean;
+  onAdd: () => void;
   onClose: () => void;
 }) => {
   const [provinces, setProvinces] = useState<{ id: string; name: string }[]>(
@@ -99,7 +101,7 @@ const AddStoreModal = ({
       latitude: -5,
       longitude: 105,
     },
-    validationSchema: AddNewAddressSchema,
+    validationSchema: AddNewStoreSchema,
     onSubmit: async (values) => {
       try {
         const token = getCookie("access_token") as string;
@@ -115,6 +117,7 @@ const AddStoreModal = ({
         });
 
         formik.resetForm();
+        onAdd();
         onClose();
 
         alert("Toko baru berhasil ditambahkan!");

@@ -15,8 +15,6 @@ export default function DeleteStoreModal({
 }) {
   const [loading, setLoading] = useState(false);
 
-  console.log(store.id);
-
   const handleDelete = async () => {
     setLoading(true);
     try {
