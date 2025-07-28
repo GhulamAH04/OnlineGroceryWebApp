@@ -6,14 +6,14 @@ import PopularCategories from "@/components/homepage/popular-categories";
 import CategoriesModal from "@/components/homepage/popular-categories/categories-modal";
 import PopularProducts from "@/components/homepage/popular-products";
 import { ILocation } from "@/interfaces/location.interface";
-import { IBranchesProducts } from "@/interfaces/product.interface";
-import axios from "axios";
+import { IProductBranch } from "@/interfaces/product.interface";
 import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
 import { useEffect, useState } from "react";
 import { setCity, setCoordinates } from "@/lib/redux/features/locationSlice";
 import { setCookie } from "cookies-next";
 import sign from "jwt-encode";
 import { jwtSecret } from "@/config";
+import { getCategories, getMainProducts, getNearbyProducts } from "@/lib/data";
 
 export default function Homepage() {
   // hook
@@ -23,7 +23,7 @@ export default function Homepage() {
   const location = useAppSelector((state) => state.location);
 
   // local state
-  const [branchesProducts, setBranchesProducts] = useState([]);
+  const [branchesProducts, setBranchesProducts] = useState<IProductBranch[]>([]);
   const [categories, setCategories] = useState([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(
     null
@@ -46,9 +46,7 @@ export default function Homepage() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const { data } = await axios.get(
-          `http://localhost:8080/api/categories/`
-        );
+        const data = await getCategories();
         setCategories(data.data);
       } catch (error) {
         console.error("Error fetching categories:", error);
@@ -62,14 +60,12 @@ export default function Homepage() {
     const fetchProducts = async () => {
       try {
         if (location.latitude !== 0 && location.longitude !== 0) {
-          const { data } = await axios.get(
-            `http://localhost:8080/api/products/nearby?latitude=${location.latitude}&longitude=${location.longitude}`
-          );
-          setBranchesProducts(data.data);
+          const data = await getNearbyProducts(location.latitude, location.longitude);
+          setBranchesProducts(data.products);
           const locationState: ILocation = {
             latitude: location.latitude,
             longitude: location.longitude,
-            city: data.data[0].branchs.address.split(",")[1].split(" ")[1]
+            city: data.data.userCity
           };
           // set location cookie
           const token = sign(locationState, `${jwtSecret}`);
@@ -77,9 +73,7 @@ export default function Homepage() {
 
           dispatch(setCity(locationState));
         } else {
-          const { data } = await axios.get(
-            `http://localhost:8080/api/products/main`
-          );
+          const data = await getMainProducts()
           setBranchesProducts(data.data);
         }
       } catch (err) {
@@ -93,7 +87,7 @@ export default function Homepage() {
   // Filter products based on the selected category
   const filteredProducts = selectedCategoryId
     ? branchesProducts.filter(
-        (product: IBranchesProducts) =>
+        (product: IProductBranch) =>
           product.products.categoryId === selectedCategoryId
       )
     : branchesProducts;

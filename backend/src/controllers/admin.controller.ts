@@ -2,7 +2,7 @@
 
 import { Request, Response, NextFunction } from "express";
 import { PrismaClient } from "@prisma/client";
-import { hashPassword } from "../utils/bcrypt";
+import { genSaltSync, hash } from "bcrypt";
 
 const prisma = new PrismaClient();
 
@@ -48,55 +48,52 @@ export const createStoreAdmin = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { email, password, role, branchId, username } = req.body;
+    const { username, email, password, role } = req.body;
 
-    const branch = await prisma.branchs.findUnique({ where: { id: branchId } });
-    if (!branch) {
-      res.status(404).json({ success: false, message: "Cabang tidak ditemukan" });
-      return;
-    }
-    if (branch.userId) {
-      res.status(400).json({ success: false, message: "Cabang ini sudah memiliki Store Admin" });
-      return;
-    }
+    const branchId = parseInt(req.body.branchId);
 
-    const hashedPassword = await hashPassword(password); // ✅ hash password
-
-    const user = await prisma.users.create({
-      data: {
-        email,
-        password: hashedPassword,
-        role,
-        username,
-        updatedAt: new Date(),
-      },
+    const existingUser = await prisma.users.findUnique({
+      where: { email, role: "STORE_ADMIN" },
     });
 
-    await prisma.branchs.update({
-      where: { id: branchId },
-      data: {
-        userId: user.id,
-        updatedAt: new Date(),
-      },
-    });
+    if (existingUser) throw new Error("Store admin already exists");
 
-    const createdUser = await prisma.users.findUnique({
-      where: { id: user.id },
-      include: {
-        branchs: { select: { name: true } },
-      },
-    });
+    const salt = genSaltSync(10);
+    const hashedPassword = await hash(password, salt);
 
-    res.status(201).json({
-      success: true,
-      message: "User Store Admin berhasil dibuat",
-      data: {
-        id: createdUser?.id,
-        email: createdUser?.email,
-        username: createdUser?.username,
-        branchName: createdUser?.branchs?.name,
-      },
-    });
+   const user = await prisma.$transaction(async (t) => {
+     const newUser = await t.users.create({
+       data: {
+         username,
+         email,
+         password: hashedPassword,
+         role,
+         isVerified: true,
+         updatedAt: new Date(),
+       },
+     });
+
+     const branch = await t.branchs.findUnique({
+       where: { id: branchId },
+     });
+
+     if (!branch) {
+       throw new Error("Branch not found");
+     }
+
+     await t.branchs.update({
+       where: { id: branchId },
+       data: {
+         users: {
+           connect: { id: newUser.id },
+         },
+       },
+     });
+
+     return newUser;
+   });
+
+    res.status(201).json({ success: true, message: "Created", data: user });
   } catch (err) {
     next(err);
   }

@@ -1,16 +1,17 @@
 import * as Yup from "yup";
 
-export const AddressSchema = Yup.object({
-  firstName: Yup.string().required("Required"),
-  lastName: Yup.string().required("Required"),
-  companyName: Yup.string(),
-  streetAddress: Yup.string().required("Required"),
-  country: Yup.string().required("Required"),
-  state: Yup.string().required("Required"),
-  zipCode: Yup.string().required("Required"),
-  email: Yup.string().email("Invalid email").required("Required"),
-  phone: Yup.string().required("Required"),
-});
+export const AddNewAddressSchema = Yup.object({
+    name: Yup.string().required("Label alamat wajib diisi"),
+    phone: Yup.string()
+      .matches(/^[0-9]+$/, "Nomor telepon harus angka")
+      .min(10, "Minimal 10 digit")
+      .required("Nomor telepon wajib diisi"),
+    address: Yup.string().required("Alamat lengkap wajib diisi"),
+    province: Yup.string().required("Provinsi wajib dipilih"),
+    city: Yup.string().required("Kota wajib dipilih"),
+    district: Yup.string().required("Kecamatan wajib dipilih"),
+    postalCode: Yup.string().required("Alamat lengkap wajib diisi"),
+  });
 
 export const BillingSchema = Yup.object({
   firstName: Yup.string().required("First name is required"),

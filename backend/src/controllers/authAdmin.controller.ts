@@ -42,6 +42,8 @@ export const loginAdmin = async (
 
     const token = signJwt({ userId: user.id, role: user.role });
 
+    console.log(token);
+
     res.status(200).json({
       success: true,
       message: "Login successful (Admin)",

@@ -2,10 +2,6 @@
 
 import { Request, Response, NextFunction } from "express";
 import {
-  IGoogleLogin,
-  IGoogleRegister,
-  ILogin,
-  IRegister,
   LoginService,
   LoginWithGoogleService,
   RegisterService,
@@ -15,6 +11,7 @@ import {
   VerifyAccountService,
   VerifyResetService,
 } from "../services/authUser.service";
+import { IGoogleLogin, IGoogleRegister, ILogin, IRegister } from "../interfaces/auth.interface";
 
 // === REGISTER USER (NORMAL) ===
 export async function RegisterController(req: Request, res: Response, next: NextFunction) {

@@ -38,7 +38,9 @@ async function getStoresByCity(city: string) {
   try {
     const branches = await prisma.branchs.findMany({
       where: {
-        cities: { name: city },
+        cities: {
+          name: city.toUpperCase(),
+        },
       },
     });
     return branches;
@@ -46,57 +48,24 @@ async function getStoresByCity(city: string) {
     throw err;
   }
 }
-
-// === Hitung Jarak Store dengan Haversine Formula ===
-async function calculateStoreDistances(lat1: number, lon1: number) {
-  try {
-    const userCity = await getCity(lat1, lon1);
-    const stores = await getStoresByCity(userCity);
-    const storeDistances: { storeId: number; distance: number }[] = [];
-
-    for (const store of stores) {
-      const lat2 = Number(store.latitude);
-      const lon2 = Number(store.longitude);
-
-      const R = 6371; // Earth's radius in km
-      const dLat = ((lat2 - lat1) * Math.PI) / 180;
-      const dLon = ((lon2 - lon1) * Math.PI) / 180;
-
-      const a =
-        Math.sin(dLat / 2) ** 2 +
-        Math.cos((lat1 * Math.PI) / 180) *
-          Math.cos((lat2 * Math.PI) / 180) *
-          Math.sin(dLon / 2) ** 2;
-
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      const distance = R * c;
-
-      if (distance <= 15) {
-        storeDistances.push({ storeId: store.id, distance });
-      }
-    }
-
-    return storeDistances.sort((a, b) => a.distance - b.distance);
-  } catch (err) {
-    throw err;
-  }
-}
-
-// === Get Produk dari Store Terdekat (User Side) ===
 export async function GetNearbyProductsService(
   latitude: number,
   longitude: number
 ) {
   try {
-    const productBranches = [];
-    const storeDistances = await calculateStoreDistances(latitude, longitude);
+    let productBranches = [];
 
-    for (const { storeId } of storeDistances) {
+    const userCity = await getCity(latitude, longitude);
+    const stores = await getStoresByCity(userCity);
+    for (let i = 0; i < stores.length; i++) {
+      const storeId = stores[i].id;
       const product = await getProductBranchesByStoreId(storeId);
       productBranches.push(product);
     }
 
-    return productBranches.flat();
+    const products = productBranches.flat();
+
+    return { products, userCity };
   } catch (err) {
     throw err;
   }
@@ -111,8 +80,8 @@ export async function GetMainStoresProductsService() {
       where: {
         cities: {
           name: {
-            contains: "Jakarta",
-            mode: "insensitive",
+            contains: "JAKARTA",
+            mode: "insensitive"
           },
         },
       },

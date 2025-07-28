@@ -1,35 +1,16 @@
 import path from "path";
 import prisma from "../lib/prisma";
-import { Role } from "@prisma/client";
+
 import fs from "fs";
 import handlebars from "handlebars";
 import { FE_URL, JWT_SECRET } from "../config";
 import { JwtPayload, sign, verify } from "jsonwebtoken";
 import { Transporter } from "../utils/nodemailer";
 import { compare, genSaltSync, hash } from "bcrypt";
+import { Role } from "@prisma/client";
+import { IGoogleLogin, IGoogleRegister, ILogin, IRegister } from "../interfaces/auth.interface";
 
 
-export interface IRegister {
-  name: string;
-  email: string;
-  password: string;
-  role: Role;
-}
-
-export interface IGoogleRegister {
-  name: string;
-  email: string;
-}
-
-export interface ILogin {
-  email: string;
-  password: string;
-}
-
-export interface IGoogleLogin {
-  name: string;
-  email: string;
-}
 
 export async function FindUserByEmail(email: string) {
   try {

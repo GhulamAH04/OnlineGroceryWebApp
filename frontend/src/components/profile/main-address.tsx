@@ -1,24 +1,21 @@
 "use client";
 
 import { apiUrl } from "@/config";
-import { IAddress } from "@/interfaces/address.interface";
+import { IExistingAddress } from "@/interfaces/address.interface";
 import { useAppSelector } from "@/lib/redux/hooks";
 import axios from "axios";
 import { getCookie } from "cookies-next";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function MainAddress() {
-  const router = useRouter();
   const userState = useAppSelector((state) => state.auth);
 
-  const [address, setAddress] = useState<IAddress>();
+  const [address, setAddress] = useState<IExistingAddress>();
 
   useEffect(() => {
     const userId = userState.user.id;
     const token = getCookie("access_token") as string;
     const fetchAddress = async () => {
-      // console.log(userState.user.id)
       const { data } = await axios.get(
         `${apiUrl}/api/users/address/main/${userId}`,
         {
@@ -43,12 +40,6 @@ export default function MainAddress() {
         <p>{userState.user.email}</p>
         <p>{address?.postalCode}</p>
       </address>
-      <button className="text-green-600 font-semibold hover:underline mt-4"
-      onClick={() => {
-        router.push("/profile/settings")
-      }}>
-        Edit Address
-      </button>
     </div>
   );
 }

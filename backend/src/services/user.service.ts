@@ -16,10 +16,11 @@ export async function FindUserById(userId: number) {
   }
 }
 
-async function getAddressByUserId(userId: number) {
+async function getMainAddressByUserId(userId: number) {
   const address = await prisma.addresses.findMany({
     where: {
-      userId: userId,
+      userId,
+      isPrimary: true,
     },
   });
 
@@ -29,7 +30,7 @@ async function getAddressByUserId(userId: number) {
 
 export async function GetMainAddressService(userId: number) {
   try {
-    const address = await getAddressByUserId(userId);
+    const address = await getMainAddressByUserId(userId);
 
     return address;
   } catch (err) {
@@ -76,6 +77,17 @@ export async function EditUserByIdService(
     const editedUser = await EditUserById(userId, username, email);
 
     return editedUser;
+  } catch (err) {
+    throw err;
+  }
+}
+
+export async function getAllUsersService(
+) {
+  try {
+    const users = await prisma.users.findMany();
+
+    return users;
   } catch (err) {
     throw err;
   }

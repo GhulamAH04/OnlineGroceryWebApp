@@ -1,4 +1,3 @@
-// OnlineGroceryWebApp/backend/src/controllers/productUser.controller.ts
 import { Request, Response, NextFunction } from "express";
 import {
   GetMainStoresProductsService,

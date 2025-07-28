@@ -1,25 +1,25 @@
-interface ICity {
+export interface IExistingAddress {
   id: number;
   name: string;
-  provinceId: number;
-}
-
-interface IProvince {
-  id: number;
-  name: string;
-}
-
-export interface IAddress {
-  id: number;
-  name: string;
+  phone: string;
   address: string;
-  provinces: IProvince;
-  cities: ICity;
+  provinces: ILocation;
+  cities: ILocation;
   postalCode: string;
   isPrimary: boolean;
   userId: number;
-  latitude: number;
-  longitude: number;
+  districts: ILocation;
+}
+
+export interface INewAddressFormData {
+  name: string;
+  address: string;
+  province: string;
+  city: string;
+  postalCode: string;
+  isPrimary: boolean;
+  userId: number;
+  district: string;
 }
 
 export interface IBillingDetails {
@@ -32,4 +32,9 @@ export interface IBillingDetails {
   zipCode: string;
   email: string;
   phone: string;
+}
+
+export interface ILocation {
+  id: number;
+  name: string;
 }

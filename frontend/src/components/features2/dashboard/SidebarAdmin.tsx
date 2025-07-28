@@ -7,9 +7,13 @@ import {
   Package,
   Percent,
   BarChart3,
+<<<<<<< HEAD
+  Store,
+=======
   LayoutGrid,
   RotateCcw,
   LogOut,
+>>>>>>> 14ecee8d3fd2d5bd07a05c728a65525c68d9ef31
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -17,6 +21,7 @@ import { usePathname, useRouter } from "next/navigation";
 const menu = [
   { label: "Dashboard", icon: <Home size={18} />, href: "/admin" },
   { label: "User Management", icon: <Users size={18} />, href: "/admin/users" },
+  { label: "Store Management", icon: <Store size={18} />, href: "/admin/stores" },
   {
     label: "Product Management",
     icon: <ShoppingCart size={18} />,

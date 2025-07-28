@@ -13,10 +13,16 @@ import { authorizeRoles } from "./middlewares/authorizeRoles.middleware";
 import { errorHandler } from "./middlewares/errorHandler.middleware";
 
 // Routes - USER
-import ProductRouter from "./routes/product.router";
-import CategoryRouter from "./routes/category.router";
+import ProductRouter from "./routes/product.routes";
+import CategoryRouter from "./routes/category.routes";
 import AuthRouter from "./routes/auth.routes";
-import UserRouter from "./routes/user.router";
+import UserRouter from "./routes/user.routes";
+import CityRouter from "./routes/city.routes";
+import ProvinceRouter from "./routes/province.routes";
+import AddressRouter from "./routes/address.routes";
+import DistrictRouter from "./routes/district.routes";
+import StoreRouter from "./routes/store.routes";
+import ShippingCostRouter from "./routes/shippingCost.routes"
 
 // Routes - ADMIN
 import AdminRouter from "./routes/admin.routes";
@@ -52,6 +58,12 @@ app.use("/api/products", ProductRouter);
 app.use("/api/categories", CategoryRouter);
 app.use("/api/auth", AuthRouter);
 app.use("/api/users", UserRouter);
+app.use("/api/cities", CityRouter);
+app.use("/api/provinces", ProvinceRouter);
+app.use("/api/districts", DistrictRouter);
+app.use("/api/addresses", AddressRouter);
+app.use("/api/stores", StoreRouter); // will add authorization later
+app.use("/api/shipping-cost", ShippingCostRouter);
 
 // === ADMIN ROUTES ===
 app.use("/admin/auth", AuthAdminRouter); // POST /admin/auth/login

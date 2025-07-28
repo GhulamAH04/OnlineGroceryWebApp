@@ -21,5 +21,5 @@ export default async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/profile/:path*"], // Apply middleware to all paths under /dashboard
+  matcher: ["/profile/:path*"], // Apply middleware to all paths under /profile
 };
