@@ -169,14 +169,13 @@ model product_branchs {
 }
 
 model product_carts {
-  id        Int      @id @default(autoincrement())
-  quantity  Int
-  productId Int
-  cartId    Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime
-  carts     carts    @relation(fields: [cartId], references: [id])
-  products  products @relation(fields: [productId], references: [id])
+  id              Int      @id @default(autoincrement())
+  quantity        Int
+  cartId          Int
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime
+  productBranchId Int
+  carts           carts    @relation(fields: [cartId], references: [id])
 }
 
 model products {
@@ -194,7 +193,6 @@ model products {
   mutations       mutations[]
   order_products  order_products[]
   product_branchs product_branchs[]
-  product_carts   product_carts[]
   categories      categories        @relation(fields: [categoryId], references: [id])
   wishlists       wishlists[]
 }
