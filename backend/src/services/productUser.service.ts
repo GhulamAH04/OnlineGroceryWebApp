@@ -1,6 +1,5 @@
-import axios from "axios";
 import prisma from "../lib/prisma";
-import { API_KEY } from "../config";
+import { getCityFromCoordinates } from "./city.service";
 
 // === Get Produk Per Cabang ===
 async function getProductBranchesByStoreId(storeId: number) {
@@ -15,19 +14,6 @@ async function getProductBranchesByStoreId(storeId: number) {
       },
     });
     return productBranches;
-  } catch (err) {
-    throw err;
-  }
-}
-
-// === Ambil Kota dari API Berdasarkan LatLong ===
-async function getCity(latitude: number, longitude: number) {
-  try {
-    const { data } = await axios.get(
-      `https://api.opencagedata.com/geocode/v1/json?q=${latitude}%2C+${longitude}&key=${API_KEY}`
-    );
-    const city: string = data.results[0].components.city;
-    return city;
   } catch (err) {
     throw err;
   }
@@ -49,13 +35,11 @@ async function getStoresByCity(city: string) {
   }
 }
 export async function GetNearbyProductsService(
-  latitude: number,
-  longitude: number
+  userCity: string
 ) {
   try {
     let productBranches = [];
 
-    const userCity = await getCity(latitude, longitude);
     const stores = await getStoresByCity(userCity);
     for (let i = 0; i < stores.length; i++) {
       const storeId = stores[i].id;

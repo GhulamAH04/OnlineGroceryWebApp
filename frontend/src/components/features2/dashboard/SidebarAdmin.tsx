@@ -7,13 +7,10 @@ import {
   Package,
   Percent,
   BarChart3,
-<<<<<<< HEAD
-  Store,
-=======
   LayoutGrid,
   RotateCcw,
   LogOut,
->>>>>>> 14ecee8d3fd2d5bd07a05c728a65525c68d9ef31
+  Store,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";

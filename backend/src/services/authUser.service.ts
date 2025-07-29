@@ -28,24 +28,19 @@ export async function FindUserByEmail(email: string) {
   }
 }
 
-// add password hashing
 async function Register(userData: IRegister) {
   try {
-    const { name, email, password } = userData;
+    const { name, email } = userData;
 
     const user = await FindUserByEmail(email);
 
     if (user) throw new Error("Email already registered");
-
-    const salt = genSaltSync(10);
-    const hashedPassword = await hash(password, salt);
 
     const newUser = await prisma.$transaction(async (t) => {
       const registeredUser = await t.users.create({
         data: {
           username: name,
           email: email,
-          password: hashedPassword,
           updatedAt: new Date(),
         },
       });
@@ -215,7 +210,7 @@ async function VerifyReset(email: string) {
       email,
     };
 
-    const token = sign(payload, String(JWT_SECRET), { expiresIn: "2h" });
+    const token = sign(payload, String(JWT_SECRET), { expiresIn: "1h" });
 
     const templateSource = fs.readFileSync(templatePath, "utf-8");
     const compiledTemplate = handlebars.compile(templateSource);

@@ -1,6 +1,6 @@
 import axios from "axios";
 import { redis } from "../lib/redis";
-import { RAJAONGKIR_API_KEY, RAJAONGKIR_BASE_URL } from "../config";
+import { API_KEY, RAJAONGKIR_API_KEY, RAJAONGKIR_BASE_URL } from "../config";
 import { getProvinceId } from "./province.service";
 
 export async function fetchCitiesByProvince(province: string) {
@@ -45,6 +45,19 @@ export async function getCityId(province: string, city: string) {
   }
 }
 
+// === Ambil Kota dari API Berdasarkan LatLong ===
+export async function getCityFromCoordinates(latitude: number, longitude: number) {
+  try {
+    const { data } = await axios.get(
+      `https://api.opencagedata.com/geocode/v1/json?q=${latitude}%2C+${longitude}&key=${API_KEY}`
+    );
+    const city: string = data.results[0].components.city;
+    return city;
+  } catch (err) {
+    throw err;
+  }
+}
+
 
 export async function GetCitiesByProvinceService(province: string) {
   try {
@@ -55,3 +68,14 @@ export async function GetCitiesByProvinceService(province: string) {
     throw err;
   }
 }
+
+export async function GetCityFromCoordinatesService(latitude: number, longitude: number) {
+  try {
+    const city = await getCityFromCoordinates(latitude, longitude);
+
+    return city;
+  } catch (err) {
+    throw err;
+  }
+}
+

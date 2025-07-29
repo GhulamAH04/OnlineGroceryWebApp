@@ -10,9 +10,9 @@ router.post("/google/register", RegisterWithGoogleController);
 router.post("/google/login", LoginWithGoogleController);
 router.patch("/verify", VerifyAccountController);
 router.patch("/set-password", SetPasswordController);
+router.post("/verifyreset", VerifyResetController);
 
 // this endpoint can only accept request when the user is logged in
 router.post("/reverify", VerifyToken, SendVerificationEmailController);
-router.post("/verifyreset", VerifyToken, VerifyResetController);
 
 export default router;

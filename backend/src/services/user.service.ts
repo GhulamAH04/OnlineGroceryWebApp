@@ -22,6 +22,11 @@ async function getMainAddressByUserId(userId: number) {
       userId,
       isPrimary: true,
     },
+    include : {
+      provinces: true,
+      cities: true,
+      districts: true
+    }
   });
 
   return address;
@@ -102,7 +107,7 @@ export async function UpdateAvatarService(
     const checkUser = await FindUserByEmail(email);
     if (!checkUser) throw new Error("User not found");
 
-    await prisma.$transaction(async (t) => {
+    const image = await prisma.$transaction(async (t) => {
       const { secure_url } = await cloudinaryUploadMulter(file);
       url = secure_url;
       const splitUrl = secure_url.split("/");
@@ -116,7 +121,10 @@ export async function UpdateAvatarService(
           image: fileName,
         },
       });
+      return fileName
     });
+
+    return image;
   } catch (err) {
     await cloudinaryRemove(url);
     throw err;

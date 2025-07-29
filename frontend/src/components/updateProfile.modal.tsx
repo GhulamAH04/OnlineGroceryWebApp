@@ -4,9 +4,13 @@ import Image from "next/image";
 import { X } from "lucide-react";
 import { useState } from "react";
 import axios from "axios";
-import { getCookie } from "cookies-next";
-import { useAppSelector } from "@/lib/redux/hooks";
-import { apiUrl, imageUrl } from "@/config";
+import { deleteCookie, getCookie, setCookie } from "cookies-next";
+import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
+import { apiUrl, imageUrl, jwtSecret } from "@/config";
+import { IAuth, IUser } from "@/interfaces/auth.interface";
+import { jwtDecode } from "jwt-decode";
+import { onLogin } from "@/lib/redux/features/authSlice";
+import sign from "jwt-encode";
 
 interface ModalProps {
   isVisible: boolean;
@@ -14,14 +18,17 @@ interface ModalProps {
 }
 
 const UpdateProfileModal: React.FC<ModalProps> = ({ isVisible, onClose }) => {
+  const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.auth.user);
 
+  const [loading, setLoading] = useState<boolean>(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>("");
 
   if (!isVisible) return null;
 
   const handleUpload = async () => {
+    setLoading(true);
     if (!selectedFile) {
       alert("Please select a file first.");
       return;
@@ -34,15 +41,43 @@ const UpdateProfileModal: React.FC<ModalProps> = ({ isVisible, onClose }) => {
       // Get the cookie value
       const token = getCookie("access_token") as string;
 
-      await axios.patch(`${apiUrl}/api/users/avatar`, formData, {
-        headers: {
-          Authorization: `Bearer ${token}`, // Use the cookie value in the request
+      const response = await axios.patch(
+        `${apiUrl}/api/users/avatar`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Use the cookie value in the request
+          },
+        }
+      );
+
+      const image = response.data.data;
+
+      // update user state in redux to see immidiate changes
+      const userData = jwtDecode<IUser>(token);
+      const userState: IAuth = {
+        user: {
+          ...userData,
+          image,
         },
-      });
+        isLogin: true,
+      };
+      dispatch(onLogin(userState));
 
-      alert("Upload Profile Image Success");
+      //immidiate update of session token
+      deleteCookie("access_token");
 
+      const payload = {
+        ...userData,
+        image,
+      };
+
+      const newToken = sign(payload, String(jwtSecret), { expiresIn: "1h" });
+      setCookie("access_token", newToken);
+
+      setLoading(false);
       onClose();
+      alert("Upload Profile Image Success");
     } catch (err) {
       alert("Error uploading image");
       console.error(err);
@@ -118,7 +153,7 @@ const UpdateProfileModal: React.FC<ModalProps> = ({ isVisible, onClose }) => {
               onClick={handleUpload}
               disabled={!selectedFile}
             >
-              Upload
+              {loading ? "Uploading..." : "Upload"}
             </button>
           </div>
         </div>

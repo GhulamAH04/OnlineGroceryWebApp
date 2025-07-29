@@ -70,10 +70,11 @@ export async function UpdateAvatarController(
     if (!file) throw new Error("File not found");
     if (!email) throw new Error("Email not found");
 
-    await UpdateAvatarService(file, email);
+    const image = await UpdateAvatarService(file, email);
 
     res.status(200).send({
       message: `Update profile picture success`,
+      data: image
     });
   } catch (err) {
     next(err);

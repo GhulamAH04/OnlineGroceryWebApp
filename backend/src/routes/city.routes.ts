@@ -1,8 +1,9 @@
 import { Router } from "express";
-import { GetCitiesByProvinceController } from "../controllers/city.controller";
+import { GetCitiesByProvinceController, GetCityFromCoordinatesController } from "../controllers/city.controller";
 const router = Router();
 
 // read
+router.get("/", GetCityFromCoordinatesController);
 router.get("/:province", GetCitiesByProvinceController);
 
 export default router;

@@ -18,13 +18,13 @@ interface PageProps {
 }
 
 // --- FORM SECTION 1: Account Settings ---
-export default function AccountSettings({ onChangeImageClick } : PageProps) {
+export default function AccountSettings({ onChangeImageClick }: PageProps) {
   const token = getCookie("access_token") as string;
   //hook
   const dispatch = useAppDispatch();
   // state in redux
   const user = useAppSelector((state) => state.auth);
-  
+
   const [isEditMode, setIsEditMode] = useState(false);
 
   const formik = useFormik({
@@ -35,11 +35,10 @@ export default function AccountSettings({ onChangeImageClick } : PageProps) {
     validationSchema: AccountSettingSchema,
     onSubmit: async (values) => {
       try {
-
         const { username, email } = values;
 
         await axios.put(
-          `${apiUrl}/api/user/${user.user.id}`,
+          `${apiUrl}/api/users/${user.user.id}`,
           {
             username,
             email,
@@ -53,22 +52,37 @@ export default function AccountSettings({ onChangeImageClick } : PageProps) {
 
         // update user state in redux to see immidiate changes
         const userData = jwtDecode<IUser>(token);
-        const userState: IAuth = {
-          user: {
-            id: userData.id,
-            email: email || userData.email,
-            username: username || userData.username,
-            isVerified: userData.isVerified,
-            role: userData.role,
-            image: userData.image,
-          },
-          isLogin: true,
-        };
+        let userState: IAuth;
+        if (email) {
+          userState = {
+            user: {
+              id: userData.id,
+              email: email || userData.email,
+              username: username || userData.username,
+              isVerified: false,
+              role: userData.role,
+              image: userData.image,
+            },
+            isLogin: true,
+          };
+        } else {
+          userState = {
+            user: {
+              id: userData.id,
+              email: email || userData.email,
+              username: username || userData.username,
+              isVerified: userData.isVerified,
+              role: userData.role,
+              image: userData.image,
+            },
+            isLogin: true,
+          };
+        }
         dispatch(onLogin(userState));
 
         //immidiate update of session token
         deleteCookie("access_token");
-        
+
         const payload = {
           id: userData.id,
           email: email || userData.email,
@@ -105,17 +119,9 @@ export default function AccountSettings({ onChangeImageClick } : PageProps) {
     try {
       const { email } = user.user;
 
-      await axios.post(
-        `${apiUrl}/api/auth/verifyreset`,
-        {
-          email,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      await axios.post(`${apiUrl}/api/auth/verifyreset`, {
+        email,
+      });
 
       alert("We've sent an email to change your password.");
     } catch (err) {
@@ -143,9 +149,7 @@ export default function AccountSettings({ onChangeImageClick } : PageProps) {
           },
         }
       );
-      alert(
-        "We've sent you an email to verify your account."
-      );
+      alert("We've sent you an email to verify your account.");
     } catch (err) {
       if (axios.isAxiosError(err) && err.response) {
         const errorMessage = err.response.data.message;
@@ -154,7 +158,7 @@ export default function AccountSettings({ onChangeImageClick } : PageProps) {
         alert("An unexpected error occurred");
       }
     }
-  }
+  };
 
   return (
     <div className="bg-white p-6 md:p-8 rounded-lg shadow-sm">
@@ -257,7 +261,11 @@ export default function AccountSettings({ onChangeImageClick } : PageProps) {
         <div className="w-[40%] flex-shrink-0 flex flex-col items-center gap-2">
           {/* eslint-disable-next-line */}
           <img
-            src={ user.user.image ? `${imageUrl}${user.user.image}` : `/no_profile.png`}
+            src={
+              user.user.image
+                ? `${imageUrl}${user.user.image}`
+                : `/no_profile.png`
+            }
             alt="User Avatar"
             className="w-32 h-32 border border-s-2 rounded-full object-cover mb-4"
           />
@@ -266,13 +274,19 @@ export default function AccountSettings({ onChangeImageClick } : PageProps) {
               <p>Verified</p> <Check className="w-5 h-5" />
             </div>
           ) : (
-            <div className="flex justify-center px-2 items-center gap-1 text-red-500 font-semibold border border-s-2 rounded-full hover:bg-gray-200 cursor-default"
-            onClick={handleUnverifiedClick}>
-              <p>Unverified</p>
-              <X className="w-5 h-5" />
-            </div>
+            <>
+              <div
+                className="flex justify-center px-2 items-center gap-1 text-red-500 font-semibold border border-s-2 rounded-full hover:bg-gray-200 cursor-default"
+                onClick={handleUnverifiedClick}
+              >
+                <p>Unverified</p>
+                <X className="w-5 h-5" />
+              </div>
+              <p className="text-[10px] mb-2">
+                Click the badge to verify your account
+              </p>
+            </>
           )}
-          <p className="text-[10px] mb-2">Click the badge to verify your account</p>
           <button
             type="button"
             onClick={onChangeImageClick}
