@@ -2,57 +2,70 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
-  // === PROVINSI ===
-  const province = await prisma.provinces.upsert({
-    where: { id: 100 },
-    update: {},
-    create: { id: 100, name: 'Provinsi Groceria' },
+  console.log('🧹 Resetting related tables...');
+  await prisma.order_products.deleteMany();
+  await prisma.orders.deleteMany();
+  await prisma.journal_mutations.deleteMany();
+  await prisma.product_branchs.deleteMany();
+  await prisma.discount.deleteMany();
+  await prisma.addresses.deleteMany();
+  await prisma.products.deleteMany();
+  await prisma.categories.deleteMany();
+  await prisma.branchs.deleteMany();
+  await prisma.users.deleteMany({
+    where: {
+      email: {
+        in: ['superadmin@email.com', 'storeadmin@email.com', 'pembeli@email.com'],
+      },
+    },
+  });
+  await prisma.districts.deleteMany();
+  await prisma.cities.deleteMany();
+  await prisma.provinces.deleteMany();
+
+  // === PROVINSI
+  const province = await prisma.provinces.create({
+    data: { id: 100, name: 'Provinsi Groceria' },
   });
 
-  // === KOTA ===
-  const city = await prisma.cities.upsert({
-    where: { id: 200 },
-    update: {},
-    create: {
+  // === KOTA
+  const city = await prisma.cities.create({
+    data: {
       id: 200,
       name: 'Kota Sayuran',
       provinceId: province.id,
     },
   });
 
-  // === DISTRIK ===
-  const district = await prisma.districts.upsert({
-    where: { id: 300 },
-    update: {},
-    create: {
+  // === DISTRIK
+  const district = await prisma.districts.create({
+    data: {
       id: 300,
       name: 'Kecamatan Sehat',
       cityId: city.id,
     },
   });
 
-  // === CABANG ===
+  // === CABANG
   const branch = await prisma.branchs.create({
     data: {
       name: 'Groceria Pusat',
+      address: 'Jl. Groceria No.1',
+      postalCode: '12345',
+      phone: '0210001234',
+      latitude: 1.2345,
+      longitude: 103.1234,
       provinceId: province.id,
       cityId: city.id,
       districtId: district.id,
-      postalCode: '12345',
-      phone: '0210001234',
-      address: 'Jl. Groceria No.1',
-      latitude: 1.234567,
-      longitude: 103.123456,
       createdAt: new Date(),
       updatedAt: new Date(),
     },
   });
 
-  // === SUPER ADMIN ===
-  const superadmin = await prisma.users.upsert({
-    where: { email: 'superadmin@email.com' },
-    update: {},
-    create: {
+  // === SUPER ADMIN
+  const superadmin = await prisma.users.create({
+    data: {
       email: 'superadmin@email.com',
       password:
         '$2b$12$PEhzRU4UE.BPGC3Xx5oP/OpfBDBO.TrgQFmXcFW3b9trfMonKc6YG', // superadmin123
@@ -63,7 +76,26 @@ async function main() {
     },
   });
 
-  // === KATEGORI ===
+  // === STORE ADMIN
+  const storeAdmin = await prisma.users.create({
+    data: {
+      email: 'storeadmin@email.com',
+      password:
+        '$2b$12$PEhzRU4UE.BPGC3Xx5oP/OpfBDBO.TrgQFmXcFW3b9trfMonKc6YG', // superadmin123
+      role: 'STORE_ADMIN',
+      isVerified: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+  });
+
+  // === LINK STORE ADMIN KE CABANG
+  await prisma.branchs.update({
+    where: { id: branch.id },
+    data: { userId: storeAdmin.id },
+  });
+
+  // === CATEGORIES
   const categoriesData = [
     { name: 'Sayuran', slug: 'sayuran' },
     { name: 'Buah-buahan', slug: 'buah-buahan' },
@@ -73,10 +105,8 @@ async function main() {
   ];
 
   for (const cat of categoriesData) {
-    await prisma.categories.upsert({
-      where: { slug: cat.slug },
-      update: {},
-      create: {
+    await prisma.categories.create({
+      data: {
         name: cat.name,
         slug: cat.slug,
         createdAt: new Date(),
@@ -87,13 +117,11 @@ async function main() {
 
   const kategori = await prisma.categories.findMany();
 
-  // === PRODUK ===
+  // === PRODUCTS
   const produk = await Promise.all(
     kategori.map((cat, i) =>
-      prisma.products.upsert({
-        where: { slug: `produk-${cat.slug}` },
-        update: {},
-        create: {
+      prisma.products.create({
+        data: {
           name: `Produk ${cat.name}`,
           slug: `produk-${cat.slug}`,
           price: 10000 + i * 2500,
@@ -107,20 +135,55 @@ async function main() {
     )
   );
 
-  // === STOK PRODUK ===
+  // === STOK PER CABANG
   for (const p of produk) {
     await prisma.product_branchs.create({
       data: {
         branchId: branch.id,
         productId: p.id,
-        stock: Math.floor(Math.random() * 100) + 1,
+        stock: 50,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
     });
   }
 
-  // === DISKON ===
+  // === JURNAL MUTASI (stok masuk & keluar)
+  for (const p of produk) {
+    const pb = await prisma.product_branchs.findFirst({
+      where: {
+        productId: p.id,
+        branchId: branch.id,
+      },
+    });
+
+    if (pb) {
+      await prisma.journal_mutations.createMany({
+        data: [
+          {
+            productBranchId: pb.id,
+            branchId: branch.id,
+            quantity: 10,
+            transactionType: 'IN',
+            description: 'Stok awal',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+          {
+            productBranchId: pb.id,
+            branchId: branch.id,
+            quantity: 3,
+            transactionType: 'OUT',
+            description: 'Uji coba',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        ],
+      });
+    }
+  }
+
+  // === DISKON
   await prisma.discount.createMany({
     data: produk.slice(0, 3).map((p, i) => ({
       type: 'PERCENTAGE',
@@ -134,11 +197,9 @@ async function main() {
     })),
   });
 
-  // === USER & ADDRESS ===
-  const user = await prisma.users.upsert({
-    where: { email: 'pembeli@email.com' },
-    update: {},
-    create: {
+  // === USER
+  const user = await prisma.users.create({
+    data: {
       email: 'pembeli@email.com',
       password: null,
       role: 'USER',
@@ -163,10 +224,11 @@ async function main() {
     },
   });
 
-  // === ORDER PER BULAN ===
+  // === ORDER BULANAN
   const tahun = new Date().getFullYear();
   for (let bulan = 0; bulan < 12; bulan++) {
     const tanggal = new Date(tahun, bulan, 15);
+
     const order = await prisma.orders.create({
       data: {
         name: `Order Bulan ${bulan + 1}`,
@@ -196,13 +258,13 @@ async function main() {
     });
   }
 
-  console.log('✅ Dummy data berhasil di-seed ulang sesuai schema terbaru');
+  console.log('✅ Dummy data berhasil di-seed ulang dengan aman.');
 }
 
 main()
   .then(() => prisma.$disconnect())
   .catch((e) => {
-    console.error(e);
+    console.error('❌ Error saat seed:', e);
     prisma.$disconnect();
     process.exit(1);
   });

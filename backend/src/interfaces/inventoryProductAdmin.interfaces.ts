@@ -1,4 +1,4 @@
-// File: src/interfaces/inventory.interface.ts
+// File: src/interfaces/inventoryProductAdmin.interface.ts
 
 
 import { Role, TransactionType } from '@prisma/client';
