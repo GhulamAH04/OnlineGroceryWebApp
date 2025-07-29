@@ -3,25 +3,39 @@
 import { apiUrl } from "@/config";
 import { IExistingAddress, ILocation } from "@/interfaces/address.interface";
 import { useAppSelector } from "@/lib/redux/hooks";
-import { BillingSchema } from "@/schemas/address.schema";
 import axios from "axios";
 import { getCookie } from "cookies-next";
 import { useFormik } from "formik";
 import { useEffect, useState } from "react";
+import AddAddressModal from "./AddAddressModal";
 
 export default function BillingInformationForm() {
   // state in redux
   const user = useAppSelector((state) => state.auth);
   // local state
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [cities, setCities] = useState<ILocation[]>([]);
-  const [provinces, setProvinces] = useState<ILocation[]>([]);
+  const [isEditMode, setIsEditMode] = useState<boolean>(false);
+  const [isShowModal, setIsShowModal] = useState<boolean>(false);
   const [address, setAddress] = useState<IExistingAddress>();
 
-  useEffect(() => {
-    const userId = user.user.id;
-    const token = getCookie("access_token") as string;
-    const fetchAddress = async () => {
+  const [provinces, setProvinces] = useState<ILocation[]>([]);
+  const [selectedProvince, setSelectedProvince] = useState<ILocation | null>(
+    null
+  );
+
+  const [cities, setCities] = useState<ILocation[]>([]);
+  const [selectedCity, setSelectedCity] = useState<ILocation | null>(null);
+
+  const [districts, setDistricts] = useState<ILocation[]>([]);
+
+  const [selectedDistrict, setSelectedDistrict] = useState<ILocation | null>(
+    null
+  );
+
+  const fetchAddress = async () => {
+    try {
+      // <-- Add try
+      const userId = user.user.id;
+      const token = getCookie("access_token") as string;
       const { data } = await axios.get(
         `${apiUrl}/api/users/address/main/${userId}`,
         {
@@ -30,71 +44,158 @@ export default function BillingInformationForm() {
           },
         }
       );
+      // Also, safely access the data
+      if (data && data.data && data.data.length > 0) {
+        setAddress(data.data[0]);
+      }
+    } catch (error) {
+      // <-- Add catch
+      console.error("Failed to fetch address:", error);
+      // Optionally, you can set an error state here
+    }
+  };
 
-      setAddress(data.data[0]);
-    };
-    if (userId !== 0) fetchAddress();
-  }, [user]);
+  useEffect(() => {
+    if (user.user.id) {
+      fetchAddress();
+    }
+  });
 
-  // Formik setup
+  useEffect(() => {
+    if (address?.provinces && address?.cities && address?.districts) {
+      setSelectedProvince(address?.provinces);
+      setSelectedCity(address?.cities);
+      setSelectedDistrict(address?.districts);
+    }
+  }, [address]);
+
   const formik = useFormik({
-    enableReinitialize: true, // Enable reinitialization
+    enableReinitialize: true,
     initialValues: {
-      address: address?.address || "",
-      city: address?.cities.id || "",
-      province: address?.provinces.id || "",
-      postalcode: address?.postalCode || "",
+      ...address,
+      province: address?.provinces.name,
+      city: address?.cities.name,
+      district: address?.districts.name,
     },
-    validationSchema: BillingSchema,
     onSubmit: async (values) => {
       try {
-        await axios.put(`${apiUrl}/api/addresses/${user.user.id}`, { values });
+        const token = getCookie("access_token") as string;
+        await axios.put(
+          `${apiUrl}/api/addresses/${address?.id}`,
+          {
+            ...values,
+            provinceId: selectedProvince?.id,
+            cityId: selectedCity?.id,
+            districtId: selectedDistrict?.id,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setIsEditMode(false);
 
-        alert("Edit address success");
+        fetchAddress();
+
+        alert("Berhasil mengubah alamat!");
       } catch (err) {
-        if (axios.isAxiosError(err) && err.response) {
-          const errorMessage = err.response.data.message;
-          alert(`${errorMessage}`);
-        } else {
-          alert("An unexpected error occurred");
-        }
+        alert("Error edit new address: " + err);
       }
     },
   });
 
   useEffect(() => {
-    const fetchCities = async () => {
+    const fetchProvinces = async () => {
       try {
-        const { data } = await axios.get(`${apiUrl}/api/cities`);
-        setCities(data.data);
-      } catch (err) {
-        if (axios.isAxiosError(err) && err.response) {
-          const errorMessage = err.response.data.message;
-          alert(`${errorMessage}`);
-        } else {
-          alert("An unexpected error occurred");
-        }
+        const response = await axios.get(`${apiUrl}/api/provinces`);
+        setProvinces(response.data.data);
+      } catch (error) {
+        console.error("Error fetching provinces:", error);
       }
     };
-    fetchCities();
+
+    fetchProvinces();
   }, []);
 
   useEffect(() => {
-    const fetchProvinces = async () => {
-      try {
-        const { data } = await axios.get(`${apiUrl}/api/provinces`);
-        setProvinces(data.data);
-      } catch (err) {
-        if (axios.isAxiosError(err) && err.response) {
-          const errorMessage = err.response.data.message;
-          alert(`${errorMessage}`);
-        } else {
-          alert("An unexpected error occurred");
+    if (selectedProvince) {
+      const fetchCities = async () => {
+        try {
+          const response = await axios.get(
+            `${apiUrl}/api/cities/${selectedProvince.name}`
+          );
+          setCities(response.data.data);
+        } catch (error) {
+          console.error("Error fetching cities:", error);
         }
-      }
-    };
-    fetchProvinces();
-  }, []);
+      };
+
+      fetchCities();
+    }
+  }, [selectedProvince]); // Dependency array with selectedProvince
+
+  useEffect(() => {
+    if (selectedCity) {
+      const fetchDistricts = async () => {
+        try {
+          const response = await axios.get(
+            `${apiUrl}/api/districts?province=${selectedProvince?.name}&city=${selectedCity.name}`
+          );
+          setDistricts(response.data.data);
+        } catch (error) {
+          console.error("Error fetching districts:", error);
+        }
+      };
+
+      fetchDistricts();
+    }
+  }, [selectedCity, selectedProvince]); // Dependency array with selectedCity and selectedProvince
+
+  const handleProvinceChange = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    const selectedName = event.target.value;
+    const province = provinces.find((p) => p.name === selectedName) || null;
+    setSelectedProvince(province);
+    formik.setFieldValue("province", province?.name || "");
+  };
+
+  const handleCityChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedName = event.target.value;
+    const city = cities.find((c) => c.name === selectedName) || null;
+    setSelectedCity(city);
+    formik.setFieldValue("city", city?.name || "");
+  };
+
+  const handleDistrictChange = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    const selectedName = event.target.value;
+    const district = districts.find((d) => d.name === selectedName) || null;
+    setSelectedDistrict(district);
+    formik.setFieldValue("district", district?.name || "");
+  };
+
+  if (!address)
+    return (
+      <div className="bg-white p-6 md:p-8 rounded-lg shadow-md">
+        <h2 className="text-2xl font-bold mb-6 text-gray-800">Main Address</h2>
+        <div
+          className="w-[15rem] py-3 mt-4 px-4 text-center bg-green-600 text-white font-semibold rounded-full hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-300 cursor-default"
+          onClick={() => {
+            setIsShowModal(true);
+          }}
+        >
+          Add New Address
+        </div>
+        <AddAddressModal
+          onAdd={fetchAddress}
+          onClose={() => setIsShowModal(false)}
+          isOpen={isShowModal}
+        />
+      </div>
+    );
 
   return (
     <div className="bg-white p-6 md:p-8 rounded-lg shadow-md">
@@ -136,44 +237,7 @@ export default function BillingInformationForm() {
         </div>
 
         {/* city, province, Zip Code */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div>
-            <label
-              htmlFor="city"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              City
-            </label>
-            {isEditMode ? (
-              <>
-                <select
-                  id="city"
-                  className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 bg-white ${
-                    formik.touched.city && formik.errors.city
-                      ? "border-red-500"
-                      : "border-gray-300"
-                  }`}
-                  {...formik.getFieldProps("city")}
-                >
-                  <option value="">Select</option>
-                  {cities.map((city) => (
-                    <option key={city.id} value={city.id}>
-                      {city.name}
-                    </option>
-                  ))}
-                </select>
-                {formik.touched.city && formik.errors.city ? (
-                  <div className="text-red-500 text-sm mt-1">
-                    {formik.errors.city}
-                  </div>
-                ) : null}
-              </>
-            ) : (
-              <p className="w-full h-10 px-3 py-2 text-gray-700 border border-gray-300 rounded-md shadow-sm cursor-not-allowed">
-                {address?.cities.name}
-              </p>
-            )}
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label
               htmlFor="province"
@@ -185,17 +249,14 @@ export default function BillingInformationForm() {
               <>
                 <select
                   id="province"
-                  className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 bg-white ${
-                    formik.touched.province && formik.errors.province
-                      ? "border-red-500"
-                      : "border-gray-300"
-                  }`}
                   {...formik.getFieldProps("province")}
+                  onChange={handleProvinceChange}
+                  className="mt-1 block w-full h-10 border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500"
                 >
-                  <option value="">Select</option>
-                  {provinces.map((province) => (
-                    <option key={province.id} value={province.id}>
-                      {province.name}
+                  <option value="">Pilih Provinsi</option>
+                  {provinces.map((p) => (
+                    <option key={p.id} value={p.name}>
+                      {p.name}
                     </option>
                   ))}
                 </select>
@@ -213,7 +274,82 @@ export default function BillingInformationForm() {
           </div>
           <div>
             <label
-              htmlFor="postalcode"
+              htmlFor="city"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              City
+            </label>
+            {isEditMode ? (
+              <>
+                <select
+                  id="city"
+                  {...formik.getFieldProps("city")}
+                  onChange={handleCityChange}
+                  disabled={!formik.values.province}
+                  className="mt-1 block w-full h-10 border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 disabled:bg-gray-100"
+                >
+                  <option value="">Pilih Kota</option>
+                  {formik.values.province &&
+                    cities.map((c) => (
+                      <option key={c.id} value={c.name}>
+                        {c.name}
+                      </option>
+                    ))}
+                </select>
+                {formik.touched.city && formik.errors.city ? (
+                  <div className="text-red-500 text-sm mt-1">
+                    {formik.errors.city}
+                  </div>
+                ) : null}
+              </>
+            ) : (
+              <p className="w-full h-10 px-3 py-2 text-gray-700 border border-gray-300 rounded-md shadow-sm cursor-not-allowed">
+                {address?.cities.name}
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label
+              htmlFor="district"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Kecamatan
+            </label>
+            {isEditMode ? (
+              <>
+                <select
+                  id="district"
+                  {...formik.getFieldProps("district")}
+                  onChange={handleDistrictChange}
+                  disabled={!formik.values.city}
+                  className="mt-1 block w-full h-10 border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 disabled:bg-gray-100"
+                >
+                  <option value="">Pilih Kecamatan</option>
+                  {formik.values.city &&
+                    districts.map((d) => (
+                      <option key={d.id} value={d.name}>
+                        {d.name}
+                      </option>
+                    ))}
+                </select>
+                {formik.touched.district && formik.errors.district ? (
+                  <div className="text-red-500 text-sm mt-1">
+                    {formik.errors.district}
+                  </div>
+                ) : null}
+              </>
+            ) : (
+              <p className="w-full h-10 px-3 py-2 text-gray-700 border border-gray-300 rounded-md shadow-sm cursor-not-allowed">
+                {address?.districts.name}
+              </p>
+            )}
+          </div>
+          <div>
+            <label
+              htmlFor="postalCode"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
               Postal Code
@@ -221,19 +357,19 @@ export default function BillingInformationForm() {
             {isEditMode ? (
               <>
                 <input
-                  id="postalcode"
+                  id="postalCode"
                   type="text"
                   placeholder="Postal Code"
                   className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 ${
-                    formik.touched.postalcode && formik.errors.postalcode
+                    formik.touched.postalCode && formik.errors.postalCode
                       ? "border-red-500"
                       : "border-gray-300"
                   }`}
-                  {...formik.getFieldProps("postalcode")}
+                  {...formik.getFieldProps("postalCode")}
                 />
-                {formik.touched.postalcode && formik.errors.postalcode ? (
+                {formik.touched.postalCode && formik.errors.postalCode ? (
                   <div className="text-red-500 text-sm mt-1">
-                    {formik.errors.postalcode}
+                    {formik.errors.postalCode}
                   </div>
                 ) : null}
               </>

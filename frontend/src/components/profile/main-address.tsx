@@ -25,7 +25,7 @@ export default function MainAddress() {
         }
       );
 
-      setAddress(data.data[0]);
+      if(data) setAddress(data.data[0]);
     };
     if (userId !== 0) fetchAddress();
   }, [userState]);
@@ -36,9 +36,20 @@ export default function MainAddress() {
         Main Address
       </h3>
       <address className="not-italic text-gray-700 space-y-2">
-        <p>{address?.address}, {address?.cities.name}</p>
-        <p>{userState.user.email}</p>
-        <p>{address?.postalCode}</p>
+        <p>Email: {userState.user.email}</p>
+        {address ? (
+          <>
+            <p>Phone: {address?.phone}</p>
+            <p>
+              Address: {address?.address}, {address?.cities.name}
+            </p>
+            <p>Postal Code: {address?.postalCode}</p>
+          </>
+        ) : (
+          <p className="my-2 text-lg text-red-500">
+            No address, set one in settings
+          </p>
+        )}
       </address>
     </div>
   );

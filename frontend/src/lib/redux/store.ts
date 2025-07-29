@@ -2,14 +2,12 @@ import { configureStore } from "@reduxjs/toolkit";
 
 import authSlice from "./features/authSlice";
 import locationReducer from "./features/locationSlice"
-import addressReducer from "./features/addressSlice"
 
 export function makeStore() {
   return configureStore({
     reducer: {
       auth: authSlice,
       location: locationReducer,
-      address: addressReducer,
     },
   });
 }

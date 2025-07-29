@@ -4,10 +4,8 @@ import axios from "axios";
 import { apiUrl } from "@/config";
 import { useFormik } from "formik";
 import { VerifyResetSchema } from "@/schemas/verifyreset.schema";
-import { getCookie } from "cookies-next";
 
 export default function VerifyResetPassword() {
-  const token = getCookie("access_token") as string;
   const formik = useFormik({
     initialValues: {
       email: "",
@@ -23,11 +21,6 @@ export default function VerifyResetPassword() {
           {
             email,
           },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
         );
 
         alert("We've sent an email to reset your password.");

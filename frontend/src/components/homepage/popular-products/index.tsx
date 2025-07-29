@@ -40,14 +40,14 @@ export default function PopularProducts({ products }: PageProps) {
 
       {/* Products Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6">
-        {products.map((product) => (
-          <Product
-            key={product.id}
-            image={product.products.image}
-            name={product.products.name}
-            price={product.products.price}
-          />
-        ))}
+            {products.map((product) => (
+              <Product
+                key={product.id}
+                image={product.products.image}
+                name={product.products.name}
+                price={product.products.price}
+              />
+            ))}
       </div>
     </section>
   );
