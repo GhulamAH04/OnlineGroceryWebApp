@@ -1,4 +1,21 @@
 
+
+// NAHALIL
+import { Router } from "express";
+import { AddNewStoreController, AssignStoreAdminController, DeleteStoreController, getAllStoresController, UpdateStoreController } from "../controllers/store.controller";
+const router = Router();
+
+router.get("/", getAllStoresController);
+router.post("/", AddNewStoreController);
+router.put("/:id", UpdateStoreController);
+router.patch("/:id", AssignStoreAdminController);
+router.delete("/:id", DeleteStoreController);
+
+export default router;
+
+
+/* rekomendasi 
+
 // === FILE: src/routes/store.routes.ts ===
 
 import { Router } from "express";
@@ -33,17 +50,5 @@ router.get("/all", authorizeRoles(["SUPER_ADMIN", "STORE_ADMIN"])
 export default router;
 
 
-/*
-// NAHALIL
-import { Router } from "express";
-import { AddNewStoreController, AssignStoreAdminController, DeleteStoreController, getAllStoresController, UpdateStoreController } from "../controllers/store.controller";
-const router = Router();
 
-router.get("/", getAllStoresController);
-router.post("/", AddNewStoreController);
-router.put("/:id", UpdateStoreController);
-router.patch("/:id", AssignStoreAdminController);
-router.delete("/:id", DeleteStoreController);
-
-export default router;
 */

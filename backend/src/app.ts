@@ -35,7 +35,6 @@ import AddressRouter from "./routes/address.routes";
 import DistrictRouter from "./routes/district.routes";
 import StoreRouter from "./routes/store.routes";
 import ShippingCostRouter from "./routes/shippingCost.routes";
-import branchRoutes from "./routes/branch.routes";
 
 // === ROUTES - ADMIN ===
 import AdminRouter from "./routes/admin.routes";
@@ -46,6 +45,8 @@ import DiscountAdminRouter from "./routes/discountAdmin.routes";
 import ReportAdminRouter from "./routes/reportSalesAdmin";
 import InventoryJournalRouter from "./routes/inventoryJournal.routes";
 import InventoryRouter from "./routes/inventoryAdmin.routes";
+import BranchAdminRouter from "./routes/branchAdmin.routes";
+
 
 // === BODY PARSER ===
 app.use(express.json());
@@ -72,7 +73,8 @@ app.use("/api/admin/discounts", DiscountAdminRouter);
 app.use("/api/admin/reports", ReportAdminRouter);
 app.use("/api/admin/inventory", InventoryRouter);
 app.use("/api/admin/inventory-journal", InventoryJournalRouter);
-app.use("/api/admin/branches", branchRoutes); // ✅ pindah ke bawah CORS
+app.use("/api/admin/branches", BranchAdminRouter);
+
 
 // === STATIC FILES ===
 app.use("/images", express.static("public/images"));

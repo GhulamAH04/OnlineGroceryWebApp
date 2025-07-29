@@ -1,6 +1,3 @@
-// === FILE: app/admin/products/page.tsx ===
-// === PRODUCT MANAGEMENT PAGE ===
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -30,7 +27,9 @@ export default function ProductPage() {
   // === FETCH PRODUCTS ===
   const fetchProducts = async () => {
     try {
-      const res = await axios.get("/admin/products");
+      const res = await axios.get("/admin/products", {
+        params: { search: debouncedSearch },
+      });
       setProducts(Array.isArray(res.data?.data) ? res.data.data : []);
     } catch {
       toast.error("Gagal memuat produk");
@@ -42,8 +41,10 @@ export default function ProductPage() {
     try {
       const res = await axios.get("/admin/branches");
       setStores(res.data || []);
-    } catch {
+      console.log("stores loaded", res.data);
+    } catch (err) {
       toast.error("Gagal memuat data toko");
+      console.error("Gagal fetch /admin/branches", err);
     }
   };
 
@@ -57,15 +58,19 @@ export default function ProductPage() {
     }
   };
 
-  // === USE EFFECT ===
+  // === FETCH DI LOAD AWAL (semua data) ===
   useEffect(() => {
-    fetchProducts();
-  }, [debouncedSearch]);
-
-  useEffect(() => {
-    fetchStores();
-    fetchCategories();
+    fetchProducts(); // ambil semua produk
+    fetchStores(); // ambil toko
+    fetchCategories(); // ambil kategori
   }, []);
+
+  // === FETCH JIKA USER KETIK CARI ===
+  useEffect(() => {
+    if (debouncedSearch !== "") {
+      fetchProducts(); // hanya jika user mulai cari
+    }
+  }, [debouncedSearch]);
 
   // === HANDLE TAMBAH PRODUK ===
   const handleAdd = () => {
@@ -149,41 +154,40 @@ export default function ProductPage() {
           </tr>
         </thead>
         <tbody>
-          {Array.isArray(products) &&
-            products.map((p) => (
-              <tr key={p.id} className="hover:bg-green-50">
-                <td className="p-2 border">
-                  <Image
-                    src={p.image || "/default.png"}
-                    alt={p.name}
-                    width={56}
-                    height={56}
-                    className="object-cover rounded"
-                  />
-                </td>
-                <td className="p-2 border">{p.name}</td>
-                <td className="p-2 border">Rp {p.price.toLocaleString()}</td>
-                <td className="p-2 border">{p.stock}</td>
-                <td className="p-2 border">
-                  {stores.find((s) => s.id === p.storeId)?.name || "-"}
-                </td>
-                <td className="p-2 border">{p.categoryName || "-"}</td>
-                <td className="p-2 border space-x-2">
-                  <button
-                    onClick={() => handleEdit(p)}
-                    className="text-blue-600 hover:underline"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => setConfirmId(p.id)}
-                    className="text-red-600 hover:underline"
-                  >
-                    Hapus
-                  </button>
-                </td>
-              </tr>
-            ))}
+          {products.map((p) => (
+            <tr key={p.id} className="hover:bg-green-50">
+              <td className="p-2 border">
+                <Image
+                  src={p.image || "/default.png"}
+                  alt={p.name}
+                  width={56}
+                  height={56}
+                  className="object-cover rounded"
+                />
+              </td>
+              <td className="p-2 border">{p.name}</td>
+              <td className="p-2 border">Rp {p.price.toLocaleString()}</td>
+              <td className="p-2 border">{p.stock}</td>
+              <td className="p-2 border">
+                {stores.find((s) => s.id === p.storeId)?.name || "-"}
+              </td>
+              <td className="p-2 border">{p.categoryName || "-"}</td>
+              <td className="p-2 border space-x-2">
+                <button
+                  onClick={() => handleEdit(p)}
+                  className="text-blue-600 hover:underline"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => setConfirmId(p.id)}
+                  className="text-red-600 hover:underline"
+                >
+                  Hapus
+                </button>
+              </td>
+            </tr>
+          ))}
         </tbody>
       </table>
 

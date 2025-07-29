@@ -6,24 +6,24 @@ import { uploadToCloudinary } from '../utils/cloudinary';
 const prisma = new PrismaClient();
 
 export const productService = {
-  // === GET ALL PRODUCTS (with branch & stock) ===
+  // === GET ALL PRODUCTS ===
   getAll: async (params: any) => {
     const {
       page = 1,
       limit = 10,
       search = '',
-      sortBy = 'createdAt',
       sortOrder = 'desc',
     } = params;
 
     const take = parseInt(limit);
     const skip = (parseInt(page) - 1) * take;
+    const finalSearch = search || '';
 
     const productBranches = await prisma.product_branchs.findMany({
       where: {
         products: {
           name: {
-            contains: search,
+            contains: finalSearch,
             mode: 'insensitive',
           },
         },
@@ -40,7 +40,10 @@ export const productService = {
     const total = await prisma.product_branchs.count({
       where: {
         products: {
-          name: { contains: search, mode: 'insensitive' },
+          name: {
+            contains: finalSearch,
+            mode: 'insensitive',
+          },
         },
       },
     });
@@ -63,6 +66,7 @@ export const productService = {
       totalPages: Math.ceil(total / take),
     };
   },
+
 
   // === GET PRODUCT BY ID (with branch & stock) ===
   getById: async (id: number) => {
