@@ -1,9 +1,10 @@
+// === FILE: app/admin/products/page.tsx ===
 // === PRODUCT MANAGEMENT PAGE ===
-// OnlineGroceryWebApp/frontend/src/app/admin/products/page.tsx
+
 "use client";
 
 import { useEffect, useState } from "react";
-import axios from "axios";
+import axios from "@/lib/axios";
 import Image from "next/image";
 import { toast } from "sonner";
 
@@ -29,10 +30,8 @@ export default function ProductPage() {
   // === FETCH PRODUCTS ===
   const fetchProducts = async () => {
     try {
-      const res = await axios.get("/admin/products", {
-        params: { search: debouncedSearch },
-      });
-      setProducts(res.data?.data || []);
+      const res = await axios.get("/admin/products");
+      setProducts(Array.isArray(res.data?.data) ? res.data.data : []);
     } catch {
       toast.error("Gagal memuat produk");
     }
@@ -150,40 +149,41 @@ export default function ProductPage() {
           </tr>
         </thead>
         <tbody>
-          {products.map((p) => (
-            <tr key={p.id} className="hover:bg-green-50">
-              <td className="p-2 border">
-                <Image
-                  src={p.image || "/default.png"}
-                  alt={p.name}
-                  width={56}
-                  height={56}
-                  className="object-cover rounded"
-                />
-              </td>
-              <td className="p-2 border">{p.name}</td>
-              <td className="p-2 border">Rp {p.price.toLocaleString()}</td>
-              <td className="p-2 border">{p.stock}</td>
-              <td className="p-2 border">
-                {stores.find((s) => s.id === p.storeId)?.name || "-"}
-              </td>
-              <td className="p-2 border">{p.categoryName || "-"}</td>
-              <td className="p-2 border space-x-2">
-                <button
-                  onClick={() => handleEdit(p)}
-                  className="text-blue-600 hover:underline"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => setConfirmId(p.id)}
-                  className="text-red-600 hover:underline"
-                >
-                  Hapus
-                </button>
-              </td>
-            </tr>
-          ))}
+          {Array.isArray(products) &&
+            products.map((p) => (
+              <tr key={p.id} className="hover:bg-green-50">
+                <td className="p-2 border">
+                  <Image
+                    src={p.image || "/default.png"}
+                    alt={p.name}
+                    width={56}
+                    height={56}
+                    className="object-cover rounded"
+                  />
+                </td>
+                <td className="p-2 border">{p.name}</td>
+                <td className="p-2 border">Rp {p.price.toLocaleString()}</td>
+                <td className="p-2 border">{p.stock}</td>
+                <td className="p-2 border">
+                  {stores.find((s) => s.id === p.storeId)?.name || "-"}
+                </td>
+                <td className="p-2 border">{p.categoryName || "-"}</td>
+                <td className="p-2 border space-x-2">
+                  <button
+                    onClick={() => handleEdit(p)}
+                    className="text-blue-600 hover:underline"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => setConfirmId(p.id)}
+                    className="text-red-600 hover:underline"
+                  >
+                    Hapus
+                  </button>
+                </td>
+              </tr>
+            ))}
         </tbody>
       </table>
 

@@ -6,7 +6,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import axios from "axios";
+import axios from "@/lib/axios";
 import { toast } from "sonner";
 import { Product, CartItem } from "@/interfaces/productAdmin.interface";
 

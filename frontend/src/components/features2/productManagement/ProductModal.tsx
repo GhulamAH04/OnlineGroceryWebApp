@@ -1,3 +1,5 @@
+// OnlineGroceryWebApp/frontend/src/components/features2/productManagement/ProductModal.tsx
+
 "use client";
 
 import {
@@ -152,11 +154,12 @@ export default function ProductModal({
               className="w-full border px-3 py-2 rounded"
             >
               <option value="">-- Pilih Toko --</option>
-              {stores.map((store) => (
-                <option key={store.id} value={store.id}>
-                  {store.name}
-                </option>
-              ))}
+              {Array.isArray(stores) &&
+                stores.map((store) => (
+                  <option key={store.id} value={store.id}>
+                    {store.name}
+                  </option>
+                ))}
             </select>
             {errors?.storeId && (
               <p className="text-sm text-red-500">{errors.storeId.message}</p>

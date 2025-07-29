@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { apiUrl } from "@/config";
+import { apiUrl } from "@/config"; // gunakan ini saja, tidak perlu pakai process.env lagi
 
 export default function Login() {
   const [formData, setFormData] = useState({
@@ -47,26 +47,17 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError("");
+
     if (validateForm()) {
-      // Panggil API backend asli
       try {
-<<<<<<< HEAD
         const res = await fetch(`${apiUrl}/admin/auth/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(formData),
         });
-=======
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/admin/auth/login`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(formData),
-          }
-        );
->>>>>>> 14ecee8d3fd2d5bd07a05c728a65525c68d9ef31
+
         const data = await res.json();
+
         if (data.success && data.data.token) {
           localStorage.setItem("token", data.data.token);
           router.push("/admin/products");

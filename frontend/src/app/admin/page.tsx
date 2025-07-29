@@ -1,18 +1,16 @@
 "use client";
 
 import Link from "next/link";
-<<<<<<< HEAD
-import { UserCog, Package, Percent, BarChart, Boxes, Store } from "lucide-react";
-=======
 import {
   UserCog,
   Package,
   Percent,
   BarChart,
   Boxes,
+  Store,
   RotateCcw,
 } from "lucide-react";
->>>>>>> 14ecee8d3fd2d5bd07a05c728a65525c68d9ef31
+
 
 export default function AdminDashboardHome() {
   return (

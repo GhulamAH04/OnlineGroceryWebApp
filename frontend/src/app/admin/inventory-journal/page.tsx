@@ -1,9 +1,9 @@
-// OnlineGroceryWebApp/frontend/src/app/admin/inventory-journal/page.tsx
 // === INVENTORY JOURNAL PAGE ===
+// File: OnlineGroceryWebApp/frontend/src/app/admin/inventory-journal/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
-import axios from "axios";
+import axios from "@/lib/axios";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { toast } from "sonner";
@@ -26,10 +26,20 @@ export default function InventoryJournalPage() {
   // === FETCH DATA JURNAL, PRODUK, CABANG ===
   const fetchData = async () => {
     try {
+      const token = localStorage.getItem("token");
       const [journalRes, productRes, branchRes] = await Promise.all([
-        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/admin/inventory-journal`),
-        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/admin/products`),
-        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/admin/branches`),
+        axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/admin/inventory-journal`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        ),
+        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/admin/products`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/admin/branches`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
       ]);
       setJournals(journalRes.data.data);
       setProducts(productRes.data.data);
@@ -57,9 +67,13 @@ export default function InventoryJournalPage() {
   const onSubmit = async (data: InventoryJournalForm) => {
     try {
       setIsSubmitting(true);
+      const token = localStorage.getItem("token");
       await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/admin/inventory-journal`,
-        data
+        data,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
       toast.success("Jurnal stok berhasil ditambahkan");
       reset();
@@ -75,8 +89,12 @@ export default function InventoryJournalPage() {
   const handleDelete = async () => {
     if (!confirmId) return;
     try {
+      const token = localStorage.getItem("token");
       await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/inventory-journal/${confirmId}`
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/inventory-journal/${confirmId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
       toast.success("Jurnal berhasil dihapus");
       fetchData();
