@@ -8,9 +8,12 @@ import { JwtPayload, sign, verify } from "jsonwebtoken";
 import { Transporter } from "../utils/nodemailer";
 import { compare, genSaltSync, hash } from "bcrypt";
 import { Role } from "@prisma/client";
-import { IGoogleLogin, IGoogleRegister, ILogin, IRegister } from "../interfaces/auth.interface";
-
-
+import {
+  IGoogleLogin,
+  IGoogleRegister,
+  ILogin,
+  IRegister,
+} from "../interfaces/auth.interface";
 
 export async function FindUserByEmail(email: string) {
   try {
@@ -45,7 +48,7 @@ async function Register(userData: IRegister) {
       return registeredUser;
     });
 
-    if (!newUser) throw new Error("Create account failed")
+    if (!newUser) throw new Error("Create account failed");
 
     SendVerificationEmail(name, email, "Welcome");
 
@@ -55,7 +58,11 @@ async function Register(userData: IRegister) {
   }
 }
 
-export async function SendVerificationEmail(username: string, email: string, subject: string) {
+export async function SendVerificationEmail(
+  username: string,
+  email: string,
+  subject: string
+) {
   try {
     //send email
     const templatePath = path.join(
@@ -164,13 +171,15 @@ async function LoginWithGoogle(userData: IGoogleLogin) {
 
     if (!user) throw new Error("Email does not exist");
 
-    if (name !== user.username) await prisma.users.update({
-      where: {
-        email
-      }, data: {
-        username: name,
-      }
-    })
+    if (name !== user.username)
+      await prisma.users.update({
+        where: {
+          email,
+        },
+        data: {
+          username: name,
+        },
+      });
 
     const payload = {
       id: user.id,
@@ -201,7 +210,7 @@ async function VerifyReset(email: string) {
       email,
     };
 
-    const token = sign(payload, String(JWT_SECRET), { expiresIn: "2h" });
+    const token = sign(payload, String(JWT_SECRET), { expiresIn: "1h" });
 
     const templateSource = fs.readFileSync(templatePath, "utf-8");
     const compiledTemplate = handlebars.compile(templateSource);
@@ -311,11 +320,14 @@ export async function VerifyResetService(email: string) {
   }
 }
 
-export async function SendVerificationEmailService(username: string, email: string, subject: string) {
+export async function SendVerificationEmailService(
+  username: string,
+  email: string,
+  subject: string
+) {
   try {
     await SendVerificationEmail(username, email, subject);
   } catch (err) {
     throw err;
   }
 }
-

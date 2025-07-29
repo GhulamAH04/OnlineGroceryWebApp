@@ -5,7 +5,7 @@ import { GetMainStoresProductsController, GetNearbyProductsController } from "..
 const router = Router();
 
 // read
-router.get("/nearby", GetNearbyProductsController);
+router.get("/nearby/:userCity", GetNearbyProductsController);
 router.get("/main", GetMainStoresProductsController);
 
 export default router;

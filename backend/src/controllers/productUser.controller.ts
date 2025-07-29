@@ -10,9 +10,9 @@ export async function GetNearbyProductsController(
   next: NextFunction
 ) {
   try {
-    const latitude = parseFloat(req.query.latitude as string);
-    const longitude = parseFloat(req.query.longitude as string);
-    const products = await GetNearbyProductsService(latitude, longitude);
+    const { userCity } = req.params;
+
+    const products = await GetNearbyProductsService(userCity);
 
     res.status(200).send({
       message: `Get products by location success`,

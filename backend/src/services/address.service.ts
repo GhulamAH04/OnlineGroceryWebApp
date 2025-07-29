@@ -18,7 +18,7 @@ export async function EditAddressByIdService(
   bodyData: INewAddress
 ) {
   try {
-    const { address, cityId, provinceId, postalCode } = bodyData;
+    const { address, cityId, provinceId, districtId, postalCode } = bodyData;
 
     const existedAddress = await prisma.addresses.findFirst({
       where: { id },
@@ -30,6 +30,7 @@ export async function EditAddressByIdService(
         address: address || existedAddress?.address,
         cityId: cityId || existedAddress?.cityId,
         provinceId: provinceId || existedAddress?.provinceId,
+        districtId: districtId || existedAddress?.districtId,
         postalCode: postalCode || existedAddress?.postalCode,
       },
     });
