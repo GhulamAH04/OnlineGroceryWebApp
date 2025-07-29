@@ -56,16 +56,6 @@ export default function UserManagementPage() {
     }
   };
 
-  // === FETCH STORE==
-  const fetchBranches = async () => {
-    try {
-      const res = await axios.get("/admin/users/branches");
-      setBranches(res.data.data);
-    } catch {
-      toast.error("Gagal memuat data cabang");
-    }
-  };
-
   // === ON LOAD ===
   useEffect(() => {
     fetchUsers();
