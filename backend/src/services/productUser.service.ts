@@ -54,30 +54,3 @@ export async function GetNearbyProductsService(
     throw err;
   }
 }
-
-// === Get Produk dari Store di Jakarta (Main Store) ===
-export async function GetMainStoresProductsService() {
-  try {
-    const productBranches = [];
-
-    const mainStores = await prisma.branchs.findMany({
-      where: {
-        cities: {
-          name: {
-            contains: "JAKARTA",
-            mode: "insensitive"
-          },
-        },
-      },
-    });
-
-    for (const store of mainStores) {
-      const product = await getProductBranchesByStoreId(store.id);
-      productBranches.push(product);
-    }
-
-    return productBranches.flat();
-  } catch (err) {
-    throw err;
-  }
-}

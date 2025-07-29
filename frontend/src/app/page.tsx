@@ -33,7 +33,7 @@ export default function Homepage() {
     const response = await axios.get(
       `${apiUrl}/api/cities?latitude=${latitude}&longitude=${longitude}`
     );
-    dispatch(setCity(response.data.data));
+    dispatch(setCity({city: response.data.data}));
   };
 
   useEffect(() => {
@@ -43,8 +43,7 @@ export default function Homepage() {
         if (latitude && longitude) getCity(latitude, longitude);
       });
     }
-      /* eslint-disable-next-line */
-  }, []);
+  });
 
   // Effect to fetch categories once on mount
   useEffect(() => {

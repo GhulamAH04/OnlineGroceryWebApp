@@ -16,6 +16,14 @@ async function main() {
     return;
   }
 
+  // for provinces
+  // const result = await prisma.provinces.createMany({
+  //   data: provinces,
+  //   skipDuplicates: true, // Useful for re-running the seed
+  // });
+  // console.log(`Seeding finished. ${result.count} data were added. 🌱`);
+
+  //for cities
   for (let i = 0; i < provinces.length; i++) {
     const cities = await fetchCitiesByProvince(provinces[i].name);
     for (let j = 0; j < cities.length; j++) {
@@ -35,7 +43,6 @@ async function main() {
   }
   console.log(`Seeding finished 🌱`);
 }
-
 
 main()
   .catch((e) => {
