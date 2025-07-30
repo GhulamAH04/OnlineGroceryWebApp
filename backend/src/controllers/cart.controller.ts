@@ -1,5 +1,5 @@
 import { Response, Request } from "express";
-import { PrismaClient, product_carts } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 import { haversineDistance } from "../utils/distance";
 
 const prisma = new PrismaClient();
@@ -52,6 +52,56 @@ export class CartController {
       });
 
       res.status(200).json(cartItems);
+    } catch (error) {
+      res.status(500).json({ message: "Terjadi kesalahan pada server", error });
+    }
+  }
+
+  /**
+   * Menghitung total kuantitas dan harga dari semua item di keranjang aktif.
+   */
+  async totalCart(req: Request, res: Response) {
+    try {
+      const userId = req.user!.id;
+
+      // Cari cart aktif user
+      const activeCart = await prisma.carts.findFirst({
+        where: { userId, isActive: true },
+        include: {
+          product_carts: true,
+        },
+      });
+
+      if (!activeCart || activeCart.product_carts.length === 0) {
+        // Jika cart kosong
+        res.status(200).json({ totalQuantity: 0, totalPrice: 0 });
+        return;
+      }
+
+      // Ambil semua productBranchId yang ada di cart
+      const productBranchIds = activeCart.product_carts.map(
+        (pc) => pc.productBranchId
+      );
+
+      // Ambil detail produk (agar dapat harga)
+      const productBranchs = await prisma.product_branchs.findMany({
+        where: { id: { in: productBranchIds } },
+        include: { products: true },
+      });
+
+      // Hitung total quantity & price
+      let totalQuantity = 0;
+      let totalPrice = 0;
+
+      for (const item of activeCart.product_carts) {
+        const pb = productBranchs.find((pb) => pb.id === item.productBranchId);
+        if (pb && pb.products) {
+          totalQuantity += item.quantity;
+          totalPrice += item.quantity * pb.products.price;
+        }
+      }
+
+      res.status(200).json({ totalQuantity, totalPrice });
     } catch (error) {
       res.status(500).json({ message: "Terjadi kesalahan pada server", error });
     }
