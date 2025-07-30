@@ -50,13 +50,6 @@ export default function Login() {
     if (validateForm()) {
       // Panggil API backend asli
       try {
-<<<<<<< HEAD
-        const res = await fetch(`${apiUrl}/admin/auth/login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
-        });
-=======
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/admin/auth/login`,
           {
@@ -65,7 +58,6 @@ export default function Login() {
             body: JSON.stringify(formData),
           }
         );
->>>>>>> 14ecee8d3fd2d5bd07a05c728a65525c68d9ef31
         const data = await res.json();
         if (data.success && data.data.token) {
           localStorage.setItem("token", data.data.token);

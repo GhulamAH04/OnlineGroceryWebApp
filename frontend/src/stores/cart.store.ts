@@ -24,6 +24,7 @@ interface CartState {
   isLoading: boolean;
   error: string | null;
   fetchCart: () => Promise<void>;
+  totalCart: () => Promise<TotalCartResponse>;
   addToCart: (productId: number, quantity: number) => Promise<void>;
   updateItemQuantity: (
     productCartId: number,
@@ -31,6 +32,11 @@ interface CartState {
   ) => Promise<void>;
   removeItem: (productCartId: number) => Promise<void>;
   getCartItemCount: () => number;
+}
+
+export interface TotalCartResponse {
+  totalQuantity: number;
+  totalPrice: number;
 }
 
 const API_URL =
@@ -54,6 +60,18 @@ export const useCartStore = create<CartState>((set, get) => ({
     }
   },
 
+  totalCart: async (): Promise<TotalCartResponse> => {
+    try {
+      const response = await axios.get<TotalCartResponse>(
+        `${API_URL}/cart/total`,
+        getAxiosConfig()
+      );
+      return response.data;
+    } catch (err: any) {
+      throw err;
+    }
+  },
+
   addToCart: async (productId: number, quantity: number) => {
     set({ isLoading: true, error: null });
     try {
@@ -63,7 +81,7 @@ export const useCartStore = create<CartState>((set, get) => ({
         getAxiosConfig()
       );
       alert("Item berhasil ditambahkan ke keranjang.");
-      await get().fetchCart();
+      set({ isLoading: false });
     } catch (err: any) {
       set({
         error: err.response?.data?.message || "Gagal menambah item.",
@@ -80,7 +98,7 @@ export const useCartStore = create<CartState>((set, get) => ({
     const updatedItems = originalItems.map((item) =>
       item.id === productCartId ? { ...item, quantity } : item
     );
-    set({ items: updatedItems });
+    set({ items: updatedItems, isLoading: true });
 
     try {
       await axios.put(
@@ -88,10 +106,13 @@ export const useCartStore = create<CartState>((set, get) => ({
         { quantity },
         getAxiosConfig()
       );
+      set({ isLoading: false });
     } catch (err: any) {
+      console.error("Error updating item quantity:", err);
       set({
         error: err.response?.data?.message || "Gagal mengubah kuantitas.",
         items: originalItems,
+        isLoading: false,
       });
     }
   },
@@ -101,17 +122,18 @@ export const useCartStore = create<CartState>((set, get) => ({
     const updatedItems = originalItems.filter(
       (item) => item.id !== productCartId
     );
-    set({ items: updatedItems });
-
+    set({ items: updatedItems, isLoading: true });
     try {
       await axios.delete(
         `${API_URL}/cart/item/${productCartId}`,
         getAxiosConfig()
       );
+      set({ isLoading: false });
     } catch (err: any) {
       set({
         error: err.response?.data?.message || "Gagal menghapus item.",
         items: originalItems,
+        isLoading: false,
       });
     }
   },
