@@ -1,11 +1,35 @@
+import { useAppSelector } from "@/lib/redux/hooks";
+import { TotalCartResponse, useCartStore } from "@/stores/cart.store";
 import { Heart, Search } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 export default function Middle() {
+  const { totalCart, isLoading } = useCartStore();
+  const userState = useAppSelector((state) => state.auth);
+  const [cartItems, setCartItems] = useState<TotalCartResponse>();
+
+  const getTotalCart = async () => {
+    try {
+      const total = await totalCart();
+      console.log("Total Cart:", total);
+      setCartItems(total);
+    } catch (error) {
+      console.error("Failed to fetch total cart:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (userState.user.username) {
+      getTotalCart();
+    } else {
+      setCartItems(undefined);
+    }
+  }, [userState, isLoading]);
+
   return (
     <div className="w-full">
-      {/* Main Container */}
       <div
         className="
         w-full
@@ -18,9 +42,7 @@ export default function Middle() {
         border-b border-neutral-100
       "
       >
-        {/* Logo - Always on left */}
         <div className="flex items-center gap-2 w-full md:w-auto">
-          {/* eslint-disable-next-line */}
           <img
             className="w-7 h-7 sm:w-8 sm:h-8"
             src="/navigation/plant.svg"
@@ -62,12 +84,14 @@ export default function Middle() {
                 flex items-center justify-center
               "
                 >
-                  2
+                  {cartItems ? cartItems.totalQuantity : 0}
                 </div>
               </div>
               <div className="hidden sm:block">
                 <p className="text-xs text-neutral-500">Shopping Cart:</p>
-                <p className="text-sm font-medium">IDR 57.000</p>
+                <p className="text-sm font-medium">
+                  IDR {cartItems ? cartItems.totalPrice : 0}
+                </p>
               </div>
             </div>
           </div>
@@ -121,7 +145,6 @@ export default function Middle() {
           </div>
         </div>
 
-        {/* Cart/Wishlist - Always on right */}
         <div className="hidden md:flex items-center gap-4 sm:gap-6 w-full md:w-auto justify-end">
           <Heart
             className="
@@ -154,12 +177,14 @@ export default function Middle() {
                 flex items-center justify-center
               "
               >
-                2
+                {cartItems ? cartItems.totalQuantity : 0}
               </div>
             </div>
             <div className="hidden sm:block">
               <p className="text-xs text-neutral-500">Shopping Cart:</p>
-              <p className="text-sm font-medium">IDR 57.000</p>
+              <p className="text-sm font-medium">
+                IDR {cartItems ? cartItems.totalPrice : 0}
+              </p>
             </div>
           </div>
         </div>
