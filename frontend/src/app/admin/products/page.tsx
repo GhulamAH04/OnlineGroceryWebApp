@@ -1,9 +1,7 @@
-// === PRODUCT MANAGEMENT PAGE ===
-// OnlineGroceryWebApp/frontend/src/app/admin/products/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
-import axios from "axios";
+import axios from "@/lib/axios";
 import Image from "next/image";
 import { toast } from "sonner";
 
@@ -32,7 +30,7 @@ export default function ProductPage() {
       const res = await axios.get("/admin/products", {
         params: { search: debouncedSearch },
       });
-      setProducts(res.data?.data || []);
+      setProducts(Array.isArray(res.data?.data) ? res.data.data : []);
     } catch {
       toast.error("Gagal memuat produk");
     }
@@ -43,8 +41,10 @@ export default function ProductPage() {
     try {
       const res = await axios.get("/admin/branches");
       setStores(res.data || []);
-    } catch {
+      console.log("stores loaded", res.data);
+    } catch (err) {
       toast.error("Gagal memuat data toko");
+      console.error("Gagal fetch /admin/branches", err);
     }
   };
 
@@ -58,15 +58,19 @@ export default function ProductPage() {
     }
   };
 
-  // === USE EFFECT ===
+  // === FETCH DI LOAD AWAL (semua data) ===
   useEffect(() => {
-    fetchProducts();
-  }, [debouncedSearch]);
-
-  useEffect(() => {
-    fetchStores();
-    fetchCategories();
+    fetchProducts(); // ambil semua produk
+    fetchStores(); // ambil toko
+    fetchCategories(); // ambil kategori
   }, []);
+
+  // === FETCH JIKA USER KETIK CARI ===
+  useEffect(() => {
+    if (debouncedSearch !== "") {
+      fetchProducts(); // hanya jika user mulai cari
+    }
+  }, [debouncedSearch]);
 
   // === HANDLE TAMBAH PRODUK ===
   const handleAdd = () => {

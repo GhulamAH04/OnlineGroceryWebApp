@@ -5,7 +5,7 @@ import AddStoreModal from "@/components/features2/storeManagement/AddStoreModal"
 import EditStoreModal from "@/components/features2/storeManagement/EditStoreModal";
 import DeleteStoreModal from "@/components/features2/storeManagement/DeleteStoreModal";
 import { IStore } from "@/interfaces";
-import axios from "axios";
+import axios from "@/lib/axios";
 import { apiUrl } from "@/config";
 import AssignStoreModal from "@/components/features2/storeManagement/AssignStoreModal";
 
@@ -20,7 +20,7 @@ export default function StoresPage() {
   const fetchStores = async () => {
     try {
       setLoading(true);
-      const { data } = await axios.get(`${apiUrl}/api/stores`);
+      const { data } = await axios.get(`/admin/branches`);
       setStores(data.data || []);
       setLoading(false);
     } catch (error) {

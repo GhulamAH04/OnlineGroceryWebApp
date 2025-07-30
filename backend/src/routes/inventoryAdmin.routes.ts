@@ -1,4 +1,4 @@
-// File: src/routes/inventory.routes.ts
+// File: src/routes/inventoryAdmin.routes.ts
 
 import express from 'express';
 import {

@@ -1,54 +1,94 @@
 import { PrismaClient } from "@prisma/client";
-import { fetchProvince } from "../src/services/province.service";
-import { fetchCitiesByProvince } from "../src/services/city.service";
-// Import your service function from the main source code
-
 const prisma = new PrismaClient();
 
+// === Modular Seeder Imports ===
+import { seedCleanup } from "./seedCleanup";
+import { seedProvinces } from "./seeds/seedProvinces";
+import { seedCities } from "./seeds/seedCities";
+import { seedDistricts } from "./seeds/seedDistricts";
+import { seedBranches } from "./seeds/seedBranches";
+import { seedUsers } from "./seeds/seedUsers";
+import { seedCategories } from "./seeds/seedCategories";
+import { seedProducts } from "./seeds/seedProducts";
+import { seedProductBranchs } from "./seeds/seedProductBranchs";
+import { seedInventory } from "./seeds/seedInventory";
+import { seedInventoryJournal } from "./seeds/seedInventoryJournal";
+import { seedUserCustomers } from "./seeds/seedUserCustomers";
+import { seedAddresses } from "./seeds/seedAddresses";
+import { seedOrders } from "./seeds/seedOrders";
+import { seedDiscounts } from "./seeds/seedDiscounts";
+
 async function main() {
-  console.log(`Start seeding ...`);
+  console.log("🌱 Starting database seeding...");
 
-  // 1. Call your service to get the data
-  const provinces = await fetchProvince();
+  // === CLEANUP
+  await seedCleanup(prisma);
 
-  if (provinces.length === 0) {
-    console.log("No data fetched. Aborting seed.");
-    return;
-  }
+  // === RajaOngkir (lokasi)
+  await seedProvinces(prisma);
+  await seedCities(prisma);
+  await seedDistricts(prisma);
 
-  // for provinces
-  // const result = await prisma.provinces.createMany({
-  //   data: provinces,
-  //   skipDuplicates: true, // Useful for re-running the seed
-  // });
-  // console.log(`Seeding finished. ${result.count} data were added. 🌱`);
+  // === Cabang dan Admin
+  await seedBranches(prisma);
+  await seedUsers(prisma);
 
-  //for cities
-  for (let i = 0; i < provinces.length; i++) {
-    const cities = await fetchCitiesByProvince(provinces[i].name);
-    for (let j = 0; j < cities.length; j++) {
-      const data = {
-        id: cities[j].id,
-        name: cities[j].name,
-        provinceId: provinces[i].id,
-      };
-      const result = await prisma.cities.createMany({
-        data,
-        skipDuplicates: true, // Useful for re-running the seed
-      });
-      console.log(`Seeding finished. ${result.count} data were added. 🌱`);
-    }
-    // 2. Use the data to populate the database
-    console.log(`Finished Seeding data from ${provinces[i].name}. 🌱`);
-  }
-  console.log(`Seeding finished 🌱`);
+  // === Kategori dan Produk
+  await seedCategories(prisma);
+  await seedProducts(prisma);
+  await seedProductBranchs(prisma);
+
+  // === Stok dan Mutasi
+  await seedInventory(prisma);
+  await seedInventoryJournal(prisma);
+
+  // === Dummy User dan Alamat
+  await seedUserCustomers(prisma);
+  await seedAddresses(prisma);
+
+  // === Order dan Diskon
+  await seedOrders(prisma);
+  await seedDiscounts(prisma);
+
+  console.log("✅ Database seeding selesai!");
 }
 
 main()
-  .catch((e) => {
-    console.error(e);
+  .catch((err) => {
+    console.error("❌ Error during seeding:", err);
     process.exit(1);
   })
   .finally(async () => {
     await prisma.$disconnect();
   });
+
+
+  /*
+  import { PrismaClient } from "@prisma/client";
+
+export default async function seedLocation(prisma: PrismaClient) {
+  // === PROVINSI
+  const province = await prisma.provinces.upsert({
+    where: { id: 100 },
+    update: {},
+    create: { id: 100, name: 'Provinsi Groceria' },
+  });
+
+  // === KOTA
+  const city = await prisma.cities.upsert({
+    where: { id: 200 },
+    update: {},
+    create: { id: 200, name: 'Kota Sayuran', provinceId: province.id },
+  });
+
+  // === DISTRIK
+  const district = await prisma.districts.upsert({
+    where: { id: 300 },
+    update: {},
+    create: { id: 300, name: 'Kecamatan Sehat', cityId: city.id },
+  });
+
+  console.log("✅ Seed lokasi berhasil: Provinsi, Kota, dan Kecamatan");
+}
+
+*/

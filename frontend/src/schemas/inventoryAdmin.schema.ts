@@ -1,3 +1,5 @@
+// OnlineGroceryWebApp/frontend/src/schemas/inventoryAdmin.schema.ts
+
 import * as yup from "yup";
 
 export const inventorySchema = yup.object({

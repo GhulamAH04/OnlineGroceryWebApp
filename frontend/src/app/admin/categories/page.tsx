@@ -3,7 +3,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import axios from "axios";
+import axios from "@/lib/axios";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
