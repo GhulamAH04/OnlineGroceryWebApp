@@ -1,10 +1,9 @@
 // FILE: frontend/src/stores/cart.store.ts
 
 import { create } from "zustand";
-import axios from "axios"; // Asumsi axios sudah ter-setup
+import axios from "axios";
+import { getAxiosConfig } from "@/helper/getAxiosConfig";
 
-// Definisikan tipe data yang sesuai dengan respons API
-// Ini harus cocok dengan apa yang dikirim dari `backend/src/controllers/cart.controller.ts`
 interface Product {
   id: number;
   name: string;
@@ -34,22 +33,18 @@ interface CartState {
   getCartItemCount: () => number;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+const API_URL =
+  `${process.env.NEXT_PUBLIC_API_URL}/api` || "http://localhost:8000/api";
 
 export const useCartStore = create<CartState>((set, get) => ({
   items: [],
-  isLoading: true,
+  isLoading: false,
   error: null,
 
-  /**
-   * Mengambil data keranjang dari server dan memperbarui state.
-   */
   fetchCart: async () => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.get(`${API_URL}/cart`, {
-        withCredentials: true,
-      }); // Asumsi setup token/cookie
+      const response = await axios.get(`${API_URL}/cart`, getAxiosConfig());
       set({ items: response.data, isLoading: false });
     } catch (err: any) {
       set({
@@ -59,32 +54,28 @@ export const useCartStore = create<CartState>((set, get) => ({
     }
   },
 
-  /**
-   * Menambahkan produk ke keranjang.
-   */
   addToCart: async (productId: number, quantity: number) => {
     set({ isLoading: true, error: null });
     try {
       await axios.post(
         `${API_URL}/cart`,
         { productId, quantity },
-        { withCredentials: true }
+        getAxiosConfig()
       );
-      await get().fetchCart(); // Muat ulang keranjang untuk mendapatkan state terbaru
+      alert("Item berhasil ditambahkan ke keranjang.");
+      await get().fetchCart();
     } catch (err: any) {
       set({
         error: err.response?.data?.message || "Gagal menambah item.",
         isLoading: false,
       });
-      throw err; // Lempar kembali error agar bisa ditangkap di komponen
+      console.error("Error adding to cart:", err);
+      alert(err.response?.data?.message || "Gagal menambah item.");
+      throw err;
     }
   },
 
-  /**
-   * Memperbarui kuantitas item di keranjang.
-   */
   updateItemQuantity: async (productCartId: number, quantity: number) => {
-    // Optimistic update
     const originalItems = get().items;
     const updatedItems = originalItems.map((item) =>
       item.id === productCartId ? { ...item, quantity } : item
@@ -95,20 +86,16 @@ export const useCartStore = create<CartState>((set, get) => ({
       await axios.put(
         `${API_URL}/cart/item/${productCartId}`,
         { quantity },
-        { withCredentials: true }
+        getAxiosConfig()
       );
-      // fetchCart tidak perlu jika optimistic update berhasil
     } catch (err: any) {
       set({
         error: err.response?.data?.message || "Gagal mengubah kuantitas.",
         items: originalItems,
-      }); // Rollback
+      });
     }
   },
 
-  /**
-   * Menghapus item dari keranjang.
-   */
   removeItem: async (productCartId: number) => {
     const originalItems = get().items;
     const updatedItems = originalItems.filter(
@@ -117,20 +104,18 @@ export const useCartStore = create<CartState>((set, get) => ({
     set({ items: updatedItems });
 
     try {
-      await axios.delete(`${API_URL}/cart/item/${productCartId}`, {
-        withCredentials: true,
-      });
+      await axios.delete(
+        `${API_URL}/cart/item/${productCartId}`,
+        getAxiosConfig()
+      );
     } catch (err: any) {
       set({
         error: err.response?.data?.message || "Gagal menghapus item.",
         items: originalItems,
-      }); // Rollback
+      });
     }
   },
 
-  /**
-   * Mengembalikan jumlah item unik di keranjang.
-   */
   getCartItemCount: () => {
     return get().items.length;
   },
