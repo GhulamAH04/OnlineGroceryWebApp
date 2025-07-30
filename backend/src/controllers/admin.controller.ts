@@ -33,13 +33,14 @@ export const createStoreAdmin = async (
   next: NextFunction
 ) => {
   try {
-    const { email, password, role } = req.body;
+    const { email, password, role, username } = req.body;
 
     const user = await prisma.users.create({
       data: {
         email,
         password, // ⚠️ Harusnya di-hash sebelum simpan ke DB
         role,
+        username,
         updatedAt: new Date(),
       },
     });
