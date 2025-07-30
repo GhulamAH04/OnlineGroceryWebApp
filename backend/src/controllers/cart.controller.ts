@@ -1,5 +1,5 @@
 import { Response, Request } from "express";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, product_carts } from "@prisma/client";
 import { haversineDistance } from "../utils/distance";
 
 const prisma = new PrismaClient();
@@ -15,7 +15,6 @@ export class CartController {
         where: { userId, isActive: true },
         include: {
           product_carts: {
-            include: {},
             orderBy: {
               createdAt: "asc",
             },
@@ -24,14 +23,36 @@ export class CartController {
       });
 
       if (!activeCart) {
-        // DIUBAH: 'return' dihapus
         res.status(200).json([]);
         return;
       }
-      // DIUBAH: 'return' dihapus
-      res.status(200).json(activeCart.product_carts);
+
+      const productBranchIds = activeCart.product_carts.map(
+        (pc) => pc.productBranchId
+      );
+
+      const productBranchs = await prisma.product_branchs.findMany({
+        where: { id: { in: productBranchIds } },
+        include: { products: true },
+      });
+
+      const cartItems = activeCart.product_carts.map((item) => {
+        const pb = productBranchs.find((pb) => pb.id === item.productBranchId);
+        return {
+          id: item.id,
+          quantity: item.quantity,
+          product: pb
+            ? {
+                name: pb.products.name,
+                price: pb.products.price,
+                image: pb.products.image,
+              }
+            : null,
+        };
+      });
+
+      res.status(200).json(cartItems);
     } catch (error) {
-      // DIUBAH: 'return' dihapus
       res.status(500).json({ message: "Terjadi kesalahan pada server", error });
     }
   }
@@ -101,36 +122,12 @@ export class CartController {
         },
       });
 
-      const existingCartItem = await prisma.product_carts.findFirst({
-        where: {
-          cartId: {
-            in: (
-              await prisma.carts.findMany({ where: { userId, isActive: true } })
-            ).map((c) => c.id),
-          },
-        },
+      const activeCart = await prisma.carts.findFirst({
+        where: { userId, isActive: true },
       });
 
-      const requestedQuantity = (existingCartItem?.quantity || 0) + quantity;
-
-      if (!productInBranch || productInBranch.stock < requestedQuantity) {
-        // DIUBAH: 'return' dihapus
-        res
-          .status(400)
-          .json({ message: "Stok produk tidak mencukupi di toko terdekat." });
-        return;
-      }
-
-      // ... logika upsert keranjang ...
       const cart = await prisma.carts.upsert({
-        where: {
-          id:
-            (
-              await prisma.carts.findFirst({
-                where: { userId, isActive: true },
-              })
-            )?.id || -1,
-        },
+        where: { id: activeCart?.id || -1 },
         update: {},
         create: {
           userId,
@@ -139,6 +136,22 @@ export class CartController {
           updatedAt: new Date(),
         },
       });
+
+      const existingCartItem = await prisma.product_carts.findFirst({
+        where: {
+          cartId: cart.id,
+          productBranchId: productInBranch?.id,
+        },
+      });
+
+      const requestedQuantity = (existingCartItem?.quantity || 0) + quantity;
+
+      if (!productInBranch || productInBranch.stock < requestedQuantity) {
+        res
+          .status(400)
+          .json({ message: "Stok produk tidak mencukupi di toko terdekat." });
+        return;
+      }
 
       if (existingCartItem) {
         const updatedItem = await prisma.product_carts.update({

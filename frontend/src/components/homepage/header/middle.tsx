@@ -1,4 +1,6 @@
 import { Heart, Search } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 
 export default function Middle() {
   return (
@@ -39,12 +41,16 @@ export default function Middle() {
             />
             <div className="flex items-center gap-3">
               <div className="relative">
-                {/* eslint-disable-next-line */}
-                <img
-                  className="w-7 h-7 xl:w-8 xl:h-8"
-                  src="/navigation/bag.svg"
-                  alt="Shopping cart"
-                />
+                <Link href={"/cart"} className="flex items-center">
+                  <Image
+                    className="w-7 h-7 xl:w-8 xl:h-8"
+                    src="/navigation/bag.svg"
+                    alt="Shopping cart"
+                    width={32}
+                    height={32}
+                    loading="lazy"
+                  />
+                </Link>
                 <div
                   className="
                 absolute -top-1 -right-1
@@ -127,12 +133,16 @@ export default function Middle() {
           />
           <div className="flex items-center gap-3">
             <div className="relative">
-              {/* eslint-disable-next-line */}
-              <img
-                className="w-7 h-7 xl:w-8 xl:h-8"
-                src="/navigation/bag.svg"
-                alt="Shopping cart"
-              />
+              <Link href={"/cart"} className="flex items-center">
+                <Image
+                  className="w-7 h-7 xl:w-8 xl:h-8"
+                  src="/navigation/bag.svg"
+                  alt="Shopping cart"
+                  width={32}
+                  height={32}
+                  loading="lazy"
+                />
+              </Link>
               <div
                 className="
                 absolute -top-1 -right-1
