@@ -41,6 +41,7 @@ export class CartController {
         return {
           id: item.id,
           quantity: item.quantity,
+          cartId: item.cartId,
           product: pb
             ? {
                 name: pb.products.name,

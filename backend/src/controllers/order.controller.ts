@@ -1,368 +1,314 @@
 import { Response, Request } from "express";
-import { PrismaClient, TransactionType } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 import { haversineDistance } from "../utils/distance";
-import multer from "multer";
+import fs from "fs";
 import path from "path";
+
+const midtransClient = require("midtrans-client");
 
 const prisma = new PrismaClient();
 
-// ... (Konfigurasi Multer tetap sama)
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "public/proofs/");
-  },
-  filename: (req: Request, file, cb) => {
-    const orderId = req.params.orderId;
-    cb(
-      null,
-      `PROOF-${orderId}-${Date.now()}${path.extname(file.originalname)}`
-    );
-  },
-});
-
-const fileFilter = (req: any, file: any, cb: any) => {
-  if (
-    file.mimetype === "image/jpeg" ||
-    file.mimetype === "image/png" ||
-    file.mimetype === "image/jpg"
-  ) {
-    cb(null, true);
-  } else {
-    cb(
-      new Error(
-        "Tipe file tidak valid, hanya .jpg, .jpeg, .png yang diizinkan"
-      ),
-      false
-    );
-  }
-};
-
-export const uploadProof = multer({
-  storage: storage,
-  limits: { fileSize: 1024 * 1024 * 1 }, // 1MB
-  fileFilter: fileFilter,
-}).single("paymentProof");
-
 export class OrderController {
-  // Ganti method createOrder yang ada dengan yang ini:
-
+  /**
+   * Membuat pesanan baru
+   */
   async createOrder(req: Request, res: Response) {
+    const { cartId, addressId, paymentMethod } = req.body;
     const userId = req.user!.id;
-    const { addressId, shippingCost, paymentMethod, courier } = req.body;
 
-    if (
-      !addressId ||
-      shippingCost === undefined ||
-      !paymentMethod ||
-      !courier
-    ) {
-      res.status(400).json({
-        message:
-          "Input tidak lengkap: addressId, shippingCost, paymentMethod, dan courier diperlukan.",
+    if (!cartId || !addressId || !paymentMethod) {
+      return res.status(400).json({
+        message: "Cart ID, Address ID, and Payment Method are required.",
       });
-      return;
     }
 
     try {
-      const result = await prisma.$transaction(async (tx) => {
-        // =================================================================
-        // BAGIAN YANG HILANG & DIPERBAIKI ADA DI SINI
-        // =================================================================
+      // Ambil cart aktif
+      const cart = await prisma.carts.findUnique({
+        where: { id: cartId },
+        include: { product_carts: true },
+      });
+      if (!cart || cart.userId !== userId || cart.isActive === false) {
+        return res
+          .status(404)
+          .json({ message: "Cart not found or is inactive." });
+      }
 
-        // 1. Validasi awal
-        const cart = await tx.carts.findFirst({
-          where: { userId, isActive: true },
-          include: { product_carts: { include: { products: true } } },
-        });
+      // Cek stok produk di semua cabang
+      let totalPrice = 0;
+      const productBranchIds = cart.product_carts.map(
+        (pc) => pc.productBranchId
+      );
+      const productBranchs = await prisma.product_branchs.findMany({
+        where: { id: { in: productBranchIds } },
+        include: { products: true },
+      });
 
-        if (!cart || cart.product_carts.length === 0) {
-          throw new Error("Keranjang Anda kosong.");
-        }
-
-        const shippingAddress = await tx.addresses.findUnique({
-          where: { id: addressId, userId, isDeleted: false },
-        });
-
-        if (!shippingAddress) {
-          throw new Error("Alamat pengiriman tidak valid.");
-        }
-
-        // 2. Tentukan toko cabang terdekat
-        const allBranches = await tx.branchs.findMany();
-        if (allBranches.length === 0)
-          throw new Error("Tidak ada toko yang tersedia.");
-
-        const processingBranch = allBranches.reduce((prev, curr) =>
-          haversineDistance(
-            shippingAddress.latitude,
-            shippingAddress.longitude,
-            prev.latitude,
-            prev.longitude
-          ) <
-          haversineDistance(
-            shippingAddress.latitude,
-            shippingAddress.longitude,
-            curr.latitude,
-            curr.longitude
-          )
-            ? prev
-            : curr
-        );
-
-        // 3. Validasi ulang stok & hitung total
-        let subTotal = 0;
-        for (const item of cart.product_carts) {
-          const productInBranch = await tx.product_branchs.findUnique({
-            where: {
-              productId_branchId: {
-                productId: item.productId,
-                branchId: processingBranch.id,
-              },
-            },
+      for (const item of cart.product_carts) {
+        const pb = productBranchs.find((pb) => pb.id === item.productBranchId);
+        if (!pb || pb.stock < item.quantity) {
+          return res.status(400).json({
+            message: "Insufficient stock for product " + pb?.products.name,
           });
-
-          if (!productInBranch || productInBranch.stock < item.quantity) {
-            throw new Error(
-              `Stok untuk produk "${item.products.name}" tidak mencukupi.`
-            );
-          }
-          subTotal += item.products.price * item.quantity;
         }
-        const total = subTotal + shippingCost;
+        totalPrice += pb.products.price * item.quantity;
+      }
 
-        // 4. Buat entri Order (INI BAGIAN KUNCINYA)
-        const expirePayment = new Date(Date.now() + 60 * 60 * 1000); // 1 jam dari sekarang
+      // Pilih cabang terdekat
+      const userAddress = await prisma.addresses.findFirst({
+        where: { id: addressId },
+      });
+      if (!userAddress) {
+        return res.status(400).json({ message: "Address not found." });
+      }
 
-        // 'newOrder' didefinisikan di sini menggunakan hasil dari `tx.order.create`
-        const newOrder = await tx.orders.create({
+      const allBranches = await prisma.branchs.findMany();
+      const closestBranch = this.findClosestBranch(allBranches, userAddress);
+
+      // Buat order
+      const order = await prisma.orders.create({
+        data: {
+          name: `Order-${new Date().getTime()}`,
+          paymentStatus: "UNPAID",
+          shippingCost: 0,
+          total: totalPrice,
+          paymentMethod,
+          expirePayment: new Date(new Date().getTime() + 60 * 60 * 1000), // Expiry in 1 hour
+          branchId: closestBranch.id,
+          userId,
+          addressId,
+          updatedAt: new Date(),
+        },
+      });
+
+      // Insert order products
+      for (const item of cart.product_carts) {
+        const pb = productBranchs.find((pb) => pb.id === item.productBranchId);
+        await prisma.order_products.create({
           data: {
-            name: `ORDER-${userId}-${Date.now()}`,
-            userId,
-            addressId,
-            branchId: processingBranch.id,
-            shippingCost,
-            total,
-            paymentMethod,
-            courier,
-            paymentStatus: "UNPAID",
-            expirePayment,
+            orderId: order.id,
+            productId: pb!.productId,
+            quantity: item.quantity,
+            price: pb!.products.price,
+            total: pb!.products.price * item.quantity,
             updatedAt: new Date(),
           },
         });
+      }
 
-        // 5. Pindahkan item dari keranjang ke OrderProduct dan update inventaris
-        for (const item of cart.product_carts) {
-          // Buat OrderProduct
-          await tx.order_products.create({
-            data: {
-              orderId: newOrder.id, // Gunakan id dari newOrder yang baru dibuat
-              productId: item.productId,
-              quantity: item.quantity,
-              price: item.products.price,
-              total: item.products.price * item.quantity,
-              updatedAt: new Date(),
-            },
-          });
+      // Inisiasi pembayaran Midtrans jika metode pembayaran transfer
+      if (paymentMethod === "TRANSFER") {
+        await this.initiateMidtransPayment(order.id, totalPrice);
+      }
 
-          // Update stok di ProductBranch
-          const updatedProductBranch = await tx.product_branchs.update({
-            where: {
-              productId_branchId: {
-                productId: item.productId,
-                branchId: processingBranch.id,
-              },
-            },
-            data: { stock: { decrement: item.quantity } },
-          });
-
-          // Buat entri JournalMutation
-          await tx.journal_mutations.create({
-            data: {
-              productBranchId: updatedProductBranch.id,
-              branchId: processingBranch.id,
-              quantity: item.quantity,
-              transactionType: TransactionType.OUT,
-              description: `Penjualan dari Pesanan #${newOrder.id}`,
-              updatedAt: new Date(),
-            },
-          });
-        }
-
-        // 6. Kosongkan keranjang user
-        await tx.product_carts.deleteMany({
-          where: { cartId: cart.id },
-        });
-
-        // Sekarang kita bisa me-return 'newOrder' karena sudah didefinisikan
-        return newOrder;
+      // Menghapus cart setelah pesanan dibuat
+      await prisma.carts.update({
+        where: { id: cartId },
+        data: { isActive: false },
       });
 
-      // 'result' sekarang berisi objek 'newOrder' yang dikembalikan dari transaksi
-      res
-        .status(201)
-        .json({ message: "Pesanan berhasil dibuat.", order: result });
-    } catch (error: any) {
-      if (error instanceof Error) {
-        res.status(400).json({ message: error.message });
-      } else {
-        res.status(500).json({
-          message: "Terjadi kesalahan pada server saat membuat pesanan.",
-        });
-      }
+      res.status(201).json(order);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Error creating order", error });
     }
   }
+
+  /**
+   * Menghitung cabang terdekat berdasarkan koordinat
+   */
+  private findClosestBranch(branches: any[], userAddress: any) {
+    const userLat = userAddress.latitude;
+    const userLong = userAddress.longitude;
+
+    return branches.reduce((prev, curr) => {
+      const prevDistance = haversineDistance(
+        userLat,
+        userLong,
+        prev.latitude,
+        prev.longitude
+      );
+      const currDistance = haversineDistance(
+        userLat,
+        userLong,
+        curr.latitude,
+        curr.longitude
+      );
+
+      return prevDistance < currDistance ? prev : curr;
+    });
+  }
+
+  /**
+   * Inisialisasi pembayaran dengan Midtrans
+   */
+  private async initiateMidtransPayment(orderId: number, totalPrice: number) {
+    const snap = new midtransClient.Snap({
+      isProduction: false,
+      serverKey: process.env.MIDTRANS_SERVER_KEY || "",
+      clientKey: process.env.MIDTRANS_CLIENT_KEY || "",
+    });
+
+    const parameter = {
+      transaction_details: {
+        order_id: `ORDER-${orderId}`,
+        gross_amount: totalPrice,
+      },
+      credit_card: {
+        secure: true,
+      },
+    };
+
+    try {
+      const transaction = await snap.createTransaction(parameter);
+      // Simpan URL pembayaran Midtrans di pesanan
+      console.log(transaction);
+      await prisma.orders.update({
+        where: { id: orderId },
+        data: { paymentProof: transaction.redirect_url },
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  /**
+   * Mengupload bukti pembayaran
+   */
 
   async uploadPaymentProof(req: Request, res: Response) {
     const { orderId } = req.params;
     const userId = req.user!.id;
 
-    if (!req.file) {
-      res
-        .status(400)
-        .json({ message: "File bukti pembayaran tidak ditemukan." });
-      return;
-    }
-
     try {
-      const order = await prisma.orders.findFirst({
-        where: { id: parseInt(orderId), userId },
+      const order = await prisma.orders.findUnique({
+        where: { id: parseInt(orderId) },
+        include: { users: true },
       });
-
-      if (!order) {
-        res.status(404).json({ message: "Pesanan tidak ditemukan." });
-        return;
+      if (!order || order.users.id !== userId) {
+        return res
+          .status(404)
+          .json({ message: "Order not found or you do not have permission." });
       }
+
       if (order.paymentStatus !== "UNPAID") {
-        res.status(400).json({
-          message: `Tidak dapat mengunggah bukti untuk pesanan dengan status ${order.paymentStatus}`,
-        });
-        return;
+        return res
+          .status(400)
+          .json({ message: "Payment has already been made." });
       }
 
-      const updatedOrder = await prisma.orders.update({
+      // Validasi file bukti pembayaran
+      const paymentProof = req.file as Express.Multer.File;
+      if (!paymentProof) {
+        return res
+          .status(400)
+          .json({ message: "No payment proof file uploaded." });
+      }
+
+      console.log(paymentProof); // Check the contents of the paymentProof
+
+      if (!["image/jpeg", "image/png"].includes(paymentProof.mimetype)) {
+        return res.status(400).json({
+          message: "Invalid payment proof file type. Only JPG/PNG allowed.",
+        });
+      }
+
+      if (paymentProof.size > 1 * 1024 * 1024) {
+        // Maksimal 1MB
+        return res
+          .status(400)
+          .json({ message: "File size exceeds the limit of 1MB." });
+      }
+
+      const fileName = `${new Date().getTime()}-${paymentProof.originalname}`;
+      const filePath = path.join(
+        __dirname,
+        "../uploads/payment_proofs",
+        fileName
+      ); // Get absolute path
+
+      // Ensure the directory exists, if not create it
+      const directoryPath = path.dirname(filePath);
+      if (!fs.existsSync(directoryPath)) {
+        fs.mkdirSync(directoryPath, { recursive: true });
+      }
+
+      // Write the file using the buffer
+      fs.writeFileSync(filePath, paymentProof.buffer);
+
+      // Update bukti pembayaran di pesanan
+      await prisma.orders.update({
         where: { id: parseInt(orderId) },
         data: {
-          paymentProof: req.file.path,
+          paymentProof: filePath,
           paymentStatus: "PROCESSING",
         },
       });
-      res.status(200).json({
-        message: "Bukti pembayaran berhasil diunggah.",
-        order: updatedOrder,
-      });
+
+      res.status(200).json({ message: "Payment proof uploaded successfully." });
     } catch (error) {
-      res.status(500).json({ message: "Terjadi kesalahan pada server." });
+      console.error(error);
+      res.status(500).json({ message: "Error uploading payment proof", error });
     }
   }
 
-  async getMyOrders(req: Request, res: Response) {
+  /**
+   * Melihat daftar pesanan
+   */
+  async getOrders(req: Request, res: Response) {
     const userId = req.user!.id;
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
-    const skip = (page - 1) * limit;
 
     try {
       const orders = await prisma.orders.findMany({
         where: { userId },
         orderBy: { createdAt: "desc" },
-        skip,
-        take: limit,
-      });
-      const totalOrders = await prisma.orders.count({ where: { userId } });
-      res.status(200).json({
-        data: orders,
-        pagination: {
-          total: totalOrders,
-          page,
-          limit,
-          totalPages: Math.ceil(totalOrders / limit),
-        },
-      });
-    } catch (error) {
-      res.status(500).json({ message: "Terjadi kesalahan pada server." });
-    }
-  }
-
-  async getOrderDetails(req: Request, res: Response) {
-    const { orderId } = req.params;
-    const userId = req.user!.id;
-    try {
-      const order = await prisma.orders.findFirst({
-        where: { id: parseInt(orderId), userId },
         include: {
-          order_products: { include: { products: true } },
+          order_products: true,
           addresses: true,
           branchs: true,
         },
       });
-      if (!order) {
-        res.status(404).json({ message: "Pesanan tidak ditemukan." });
-        return;
-      }
-      res.status(200).json(order);
+
+      res.status(200).json(orders);
     } catch (error) {
-      res.status(500).json({ message: "Terjadi kesalahan pada server." });
+      console.error(error);
+      res.status(500).json({ message: "Error retrieving orders", error });
     }
   }
 
+  /**
+   * Membatalkan pesanan
+   */
   async cancelOrder(req: Request, res: Response) {
     const { orderId } = req.params;
     const userId = req.user!.id;
 
     try {
-      const orderToCancel = await prisma.orders.findFirst({
-        where: { id: parseInt(orderId), userId },
-      });
-
-      if (!orderToCancel) {
-        res.status(404).json({ message: "Pesanan tidak ditemukan." });
-        return;
-      }
-      if (orderToCancel.paymentStatus !== "UNPAID") {
-        res.status(400).json({
-          message: `Pesanan dengan status ${orderToCancel.paymentStatus} tidak dapat dibatalkan.`,
-        });
-        return;
-      }
-
-      // ... logika transaksi ...
-
-      res.status(200).json({ message: "Pesanan berhasil dibatalkan." });
-    } catch (error) {
-      res.status(500).json({
-        message: "Terjadi kesalahan pada server saat membatalkan pesanan.",
-      });
-    }
-  }
-
-  async confirmDelivery(req: Request, res: Response) {
-    const { orderId } = req.params;
-    const userId = req.user!.id;
-
-    try {
-      const order = await prisma.orders.findFirst({
-        where: { id: parseInt(orderId), userId },
-      });
-      if (!order) {
-        res.status(404).json({ message: "Pesanan tidak ditemukan." });
-        return;
-      }
-      if (order.paymentStatus !== "SHIPPED") {
-        res.status(400).json({
-          message: "Hanya pesanan yang sedang dikirim yang bisa dikonfirmasi.",
-        });
-        return;
-      }
-      const updatedOrder = await prisma.orders.update({
+      const order = await prisma.orders.findUnique({
         where: { id: parseInt(orderId) },
-        data: { paymentStatus: "DELIVERED" },
+        include: { users: true },
       });
-      res.status(200).json({
-        message: "Penerimaan pesanan berhasil dikonfirmasi.",
-        order: updatedOrder,
+      if (!order || order.users.id !== userId) {
+        return res
+          .status(404)
+          .json({ message: "Order not found or you do not have permission." });
+      }
+
+      if (order.paymentStatus === "PAID") {
+        return res.status(400).json({
+          message: "Order cannot be canceled as it has already been paid.",
+        });
+      }
+
+      await prisma.orders.update({
+        where: { id: parseInt(orderId) },
+        data: { paymentStatus: "CANCELED" },
       });
+
+      res.status(200).json({ message: "Order canceled successfully." });
     } catch (error) {
-      res.status(500).json({ message: "Terjadi kesalahan pada server." });
+      console.error(error);
+      res.status(500).json({ message: "Error canceling order", error });
     }
   }
 }

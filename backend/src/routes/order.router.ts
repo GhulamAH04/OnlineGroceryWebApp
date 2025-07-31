@@ -1,42 +1,34 @@
 import { Router, Request, Response, NextFunction } from "express"; // DIUBAH: Tambahkan import Request, Response, NextFunction
-import { OrderController, uploadProof } from "../controllers/order.controller";
+import { OrderController } from "../controllers/order.controller";
 import { verifyToken } from "../middlewares/authOrder.middleware";
 import { Role } from "@prisma/client";
+import { upload } from "../middlewares/fileUpload.middleware";
 
 const orderRouter = Router();
 const orderController = new OrderController();
 const userMiddleware = verifyToken([Role.USER]);
 
-orderRouter.post("/", userMiddleware, orderController.createOrder);
-orderRouter.get("/", userMiddleware, orderController.getMyOrders);
-orderRouter.get("/:orderId", userMiddleware, orderController.getOrderDetails);
-
+orderRouter.get("/", userMiddleware, orderController.getOrders);
 orderRouter.post(
-  "/:orderId/upload",
+  "/",
   userMiddleware,
-  // DIUBAH: Tambahkan tipe eksplisit untuk req, res, dan next
   (req: Request, res: Response, next: NextFunction) => {
-    uploadProof(req, res, (err: any) => {
-      if (err) {
-        // DIUBAH: Hapus 'return' dari sini
-        res.status(400).json({ message: err.message });
-        return; // Hentikan eksekusi jika ada error
-      }
-      next(); // Lanjutkan ke controller jika tidak ada error
-    });
-  },
-  orderController.uploadPaymentProof
-);
-
-orderRouter.post(
-  "/:orderId/cancel",
-  userMiddleware,
-  orderController.cancelOrder
+    orderController.createOrder(req, res).catch(next);
+  }
 );
 orderRouter.post(
-  "/:orderId/confirm-delivery",
+  "/payment/:orderId",
   userMiddleware,
-  orderController.confirmDelivery
+  upload.single("paymentProof"),
+  (req: Request, res: Response, next: NextFunction) => {
+    orderController.uploadPaymentProof(req, res).catch(next);
+  }
 );
-
+orderRouter.put(
+  "/cancel/:orderId",
+  userMiddleware,
+  (req: Request, res: Response, next: NextFunction) => {
+    orderController.cancelOrder(req, res).catch(next);
+  }
+);
 export default orderRouter;
