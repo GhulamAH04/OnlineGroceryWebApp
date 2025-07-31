@@ -26,6 +26,7 @@ export default function Middle() {
     } else {
       setCartItems(undefined);
     }
+      /* eslint-disable-next-line */
   }, [userState, isLoading]);
 
   return (
@@ -43,6 +44,7 @@ export default function Middle() {
       "
       >
         <div className="flex items-center gap-2 w-full md:w-auto">
+          {/* eslint-disable-next-line */}
           <img
             className="w-7 h-7 sm:w-8 sm:h-8"
             src="/navigation/plant.svg"

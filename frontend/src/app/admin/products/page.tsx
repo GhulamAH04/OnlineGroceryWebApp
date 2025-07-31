@@ -62,15 +62,20 @@ export default function ProductPage() {
   // === FETCH DI LOAD AWAL ===
   useEffect(() => {
     fetchProducts();
+    /* eslint-disable-next-line */
+  }, [debouncedSearch]);
+  
+  useEffect(() => {
     fetchStores();
     fetchCategories();
   }, []);
-
+  
   // === FETCH SAAT CARI ===
   useEffect(() => {
     if (debouncedSearch !== "") {
       fetchProducts();
     }
+    /* eslint-disable-next-line */
   }, [debouncedSearch]);
 
   // === HANDLE TAMBAH ===

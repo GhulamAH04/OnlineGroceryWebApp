@@ -102,8 +102,6 @@ const AddAddressModal = ({
       district: "",
       isPrimary: true,
       postalCode: "",
-      latitude: 0,
-      longitude: 0,
     },
     validationSchema: AddNewAddressSchema,
     onSubmit: async (values) => {

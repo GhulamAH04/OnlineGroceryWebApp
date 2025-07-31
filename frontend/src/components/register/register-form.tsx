@@ -8,8 +8,12 @@ import Link from "next/link";
 import axios from "axios";
 import { apiUrl } from "@/config";
 import { useRouter } from "next/navigation";
+import { setCookie } from "cookies-next";
+import { useAppDispatch } from "@/lib/redux/hooks";
+import { onLogin } from "@/lib/redux/features/authSlice";
 
 export default function RegisterForm() {
+  const dispatch = useAppDispatch();
   const router = useRouter();
   const formik = useFormik({
     initialValues: {
@@ -52,11 +56,33 @@ export default function RegisterForm() {
 
         const { name, email } = userInfoResponse.data;
 
-        await axios.post(`${apiUrl}/api/auth/google/register`, { name, email });
-
-        alert(
-          "Account created successfully. We'll logged you in."
+        const response = await axios.post(
+          `${apiUrl}/api/auth/google/register`,
+          { name, email }
         );
+
+        const { user } = response.data.data;
+        const { token } = response.data.data;
+
+        // set token to cookie
+        setCookie("access_token", token);
+
+        // update user state on login
+        const userState = {
+          user: {
+            id: user.id,
+            email: user.email,
+            username: user.username,
+            isVerified: user.isVerified,
+            role: user.role,
+            image: user.image,
+          },
+          isLogin: true,
+        };
+
+        dispatch(onLogin(userState));
+
+        alert("Account created successfully. We'll logged you in.");
 
         router.push("/");
       } catch (err) {

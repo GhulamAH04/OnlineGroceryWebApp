@@ -1,44 +1,38 @@
 "use client";
 
 import { apiUrl } from "@/config";
-import { IStore } from "@/interfaces";
-import { ILocation } from "@/interfaces/address.interface";
-import { EditStoreSchema } from "@/schemas/store.schema";
+import { IExistingAddress, ILocation } from "@/interfaces/address.interface";
+import { useAppSelector } from "@/lib/redux/hooks";
 import axios from "axios";
 import { getCookie } from "cookies-next";
 import { useFormik } from "formik";
 import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 
-const EditStoreModal = ({
-  store,
-  onClose,
+const EditAddressModal = ({
+  address,
+  isOpen,
   onEdit,
+  onClose,
 }: {
-  store: IStore;
-  onClose: () => void;
+  address: IExistingAddress | null;
+  isOpen: boolean;
   onEdit: () => void;
+  onClose: () => void;
 }) => {
-  const [provinces, setProvinces] = useState<ILocation[]>([]);
-  const [selectedProvince, setSelectedProvince] = useState<ILocation | null>(
-    null
+  // state in redux
+  const user = useAppSelector((state) => state.auth);
+  const [provinces, setProvinces] = useState<ILocation[]>(
+    []
   );
+  const [selectedProvince, setSelectedProvince] = useState<ILocation | null>(null);
 
   const [cities, setCities] = useState<ILocation[]>([]);
   const [selectedCity, setSelectedCity] = useState<ILocation | null>(null);
 
   const [districts, setDistricts] = useState<ILocation[]>([]);
-  const [selectedDistrict, setSelectedDistrict] = useState<ILocation | null>(
-    null
-  );
 
-  useEffect(() => {
-    if (store.provinces && store.cities && store.districts) {
-      setSelectedProvince(store.provinces);
-      setSelectedCity(store.cities);
-      setSelectedDistrict(store.districts);
-    }
-  }, [store]);
+  const [selectedDistrict, setSelectedDistrict] = useState<ILocation | null>(null);
 
   useEffect(() => {
     const fetchProvinces = async () => {
@@ -85,27 +79,26 @@ const EditStoreModal = ({
 
       fetchDistricts();
     }
-  }, [selectedCity, selectedProvince]);
+  }, [selectedCity, selectedProvince]); // Dependency array with selectedCity and selectedProvince
 
   const formik = useFormik({
     enableReinitialize: true,
     initialValues: {
-      name: store.name || "",
-      phone: store.phone || "",
-      address: store.address || "",
-      province: store.provinces.name || "",
-      city: store.cities.name || "",
-      district: store.districts.name || "",
-      postalCode: store.postalCode || "",
-      latitude: store.latitude,
-      longitude: store.longitude,
+      userId: user.user.id,
+      name: address?.name || "",
+      phone: address?.phone || "",
+      address: address?.address || "",
+      province: address?.provinces.name || "",
+      city: address?.cities.name || "",
+      district: address?.districts.name || "",
+      isPrimary: address?.isPrimary || true,
+      postalCode: address?.postalCode || "",
     },
-    validationSchema: EditStoreSchema,
     onSubmit: async (values) => {
       try {
         const token = getCookie("access_token") as string;
         await axios.put(
-          `${apiUrl}/api/stores/${store.id}`,
+          `${apiUrl}/api/addresses/${address?.id}`,
           {
             ...values,
             provinceId: selectedProvince?.id,
@@ -122,9 +115,9 @@ const EditStoreModal = ({
         onEdit();
         onClose();
 
-        alert("Toko baru berhasil diupdate!");
+        alert("Edit alamat berhasil!");
       } catch (err) {
-        alert("Error updating store: " + err);
+        alert("Error edit address: " + err);
       }
     },
   });
@@ -154,11 +147,13 @@ const EditStoreModal = ({
     formik.setFieldValue("district", district?.name || "");
   };
 
+  if (!isOpen) return null;
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
         <div className="p-4 border-b flex justify-between items-center">
-          <h2 className="text-xl font-semibold">Tambah Toko Baru</h2>
+          <h2 className="text-xl font-semibold">Tambah Alamat Baru</h2>
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-800"
@@ -176,7 +171,7 @@ const EditStoreModal = ({
                   htmlFor="name"
                   className="block text-sm font-medium text-gray-700"
                 >
-                  Nama Toko
+                  Nama (Label)
                 </label>
                 <input
                   type="text"
@@ -342,7 +337,7 @@ const EditStoreModal = ({
                 type="submit"
                 className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
               >
-                {formik.isSubmitting ? "Mengupdate..." : "Update Toko"}
+                {formik.isSubmitting ? "Mengedit..." : "Edit Alamat"}
               </button>
             </div>
           </form>
@@ -352,4 +347,4 @@ const EditStoreModal = ({
   );
 };
 
-export default EditStoreModal;
+export default EditAddressModal;

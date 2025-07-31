@@ -5,30 +5,36 @@ import { IUserReqParam } from "../custom";
 import { verify } from "jsonwebtoken";
 import { JWT_SECRET } from "../config";
 
-export async function VerifyToken(req: Request, res: Response, next: NextFunction) {
-    try {
-        const token = req.header("Authorization")?.replace("Bearer ", "");
+export async function VerifyToken(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const token = req.header("Authorization")?.replace("Bearer ", "");
 
-        if (!token) throw new Error("Unauthorized");
+    if (!token) throw new Error("Unauthorized");
 
-        const verifyUser = verify(token, String(JWT_SECRET));
+    const verifyUser = verify(token, String(JWT_SECRET));
 
-        if (!verifyUser) throw new Error("Invalid Token");
+    if (!verifyUser) throw new Error("Invalid Token");
 
-        req.user = verifyUser as IUserReqParam;
+    req.user = verifyUser as IUserReqParam;
 
-        next();
-    } catch (err) {
-        next(err);
-    }
+    next();
+  } catch (err) {
+    next(err);
+  }
 }
 
-export async function EOGuard(req: Request, res: Response, next: NextFunction) {
+export const RoleGuard = (role: string) => {
+  return (req: Request, res: Response, next: NextFunction) => {
     try {
-        if (req.user?.role !== "STORE_ADMIN") throw new Error("Restricted");
+      if (req.user?.role !== role) throw new Error("Restricted");
 
-        next();
+      next();
     } catch (err) {
-        next(err);
+      next(err);
     }
-}
+  };
+};

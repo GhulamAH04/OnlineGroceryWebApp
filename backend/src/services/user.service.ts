@@ -2,7 +2,6 @@ import prisma from "../lib/prisma";
 import { FindUserByEmail, SendVerificationEmail } from "./authUser.service";
 import { cloudinaryRemove, cloudinaryUploadMulter } from "../utils/cloudinary";
 
-
 export async function FindUserById(userId: number) {
   try {
     const user = await prisma.users.findFirst({
@@ -22,16 +21,15 @@ async function getMainAddressByUserId(userId: number) {
       userId,
       isPrimary: true,
     },
-    include : {
+    include: {
       provinces: true,
       cities: true,
-      districts: true
-    }
+      districts: true,
+    },
   });
 
   return address;
 }
-
 
 export async function GetMainAddressService(userId: number) {
   try {
@@ -87,8 +85,7 @@ export async function EditUserByIdService(
   }
 }
 
-export async function getAllUsersService(
-) {
+export async function getAllUsersService() {
   try {
     const users = await prisma.users.findMany();
 
@@ -121,7 +118,7 @@ export async function UpdateAvatarService(
           image: fileName,
         },
       });
-      return fileName
+      return fileName;
     });
 
     return image;

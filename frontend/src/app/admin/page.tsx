@@ -7,8 +7,8 @@ import {
   Percent,
   BarChart,
   Boxes,
-  Store,
   RotateCcw,
+  StoreIcon,
   MapPin,
 } from "lucide-react";
 
@@ -42,7 +42,7 @@ export default function AdminDashboardHome() {
           className="group bg-white border border-green-100 rounded-xl p-6 flex flex-col gap-2 shadow hover:shadow-lg hover:bg-green-50 transition"
         >
           <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-green-100 text-green-700 mb-2">
-            <Store size={28} />
+            <StoreIcon size={28} />
           </div>
           <div className="text-lg font-semibold text-green-700">
             Store Management

@@ -3,6 +3,7 @@
 import { create } from "zustand";
 import axios from "axios";
 import { getAxiosConfig } from "@/helper/getAxiosConfig";
+import { apiUrl } from "@/config";
 
 interface Product {
   id: number;
@@ -39,9 +40,6 @@ export interface TotalCartResponse {
   totalPrice: number;
 }
 
-const API_URL =
-  `${process.env.NEXT_PUBLIC_API_URL}/api` || "http://localhost:8000/api";
-
 export const useCartStore = create<CartState>((set, get) => ({
   items: [],
   isLoading: false,
@@ -50,7 +48,7 @@ export const useCartStore = create<CartState>((set, get) => ({
   fetchCart: async () => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.get(`${API_URL}/cart`, getAxiosConfig());
+      const response = await axios.get(`${apiUrl}/api/cart`, getAxiosConfig());
       set({ items: response.data, isLoading: false });
     } catch (err: any) {
       set({
@@ -63,7 +61,7 @@ export const useCartStore = create<CartState>((set, get) => ({
   totalCart: async (): Promise<TotalCartResponse> => {
     try {
       const response = await axios.get<TotalCartResponse>(
-        `${API_URL}/cart/total`,
+        `${apiUrl}/api/cart/total`,
         getAxiosConfig()
       );
       return response.data;
@@ -76,7 +74,7 @@ export const useCartStore = create<CartState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       await axios.post(
-        `${API_URL}/cart`,
+        `${apiUrl}/api/cart`,
         { productId, quantity },
         getAxiosConfig()
       );
@@ -102,7 +100,7 @@ export const useCartStore = create<CartState>((set, get) => ({
 
     try {
       await axios.put(
-        `${API_URL}/cart/item/${productCartId}`,
+        `${apiUrl}/api/cart/item/${productCartId}`,
         { quantity },
         getAxiosConfig()
       );
@@ -125,7 +123,7 @@ export const useCartStore = create<CartState>((set, get) => ({
     set({ items: updatedItems, isLoading: true });
     try {
       await axios.delete(
-        `${API_URL}/cart/item/${productCartId}`,
+        `${apiUrl}/api/cart/item/${productCartId}`,
         getAxiosConfig()
       );
       set({ isLoading: false });

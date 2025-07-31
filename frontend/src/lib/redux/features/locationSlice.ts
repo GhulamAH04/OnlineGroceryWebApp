@@ -1,6 +1,10 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-const initialState: {city: string} = {
+export interface ILocationState {
+  city: string
+}
+
+const initialState: ILocationState = {
   city: "JAKARTA PUSAT"
 };
 
@@ -8,7 +12,7 @@ export const locationSlice = createSlice({
   name: "location",
   initialState,
   reducers: {
-    setCity: (state: {city: string}, action: PayloadAction<{city: string}>) => {
+    setCity: (state: ILocationState, action: PayloadAction<ILocationState>) => {
       state.city = action.payload.city;
     },
   },
