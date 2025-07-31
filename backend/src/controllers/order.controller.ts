@@ -145,8 +145,8 @@ export class OrderController {
   private async initiateMidtransPayment(orderId: number, totalPrice: number) {
     const snap = new midtransClient.Snap({
       isProduction: false,
-      serverKey: "Mid-server-9619t0N9kiTsiQqXXXoZgIEE",
-      clientKey: "Mid-client-H2Ep8sCppZWC_ioc",
+      serverKey: process.env.MIDTRANS_SERVER_KEY || "",
+      clientKey: process.env.MIDTRANS_CLIENT_KEY || "",
     });
 
     const parameter = {
