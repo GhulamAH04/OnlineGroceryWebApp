@@ -110,9 +110,9 @@ const UpdateProfileModal: React.FC<ModalProps> = ({ isVisible, onClose }) => {
             ) : (
               <Image
                 src={
-                  user.image
-                    ? `${imageUrl}${user.image}`
-                    : "/default-avatar.png"
+                  user.image === "/profile.jpg"
+                    ? `${user.image}`
+                    : `${imageUrl}${user.image}`
                 }
                 alt="profile-picture"
                 className="border-black border-solid border-2 rounded-full object-cover"

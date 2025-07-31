@@ -38,6 +38,8 @@ export default function Login() {
     }
   };
 
+  console.log(formData);
+
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
     if (!formData.email) {
@@ -60,7 +62,7 @@ export default function Login() {
 
     if (validateForm()) {
       try {
-        const res = await fetch(`${apiUrl}/admin/auth/login`, {
+        const res = await fetch(`${apiUrl}/api/admin/auth/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(formData),

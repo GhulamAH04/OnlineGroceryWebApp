@@ -5,6 +5,11 @@ export async function GetAllAddressByUserIdService(userId: number) {
   try {
     const addresses = await prisma.addresses.findMany({
       where: { userId },
+      include: {
+        provinces: true,
+        cities: true,
+        districts: true
+      }
     });
 
     return addresses;

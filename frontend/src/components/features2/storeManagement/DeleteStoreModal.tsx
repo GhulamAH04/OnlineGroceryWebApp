@@ -3,6 +3,7 @@ import { useState } from "react";
 import { IStore } from "@/interfaces";
 import axios from "axios";
 import { apiUrl } from "@/config";
+import { getCookie } from "cookies-next";
 
 export default function DeleteStoreModal({
   store,
@@ -13,12 +14,15 @@ export default function DeleteStoreModal({
   onDelete: () => void;
   onClose: () => void;
 }) {
+  const token = getCookie("access_token") as string;
   const [loading, setLoading] = useState(false);
 
   const handleDelete = async () => {
     setLoading(true);
     try {
-      await axios.delete(`${apiUrl}/api/stores/${store.id}`);
+      await axios.delete(`${apiUrl}/api/stores/${store.id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       onDelete();
       onClose();
       setLoading(false);

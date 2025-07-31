@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { getCategories } from "@/lib/data";
 import { apiUrl } from "@/config";
 import Featured from "@/components/homepage/featured";
 import PopularCategories from "@/components/homepage/popular-categories";
@@ -12,6 +11,7 @@ import Banner from "@/components/homepage/bannar";
 import { IProductBranch } from "@/interfaces/product.interface";
 import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
 import { setCity } from "@/lib/redux/features/locationSlice";
+import { setCookie } from "cookies-next";
 
 export default function Homepage() {
   const dispatch = useAppDispatch();
@@ -33,7 +33,10 @@ export default function Homepage() {
     const response = await axios.get(
       `${apiUrl}/api/cities?latitude=${latitude}&longitude=${longitude}`
     );
-    dispatch(setCity({city: response.data.data}));
+    dispatch(setCity({ city: response.data.data.city }));
+    // set token to cookie
+    const { token } = response.data.data;
+    setCookie("location_token", token);
   };
 
   useEffect(() => {
@@ -49,7 +52,7 @@ export default function Homepage() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const data = await getCategories();
+        const { data } = await axios.get(`${apiUrl}/api/categories/`);
         setCategories(data.data);
       } catch (error) {
         console.error("Error fetching categories:", error);

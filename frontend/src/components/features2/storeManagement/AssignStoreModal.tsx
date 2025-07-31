@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { IStore, IUser } from "@/interfaces";
 import axios from "axios";
 import { apiUrl } from "@/config";
+import { getCookie } from "cookies-next";
 
 export default function AssignStoreModal({
   store,
@@ -13,13 +14,16 @@ export default function AssignStoreModal({
   onAssign: () => void;
   onClose: () => void;
 }) {
+  const token = getCookie("access_token") as string;
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState<IUser[]>([]);
   const [selectedUser, setSelectedUser] = useState<IUser | null>(null);
 
   const fetchUsers = async () => {
     try {
-      const response = await axios.get(`${apiUrl}/api/users`);
+      const response = await axios.get(`${apiUrl}/api/users`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const users = response.data.data;
       const storeAdmins = users.filter((user: IUser) => user.role === "STORE_ADMIN" ) || null;
       setUsers(storeAdmins);
@@ -30,14 +34,20 @@ export default function AssignStoreModal({
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  });
 
   const handleAssign = async () => {
     setLoading(true);
     try {
-      await axios.patch(`${apiUrl}/api/stores/${store.id}`, {
-        userId: selectedUser?.id
-      });
+      await axios.patch(
+        `${apiUrl}/api/stores/${store.id}`,
+        {
+          userId: selectedUser?.id,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       onAssign();
       onClose();
       setLoading(false);

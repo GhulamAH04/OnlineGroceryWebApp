@@ -59,6 +59,7 @@ export default function CategoryPage() {
 
   useEffect(() => {
     fetchData();
+    /* eslint-disable-next-line */
   }, [debouncedSearch]);
 
   // === SUBMIT FORM TAMBAH / EDIT ===

@@ -32,6 +32,7 @@ const fetchInventory = async () => {
   // === TRIGGER FETCH SETIAP SEARCH ===
   useEffect(() => {
     fetchInventory();
+    /* eslint-disable-next-line */
   }, [debouncedSearch]);
 
   // === RENDER ===

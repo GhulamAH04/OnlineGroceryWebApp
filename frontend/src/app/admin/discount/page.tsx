@@ -54,6 +54,7 @@ export default function DiscountPage() {
 
   useEffect(() => {
     fetchData();
+    /* eslint-disable-next-line */
   }, [debouncedSearch]);
 
   // === SUBMIT FORM DISKON ===

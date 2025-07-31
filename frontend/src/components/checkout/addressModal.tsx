@@ -49,6 +49,11 @@ const AddressModal = ({
     []
   );
 
+   const [selectedDistrict, setSelectedDistrict] = useState<{
+      id: string;
+      name: string;
+    } | null>(null);
+
   useEffect(() => {
     const fetchProvinces = async () => {
       try {
@@ -113,13 +118,23 @@ const AddressModal = ({
     onSubmit: async (values) => {
       try {
         const token = getCookie("access_token") as string;
-        await axios.post(`${apiUrl}/api/addresses`, values, {
+        await axios.post(`${apiUrl}/api/addresses`, {
+            ...values,
+            provinceId: selectedProvince?.id,
+            cityId: selectedCity?.id,
+            districtId: selectedDistrict?.id
+          }, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
 
-        onAddNewAddress(values);
+        onAddNewAddress({
+          ...values,
+          provinces: selectedProvince,
+          cities: selectedCity,
+          districts: selectedDistrict
+        });
 
         formik.resetForm();
         setIsAddingNew(false);
@@ -145,6 +160,15 @@ const AddressModal = ({
     const city = cities.find((c) => c.name === selectedName) || null;
     setSelectedCity(city);
     formik.setFieldValue("city", city?.name || "");
+  };
+
+  const handleDistrictChange = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    const selectedName = event.target.value;
+    const district = districts.find((d) => d.name === selectedName) || null;
+    setSelectedDistrict(district);
+    formik.setFieldValue("district", district?.name || "");
   };
 
   if (!isOpen) return null;
@@ -290,6 +314,7 @@ const AddressModal = ({
                   <select
                     id="district"
                     {...formik.getFieldProps("district")}
+                    onChange={handleDistrictChange}
                     disabled={!formik.values.city}
                     className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 disabled:bg-gray-100"
                   >
@@ -339,7 +364,7 @@ const AddressModal = ({
                   type="submit"
                   className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
                 >
-                  Simpan Alamat
+                  {formik.isSubmitting ? "Menyimpan..." : "Simpan Alamat" }
                 </button>
               </div>
             </form>

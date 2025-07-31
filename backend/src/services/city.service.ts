@@ -1,7 +1,13 @@
 import axios from "axios";
 import { redis } from "../lib/redis";
-import { API_KEY, RAJAONGKIR_API_KEY, RAJAONGKIR_BASE_URL } from "../config";
+import {
+  API_KEY,
+  JWT_SECRET,
+  RAJAONGKIR_API_KEY,
+  RAJAONGKIR_BASE_URL,
+} from "../config";
 import { getProvinceId } from "./province.service";
+import { sign } from "jsonwebtoken";
 
 export async function fetchCitiesByProvince(province: string) {
   try {
@@ -33,31 +39,39 @@ export async function fetchCitiesByProvince(province: string) {
 export async function getCityId(province: string, city: string) {
   try {
     const cities = await fetchCitiesByProvince(province);
-  
+
     const matchingCity = cities.find(
       (c: { name: string }) => c.name.toLowerCase() === city.toLowerCase()
     );
-  
+
     return matchingCity ? matchingCity.id : null;
-    
   } catch (err) {
     throw err;
   }
 }
 
 // === Ambil Kota dari API Berdasarkan LatLong ===
-export async function getCityFromCoordinates(latitude: number, longitude: number) {
+export async function getCityFromCoordinates(
+  latitude: number,
+  longitude: number
+) {
   try {
     const { data } = await axios.get(
       `https://api.opencagedata.com/geocode/v1/json?q=${latitude}%2C+${longitude}&key=${API_KEY}`
     );
     const city: string = data.results[0].components.city;
-    return city;
+
+    const payload = {
+      city,
+    };
+
+    const token = sign(payload, String(JWT_SECRET), { expiresIn: "1h" });
+
+    return { city, token };
   } catch (err) {
     throw err;
   }
 }
-
 
 export async function GetCitiesByProvinceService(province: string) {
   try {
@@ -69,7 +83,10 @@ export async function GetCitiesByProvinceService(province: string) {
   }
 }
 
-export async function GetCityFromCoordinatesService(latitude: number, longitude: number) {
+export async function GetCityFromCoordinatesService(
+  latitude: number,
+  longitude: number
+) {
   try {
     const city = await getCityFromCoordinates(latitude, longitude);
 
@@ -78,4 +95,3 @@ export async function GetCityFromCoordinatesService(latitude: number, longitude:
     throw err;
   }
 }
-
