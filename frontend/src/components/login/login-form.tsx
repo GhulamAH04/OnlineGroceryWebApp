@@ -35,7 +35,7 @@ export default function LoginForm() {
         // set token to cookie
         const { token } = data.data;
 
-        setCookie("access_token", token);
+        setCookie("access_token", token, {expires: new Date(Date.now() + 60 * 60 * 1000)});
 
         // update user state on login
         const { user } = data.data;
@@ -92,7 +92,9 @@ export default function LoginForm() {
 
         // set token to cookie
         const { token } = data.data;
-        setCookie("access_token", token);
+        setCookie("access_token", token, {
+          expires: new Date(Date.now() + 60 * 60 * 1000),
+        });
 
         // update user state on login
         const { user } = data.data;

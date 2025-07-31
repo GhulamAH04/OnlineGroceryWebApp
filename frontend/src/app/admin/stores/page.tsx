@@ -8,6 +8,7 @@ import { IStore } from "@/interfaces";
 import axios from "axios";
 import { apiUrl } from "@/config";
 import AssignStoreModal from "@/components/features2/storeManagement/AssignStoreModal";
+import { getCookie } from "cookies-next";
 
 export default function StoresPage() {
   const [stores, setStores] = useState<IStore[]>([]);
@@ -20,7 +21,12 @@ export default function StoresPage() {
   const fetchStores = async () => {
     try {
       setLoading(true);
-      const { data } = await axios.get(`${apiUrl}/api/stores`);
+      const token = getCookie("access_token") as string;
+      const { data } = await axios.get(`${apiUrl}/api/stores`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       setStores(data.data || []);
       setLoading(false);
     } catch (error) {

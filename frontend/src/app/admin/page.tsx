@@ -1,9 +1,6 @@
 "use client";
 
 import Link from "next/link";
-<<<<<<< HEAD
-import { UserCog, Package, Percent, BarChart, Boxes, Store } from "lucide-react";
-=======
 import {
   UserCog,
   Package,
@@ -11,8 +8,8 @@ import {
   BarChart,
   Boxes,
   RotateCcw,
+  StoreIcon,
 } from "lucide-react";
->>>>>>> 14ecee8d3fd2d5bd07a05c728a65525c68d9ef31
 
 export default function AdminDashboardHome() {
   return (
@@ -44,7 +41,7 @@ export default function AdminDashboardHome() {
           className="group bg-white border border-green-100 rounded-xl p-6 flex flex-col gap-2 shadow hover:shadow-lg hover:bg-green-50 transition"
         >
           <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-green-100 text-green-700 mb-2">
-            <Store size={28} />
+            <StoreIcon size={28} />
           </div>
           <div className="text-lg font-semibold text-green-700">
             Store Management

@@ -5,11 +5,11 @@ import {
   GetMainAddressController,
   UpdateAvatarController,
 } from "../controllers/user.controller";
-import { VerifyToken } from "../middlewares/authUser.middleware";
+import { RoleGuard, VerifyToken } from "../middlewares/authUser.middleware";
 import { Multer } from "../utils/multer";
 const router = Router();
 
-router.get("/", GetAllUsersController);
+router.get("/", VerifyToken, RoleGuard("SUPER_ADMIN"), GetAllUsersController);
 router.get("/address/main/:userId", VerifyToken, GetMainAddressController); //should move to address.routes.ts
 router.put("/:id", VerifyToken, EditUserByIdController);
 router.patch(

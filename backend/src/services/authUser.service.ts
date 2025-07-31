@@ -110,6 +110,7 @@ async function RegisterWithGoogle(userData: IGoogleRegister) {
           username: name,
           email: email,
           role: Role.USER,
+          isVerified: true,
           provider: "google",
           updatedAt: new Date(),
         },
@@ -122,6 +123,7 @@ async function RegisterWithGoogle(userData: IGoogleRegister) {
       id: newUser.id,
       email: newUser.email,
       username: newUser.username,
+      isVerified: newUser.isVerified,
       role: newUser.role,
       image: newUser.image,
     };

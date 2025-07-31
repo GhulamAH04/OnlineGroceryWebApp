@@ -7,7 +7,7 @@ export default async function middleware(req: NextRequest) {
     const cookieStore = await cookies();
 
     const protectedRoute =
-      req.nextUrl.pathname === "/profile" || "/profile/:path*";
+      req.nextUrl.pathname === "/profile" || "/profile/:path*" || "/checkout";
 
     const access_token = cookieStore.get("access_token")?.value || "";
 
@@ -21,5 +21,5 @@ export default async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/profile/:path*"], // Apply middleware to all paths under /profile
+  matcher: ["/profile/:path*", "/checkout"], // Apply middleware to all paths under /profile
 };

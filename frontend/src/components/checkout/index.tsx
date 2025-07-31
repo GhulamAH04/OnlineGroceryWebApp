@@ -4,12 +4,12 @@ import { useState, useMemo, useEffect } from "react";
 import { MapPin, Truck, ShoppingCart, CreditCard, Plus } from "lucide-react";
 import AddressModal from "./addressModal";
 import { useAppSelector } from "@/lib/redux/hooks";
-import { getCookie } from "cookies-next";
 import { ICartItems, IGroupedItem } from "@/interfaces/product.interface";
 import { IShippingOption } from "@/interfaces/shipping.interface";
-import { getMainAddress, getShippingOptions, getUserAddresses } from "@/lib/data";
 import { IExistingAddress } from "@/interfaces/address.interface";
-
+import { apiUrl } from "@/config";
+import axios from "axios";
+import { getCookie } from "cookies-next";
 
 // --- DATA DUMMY / MOCK DATA ---
 // Data ini seharusnya datang dari state global (Redux/Context) atau props
@@ -26,7 +26,7 @@ const initialCartItems: ICartItems[] = [
         address: "Jl. Raya No. 1",
         districts: { id: 1, name: "kenjeran" },
         cities: { id: 1, name: "Surabaya" },
-        provinces: {id: 1, name: "Jawa Timur"},
+        provinces: { id: 1, name: "Jawa Timur" },
         postalCode: "12345",
         isPrimary: true,
         userId: 1,
@@ -52,7 +52,8 @@ export default function Checkout() {
   /* eslint-disable-next-line */
   const [cartItems, setCartItems] = useState<ICartItems[]>(initialCartItems);
   const [userAddresses, setUserAddresses] = useState<IExistingAddress[]>([]);
-  const [selectedAddress, setSelectedAddress] = useState<IExistingAddress | null>(null);
+  const [selectedAddress, setSelectedAddress] =
+    useState<IExistingAddress | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [shippingOptions, setShippingOptions] = useState<{
@@ -98,6 +99,16 @@ export default function Checkout() {
 
         // 3. Use the correct path for the origin address.
         const originAddress = products[0].storeAddress;
+        const origin = {
+          province: originAddress.provinces.name,
+          city: originAddress.cities.name,
+          district: originAddress.districts.name,
+        };
+        const destination = {
+          province: selectedAddress.provinces.name,
+          city: selectedAddress.cities.name,
+          district: selectedAddress.districts.name,
+        };
         const totalWeight = products.reduce(
           (sum, p) => sum + p.weightInGrams * p.quantity,
           0
@@ -105,10 +116,23 @@ export default function Checkout() {
 
         const fetchShippingOptionsForStore = async () => {
           try {
-            const data = await getShippingOptions(originAddress, selectedAddress, totalWeight);
+            const token = getCookie("access_token") as string;
+            const { data } = await axios.post(
+              `${apiUrl}/api/shipping-cost`,
+              {
+                origin,
+                destination,
+                weight: totalWeight,
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }
+            );
 
             // API response might not have data, default to an empty array.
-            const fetchedOptions = data || [];
+            const fetchedOptions = data.data || [];
 
             setShippingOptions((prev) => ({
               ...prev,
@@ -131,15 +155,20 @@ export default function Checkout() {
       });
     }
   }, [selectedAddress, groupedByStore]);
-  
-  console.log("Shipping Options:", shippingOptions);
+
+  console.log(selectedAddress);
 
   useEffect(() => {
     try {
-      const token = getCookie("access_token") as string;
       const fetchMainAddress = async () => {
-        const data = await getMainAddress(user.user.id, token)
-        setSelectedAddress(data || null);
+        const token = getCookie("access_token") as string;
+        const { data } = await axios.get(
+          `${apiUrl}/api/users/address/main/${user.user.id}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        setSelectedAddress(data.data[0]);
       };
       fetchMainAddress();
     } catch (err) {
@@ -150,8 +179,14 @@ export default function Checkout() {
   useEffect(() => {
     try {
       const fetchUserAddresses = async () => {
-        const data = await getUserAddresses(user.user.id)
-        setUserAddresses(data);
+        const token = getCookie("access_token") as string;
+        const { data } = await axios.get(
+          `${apiUrl}/api/addresses/${user.user.id}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        setUserAddresses(data.data);
       };
       fetchUserAddresses();
     } catch (err) {
@@ -164,7 +199,9 @@ export default function Checkout() {
     setIsModalOpen(false);
   };
 
-  const handleAddNewAddress = (newAddressData: Omit<IExistingAddress, "id">) => {
+  const handleAddNewAddress = (
+    newAddressData: Omit<IExistingAddress, "id">
+  ) => {
     const newAddress: IExistingAddress = {
       id: Date.now(), // temporary ID
       ...newAddressData,
@@ -188,8 +225,6 @@ export default function Checkout() {
       (c) => c.service === selectedOptionService
     );
 
-    console.log(selectedCourier);
-
     if (selectedCourier) {
       setSelectedShipping((prev) => ({
         ...prev,
@@ -200,7 +235,11 @@ export default function Checkout() {
 
   // Kalkulasi Total
   const productsSubtotal = useMemo(
-    () => cartItems.reduce((sum, item) => sum + item.products.price * item.quantity, 0),
+    () =>
+      cartItems.reduce(
+        (sum, item) => sum + item.products.price * item.quantity,
+        0
+      ),
     [cartItems]
   );
   const shippingTotal = useMemo(
@@ -268,7 +307,10 @@ export default function Checkout() {
                   className="mb-6 last:mb-0 border border-gray-200 rounded-lg p-4"
                 >
                   <h3 className="font-bold text-md text-gray-700 mb-3">
-                    Dikirim dari: {storeName + " - " + `(${products[0].storeAddress.cities.name})`}
+                    Dikirim dari:{" "}
+                    {storeName +
+                      " - " +
+                      `(${products[0].storeAddress.cities.name})`}
                   </h3>
                   {products.map((product) => (
                     <div

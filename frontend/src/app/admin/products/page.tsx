@@ -61,6 +61,7 @@ export default function ProductPage() {
   // === USE EFFECT ===
   useEffect(() => {
     fetchProducts();
+    /* eslint-disable-next-line */
   }, [debouncedSearch]);
 
   useEffect(() => {

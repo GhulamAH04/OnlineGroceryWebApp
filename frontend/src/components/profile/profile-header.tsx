@@ -12,7 +12,11 @@ export default function ProfileHeader() {
       <div className="w-24 h-24 rounded-full border border-s-2 overflow-hidden mb-4">
         {/* eslint-disable-next-line */}
         <img
-          src={ userState.user.image ? `${imageUrl}${userState.user.image}` : `/no_profile.png`}
+          src={
+            (userState.user.image === "/profile.jpg")
+            ? `${userState.user.image}`
+            : `${imageUrl}${userState.user.image}`
+          }
           alt="User Avatar"
           width={100}
           height={100}

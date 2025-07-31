@@ -2,9 +2,8 @@
 
 import { imageUrl } from "@/config";
 import { IAuth, IUser } from "@/interfaces/auth.interface";
-import { ILocation } from "@/interfaces/location.interface";
 import { onLogin } from "@/lib/redux/features/authSlice";
-import { setCity } from "@/lib/redux/features/locationSlice";
+import { ILocationState, setCity } from "@/lib/redux/features/locationSlice";
 import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
 import { getCookie } from "cookies-next";
 import { jwtDecode } from "jwt-decode";
@@ -18,9 +17,9 @@ export default function SmallOne() {
   // state in redux
   const userState = useAppSelector((state) => state.auth);
   const location = useAppSelector((state) => state.location);
-
+const token = getCookie("access_token") as string;
   useEffect(() => {
-    const token = getCookie("access_token") as string;
+    
     if (token) {
       const userData = jwtDecode<IUser>(token);
       const userState: IAuth = {
@@ -36,18 +35,13 @@ export default function SmallOne() {
       };
       dispatch(onLogin(userState));
     }
-  }, [dispatch]);
+  }, [token, dispatch]);
   
   useEffect(() => {
     const token = getCookie("location_token") as string;
     if (token) {
-      const location = jwtDecode<ILocation>(token);
-      const locationState: ILocation = {
-        latitude: location.latitude,
-        longitude: location.longitude,
-        city: location.city,
-      };
-      dispatch(setCity(locationState));
+      const decodedData = jwtDecode<ILocationState>(token);
+      dispatch(setCity({city: decodedData.city}));
     }
   }, [location, dispatch]);
 
@@ -81,7 +75,11 @@ export default function SmallOne() {
           <Link href="/profile">
             {/* eslint-disable-next-line */}
             <img
-              src={ userState.user.image ? `${imageUrl}${userState.user.image}` : `/no_profile.png`}
+              src={
+                userState.user.image === "/profile.jpg"
+                  ? `${userState.user.image}`
+                  : `${imageUrl}${userState.user.image}`
+              }
               alt="profile-picture"
               className="rounded-full w-6 h-6 border-black border-solid border-1"
             />

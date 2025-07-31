@@ -113,6 +113,7 @@ export default function ReportsPage() {
   useEffect(() => {
     fetchReports(selectedBranchId ?? undefined);
     fetchMutations();
+    /* eslint-disable-next-line */
   }, [selectedBranchId, selectedMonth]);
 
   return (

@@ -32,6 +32,7 @@ export default function InventoryPage() {
   // === TRIGGER FETCH SETIAP SEARCH ===
   useEffect(() => {
     fetchInventory();
+    /* eslint-disable-next-line */
   }, [debouncedSearch]);
 
   // === RENDER ===
