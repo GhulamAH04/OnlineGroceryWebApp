@@ -1,3 +1,144 @@
+// === FILE: src/controllers/store.controller.ts ===
+
+import { Request, Response, NextFunction } from "express";
+import {
+  AddNewStoreService,
+  AssignStoreAdminService,
+  DeleteStoreService,
+  getAllStoresService,
+  UpdateStoreService,
+  getAllBranchesForDropdownService, 
+} from "../services/store.service";
+import { INewStore } from "../interfaces/store.interface";
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
+
+// === GET ALL STORES (Only SUPER_ADMIN) ===
+export async function getAllStoresController(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const stores = await getAllStoresService();
+
+    res.status(200).send({
+      message: `get all stores success`,
+      data: stores,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// === CREATE NEW STORE ===
+export async function AddNewStoreController(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const newStoreData: INewStore = req.body;
+
+    const newStore = await AddNewStoreService(newStoreData);
+
+    res.status(200).send({
+      message: `create new store success`,
+      data: newStore,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// === DELETE STORE ===
+export async function DeleteStoreController(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const storeId: number = parseInt(req.params.id);
+
+    const deletedStore = await DeleteStoreService(storeId);
+
+    res.status(200).send({
+      message: `delete store success`,
+      data: deletedStore,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// === UPDATE STORE ===
+export async function UpdateStoreController(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const storeId: number = parseInt(req.params.id);
+
+    const updatedStore = await UpdateStoreService(storeId, req.body);
+
+    res.status(200).send({
+      message: `update store success`,
+      data: updatedStore,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// === GET ALL BRANCHES for dropdown (ID & name only) ===
+export async function getAllBranchesForDropdown(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const branches = await getAllBranchesForDropdownService();
+    res.status(200).json({
+      message: "get all branches for dropdown success",
+      data: branches,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+
+// === ASSIGN STORE ADMIN TO A STORE ===
+export async function AssignStoreAdminController(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const storeId: number = parseInt(req.params.id);
+    const { userId } = req.body;
+
+    const updatedStore = await AssignStoreAdminService(storeId, parseInt(userId));
+
+    res.status(200).send({
+      message: `assign store admin success`,
+      data: updatedStore,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// === GET BRANCHES FOR DRO
+
+
+
+/*
+// NAHALIL
+
+
 import { Request, Response, NextFunction } from "express";
 import { AddNewStoreService, AssignStoreAdminService, DeleteStoreService, getAllStoresService, UpdateStoreService } from "../services/store.service";
 import { INewStore } from "../interfaces/store.interface";
@@ -95,3 +236,4 @@ export async function AssignStoreAdminController(
     next(err);
   }
 }
+*/

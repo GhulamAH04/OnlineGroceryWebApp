@@ -1,4 +1,6 @@
-export * from "./product";
+export * from "./productAdmin.interface";
+export * from "./branch"
+export * from "./product.interface"
 export * from "./user.interface";
 export * from "./inventory";
 export * from "./discount";

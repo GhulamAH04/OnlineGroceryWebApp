@@ -3,13 +3,18 @@
 // === Current Inventory (per cabang & produk) ===
 export interface Inventory {
   id: number;
-  productId: number;
-  productName: string;
-  productImage?: string;
-  branchId: number;
-  branchName: string;
-  currentStock: number;
+  stock: number;
+  products: {
+    id: number;
+    name: string;
+    image: string;
+  };
+  branchs: {
+    id: number;
+    name: string;
+  };
 }
+
 
 // === Journal Entry (log mutasi stok) ===
 export interface InventoryJournal {

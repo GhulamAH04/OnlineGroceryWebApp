@@ -1,5 +1,4 @@
-// === SCHEMA: PRODUCT ADMIN ===
-
+// === FILE: productAdmin.schema.ts ===
 import * as yup from "yup";
 
 const SUPPORTED_FORMATS = ["image/jpg", "image/jpeg", "image/png", "image/gif"];
@@ -24,10 +23,12 @@ export const productAdminSchema = yup
       .min(0, "Stok tidak boleh negatif")
       .required("Stok wajib diisi"),
     description: yup.string().nullable().notRequired(),
-    storeId: yup
+
+    branchId: yup
       .number()
       .typeError("Toko wajib dipilih")
       .required("Toko wajib dipilih"),
+
     categoryId: yup
       .number()
       .typeError("Kategori wajib dipilih")

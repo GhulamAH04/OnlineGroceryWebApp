@@ -8,5 +8,19 @@ export interface CreateProductInput {
   price: number;
   stock: number;
   categoryId: number;
-  branchId: number;
+  branchId?: number | null;
+}
+// src/interfaces/productAdmin.interface.ts
+
+export interface ProductAdminItem {
+  id: number;
+  name: string;
+  slug: string;
+  image: string | null;
+  price: number;
+  stock: number;
+  branchId: number | null; // ✅ BUKAN hanya number
+  branchName: string;
+  categoryName: string;
+  description: string;
 }

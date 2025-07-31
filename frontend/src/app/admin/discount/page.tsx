@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import axios from "axios";
+import axios from "@/lib/axios";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { toast } from "sonner";
@@ -12,13 +12,14 @@ import {
   DiscountAdminInput,
 } from "@/schemas/discountAdmin.schema";
 import { Discount } from "@/interfaces/discountAdmin";
+import { Product } from "@/interfaces/productAdmin.interface";
 import ConfirmModal from "@/components/features2/common/ConfirmModal";
 import { useDebounceSearch } from "@/hooks/useDebounceSearch";
 
 export default function DiscountPage() {
   // === STATE ===
   const [discounts, setDiscounts] = useState<Discount[]>([]);
-  const [products, setProducts] = useState<{ id: number; name: string }[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [editId, setEditId] = useState<number | null>(null);
   const [confirmId, setConfirmId] = useState<number | null>(null);
   const [search, setSearch] = useState("");
@@ -43,8 +44,9 @@ export default function DiscountPage() {
         }),
         axios.get(`${process.env.NEXT_PUBLIC_API_URL}/admin/products`),
       ]);
-      setDiscounts(discRes.data.data);
-      setProducts(prodRes.data.data);
+
+      setDiscounts(discRes?.data?.data ?? []);
+      setProducts(Array.isArray(prodRes?.data?.data) ? prodRes.data.data : []);
     } catch {
       toast.error("Gagal mengambil data diskon");
     }
@@ -144,11 +146,12 @@ export default function DiscountPage() {
               className="w-full border rounded p-2"
             >
               <option value="">Pilih Produk</option>
-              {products.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
+              {Array.isArray(products) &&
+                products.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
             </select>
             {errors.productId && (
               <p className="text-red-500 text-sm">{errors.productId.message}</p>

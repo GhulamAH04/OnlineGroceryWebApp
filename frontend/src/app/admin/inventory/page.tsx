@@ -1,9 +1,7 @@
-// === INVENTORY MANAGEMENT PAGE ===
-// OnlineGroceryWebApp/frontend/src/app/admin/inventory/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
-import axios from "axios";
+import axios from "@/lib/axios"; // ✅ Pakai custom axios
 import Image from "next/image";
 import { Inventory } from "@/interfaces/inventoryAdmin";
 import { useDebounceSearch } from "@/hooks/useDebounceSearch";
@@ -15,19 +13,21 @@ export default function InventoryPage() {
   const debouncedSearch = useDebounceSearch(search);
 
   // === FETCH DATA INVENTORY ===
-  const fetchInventory = async () => {
-    try {
-      const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/inventory`,
-        {
-          params: { search: debouncedSearch },
-        }
-      );
-      setInventoryList(res.data.data);
-    } catch {
-      console.error("Gagal mengambil data inventory");
-    }
-  };
+const fetchInventory = async () => {
+  try {
+    const token = localStorage.getItem("token");
+    const res = await axios.get("/admin/inventory", {
+      params: { search: debouncedSearch },
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    setInventoryList(res.data.data);
+  } catch (error) {
+    console.error("❌ Gagal mengambil data inventory", error);
+  }
+};
+
 
   // === TRIGGER FETCH SETIAP SEARCH ===
   useEffect(() => {
@@ -51,7 +51,6 @@ export default function InventoryPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-
           <a
             href="/admin/inventory-journal"
             className="bg-green-600 text-white px-4 py-2 rounded"
@@ -74,10 +73,10 @@ export default function InventoryPage() {
             {inventoryList.map((item) => (
               <tr key={item.id} className="border">
                 <td className="p-2">
-                  {item.productImage ? (
+                  {item.products?.image ? (
                     <Image
-                      src={item.productImage}
-                      alt={item.productName}
+                      src={item.products.image}
+                      alt={item.products.name}
                       width={50}
                       height={50}
                       className="rounded"
@@ -86,10 +85,10 @@ export default function InventoryPage() {
                     <span>-</span>
                   )}
                 </td>
-                <td className="p-2">{item.productName}</td>
-                <td className="p-2">{item.branchName}</td>
+                <td className="p-2">{item.products?.name || "-"}</td>
+                <td className="p-2">{item.branchs?.name || "-"}</td>
                 <td className="p-2 font-semibold text-green-700">
-                  {item.currentStock}
+                  {item.stock}
                 </td>
               </tr>
             ))}

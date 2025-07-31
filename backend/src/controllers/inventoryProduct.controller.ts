@@ -1,7 +1,8 @@
-// OnlineGroceryWebApp/backend/src/controllers/inventoryProduct.controller.ts
+// === FILE: backend/src/controllers/inventoryProduct.controller.ts ===
 import { Request, Response, NextFunction } from 'express';
 import { inventoryService } from '../services/inventoryAdmin.service';
 
+// === GET INVENTORY ===
 export const getInventory = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const user = req.user!;
@@ -14,6 +15,7 @@ export const getInventory = async (req: Request, res: Response, next: NextFuncti
   }
 };
 
+// === UPDATE INVENTORY ===
 export const updateInventory = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const user = req.user!;

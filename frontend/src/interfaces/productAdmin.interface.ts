@@ -1,19 +1,27 @@
-// === INTERFACE: PRODUCT (FRONTEND) ===
+// === FILE: productAdmin.interface.ts ===
 
 export interface Product {
   id: number;
   name: string;
-  slug: string;
-  image: string;
+  slug?: string;
+  image?: string;
   price: number;
   stock: number;
-  description: string | null;
-  storeId: number;
-  storeName: string;
+  branchId: number;
+  branchName?: string;
   categoryId: number;
-  categoryName: string;
+  categoryName?: string;
+  description?: string;
 }
 
+export interface CreateProductInput {
+  name: string;
+  price: number;
+  stock: number;
+  description?: string;
+  branchId: number;
+  categoryId: number;
+}
 // === INTERFACE: CART ITEM (FRONTEND) ===
 
 export interface CartItem {

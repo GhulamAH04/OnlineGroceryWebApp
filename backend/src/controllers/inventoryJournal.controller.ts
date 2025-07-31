@@ -1,10 +1,16 @@
+// === FILE: backend/src/controllers/inventoryJournal.controller.ts ===
+
 import { Request, Response, NextFunction } from "express";
 import { PrismaClient, TransactionType } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
 // === GET ALL JOURNAL MUTATIONS ===
-export const getAllInventoryJournals = async (req: Request, res: Response, next: NextFunction) => {
+export const getAllInventoryJournals = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const journals = await prisma.journal_mutations.findMany({
       include: {
@@ -20,8 +26,8 @@ export const getAllInventoryJournals = async (req: Request, res: Response, next:
 
     const result = journals.map((j) => ({
       id: j.id,
-      productId: j.product_branchs.productId,
-      productName: j.product_branchs.products.name,
+      productId: j.product_branchs?.productId ?? null,
+      productName: j.product_branchs?.products?.name ?? "Produk tidak ditemukan",
       branchId: j.branchId,
       branchName: j.branchs?.name || "-",
       action: j.transactionType,
@@ -81,11 +87,11 @@ export const createInventoryJournal = async (
       prisma.journal_mutations.create({
         data: {
           quantity: Number(stock),
-          transactionType: type,
+          transactionType: type as TransactionType,
           description: note || "",
           productBranchId: productBranch.id,
           branchId: Number(branchId),
-          updatedAt: new Date(), // pastikan ditambahkan
+          updatedAt: new Date(),
         },
       }),
       prisma.product_branchs.update({
@@ -96,16 +102,20 @@ export const createInventoryJournal = async (
 
     res.json({ success: true, message: "Jurnal stok berhasil ditambahkan" });
   } catch (err) {
-    next(err); // kirim error ke handler express
+    next(err);
   }
 };
 
-
-// === DELETE JOURNAL (optional) ===
-export const deleteInventoryJournal = async (req: Request, res: Response, next: NextFunction) => {
+// === DELETE JOURNAL MUTATION ===
+export const deleteInventoryJournal = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const id = Number(req.params.id);
     await prisma.journal_mutations.delete({ where: { id } });
+
     res.json({ success: true, message: "Jurnal berhasil dihapus" });
   } catch (err) {
     next(err);
