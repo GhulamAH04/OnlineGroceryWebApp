@@ -28,10 +28,10 @@ export default function Sidebar() {
 
   const navItems = [
     { icon: LayoutGrid, label: "Dashboard", link: "/" },
-    { icon: FileText, label: "Order History", link: "/history" },
+    { icon: FileText, label: "Order History", link: "/profile/history" },
     { icon: Heart, label: "Wishlist", link: "wishlist" },
-    { icon: ShoppingCart, label: "Shopping Cart", link: "cart" },
-    { icon: Settings, label: "Settings", link: "settings" },
+    { icon: ShoppingCart, label: "Shopping Cart", link: "/cart" },
+    { icon: Settings, label: "Settings", link: "/profile/settings" },
   ];
 
   // Effect to update state from localStorage on component mount
@@ -52,7 +52,7 @@ export default function Sidebar() {
             return (
               <li key={item.label}>
                 <a
-                  href={`/profile/${item.link}`}
+                  href={`${item.link}`}
                   onClick={() => handleMenuItemClick(item.label)}
                   className={`flex items-center p-3 my-1 rounded-lg transition-colors ${
                     activeItem === item.label

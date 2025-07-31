@@ -3,6 +3,7 @@ import { PrismaClient } from "@prisma/client";
 import { haversineDistance } from "../utils/distance";
 import fs from "fs";
 import path from "path";
+import { cloudinaryUploadMulter } from "../utils/cloudinary";
 
 const midtransClient = require("midtrans-client");
 
@@ -13,7 +14,8 @@ export class OrderController {
    * Membuat pesanan baru
    */
   async createOrder(req: Request, res: Response) {
-    const { cartId, addressId, paymentMethod } = req.body;
+    const { cartId, addressId, paymentMethod, shippingCost, courier } =
+      req.body;
     const userId = req.user!.id;
 
     if (!cartId || !addressId || !paymentMethod) {
@@ -70,7 +72,8 @@ export class OrderController {
         data: {
           name: `Order-${new Date().getTime()}`,
           paymentStatus: "UNPAID",
-          shippingCost: 0,
+          shippingCost: shippingCost || 0,
+          courier: courier || "JNE",
           total: totalPrice,
           paymentMethod,
           expirePayment: new Date(new Date().getTime() + 60 * 60 * 1000), // Expiry in 1 hour
@@ -205,8 +208,6 @@ export class OrderController {
           .json({ message: "No payment proof file uploaded." });
       }
 
-      console.log(paymentProof); // Check the contents of the paymentProof
-
       if (!["image/jpeg", "image/png"].includes(paymentProof.mimetype)) {
         return res.status(400).json({
           message: "Invalid payment proof file type. Only JPG/PNG allowed.",
@@ -220,32 +221,54 @@ export class OrderController {
           .json({ message: "File size exceeds the limit of 1MB." });
       }
 
-      const fileName = `${new Date().getTime()}-${paymentProof.originalname}`;
-      const filePath = path.join(
-        __dirname,
-        "../uploads/payment_proofs",
-        fileName
-      ); // Get absolute path
+      let paymentProofUrl: string | undefined;
 
-      // Ensure the directory exists, if not create it
-      const directoryPath = path.dirname(filePath);
-      if (!fs.existsSync(directoryPath)) {
-        fs.mkdirSync(directoryPath, { recursive: true });
+      // Coba upload ke Cloudinary
+      try {
+        const uploadResult = await cloudinaryUploadMulter(paymentProof);
+        paymentProofUrl = uploadResult.secure_url;
+
+        await prisma.orders.update({
+          where: { id: parseInt(orderId) },
+          data: {
+            paymentProof: paymentProofUrl,
+            paymentStatus: "PROCESSING",
+          },
+        });
+
+        return res.status(200).json({
+          message: "Payment proof uploaded successfully (Cloudinary).",
+          url: paymentProofUrl,
+        });
+      } catch (err) {
+        // Fallback: upload ke storage lokal (multer)
+        try {
+          const fileName = `${Date.now()}-${paymentProof.originalname}`;
+          const uploadDir = path.join(__dirname, "../uploads/payment_proofs");
+          if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+          }
+          const filePath = path.join(uploadDir, fileName);
+          fs.writeFileSync(filePath, paymentProof.buffer);
+
+          await prisma.orders.update({
+            where: { id: parseInt(orderId) },
+            data: {
+              paymentProof: filePath,
+              paymentStatus: "PROCESSING",
+            },
+          });
+
+          return res.status(200).json({
+            message: "Payment proof uploaded locally (Cloudinary failed).",
+            url: filePath,
+          });
+        } catch (err2) {
+          return res
+            .status(500)
+            .json({ message: "Error uploading payment proof", error: err2 });
+        }
       }
-
-      // Write the file using the buffer
-      fs.writeFileSync(filePath, paymentProof.buffer);
-
-      // Update bukti pembayaran di pesanan
-      await prisma.orders.update({
-        where: { id: parseInt(orderId) },
-        data: {
-          paymentProof: filePath,
-          paymentStatus: "PROCESSING",
-        },
-      });
-
-      res.status(200).json({ message: "Payment proof uploaded successfully." });
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: "Error uploading payment proof", error });
@@ -256,12 +279,44 @@ export class OrderController {
    * Melihat daftar pesanan
    */
   async getOrders(req: Request, res: Response) {
-    const userId = req.user!.id;
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const limit = Number(req.query.limit) || 5;
+    const idParam = req.query.id;
+    let id: number | undefined = undefined;
+
+    if (idParam !== undefined) {
+      const idNum = Number(idParam);
+      if (isNaN(idNum)) {
+        return res.status(400).json({ message: "Invalid order id." });
+      }
+      id = idNum;
+    }
+
+    const dateQuery = req.query.date as string | undefined;
+    const noOrderQuery = req.query.no_order as string | undefined;
 
     try {
-      const orders = await prisma.orders.findMany({
-        where: { userId },
+      const whereClause: any = { userId };
+      if (id !== undefined) whereClause.id = id;
+
+      if (noOrderQuery) {
+        whereClause.name = { contains: noOrderQuery, mode: "insensitive" };
+      }
+
+      if (dateQuery) {
+        const dayStart = new Date(dateQuery + "T00:00:00.000Z");
+        const dayEnd = new Date(dateQuery + "T23:59:59.999Z");
+        whereClause.createdAt = { gte: dayStart, lte: dayEnd };
+      }
+
+      const data = await prisma.orders.findMany({
+        where: whereClause,
         orderBy: { createdAt: "desc" },
+        take: limit > 0 ? limit : undefined,
         include: {
           order_products: true,
           addresses: true,
@@ -269,10 +324,49 @@ export class OrderController {
         },
       });
 
-      res.status(200).json(orders);
+      return res.status(200).json(data);
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: "Error retrieving orders", error });
+      console.error("Error retrieving orders:", error);
+      return res.status(500).json({ message: "Error retrieving orders" });
+    }
+  }
+
+  /**
+   * Melihat pesanan by id
+   */
+  async getOrder(req: Request, res: Response) {
+    const userId = req.user?.id;
+    const orderId = Number(req.params.id);
+
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    if (!orderId || isNaN(orderId)) {
+      return res.status(400).json({ message: "Order id tidak valid." });
+    }
+
+    try {
+      const order = await prisma.orders.findFirst({
+        where: {
+          id: orderId,
+          userId: userId,
+        },
+        include: {
+          order_products: true,
+          addresses: true,
+          branchs: true,
+        },
+      });
+
+      if (!order) {
+        return res.status(404).json({ message: "Order tidak ditemukan." });
+      }
+
+      return res.status(200).json({ data: order });
+    } catch (error) {
+      console.error("Error retrieving order:", error);
+      return res.status(500).json({ message: "Error retrieving order" });
     }
   }
 
@@ -309,6 +403,43 @@ export class OrderController {
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: "Error canceling order", error });
+    }
+  }
+
+  /**
+   * Konfirmasi Pesanan
+   */
+
+  async confirmOrder(req: Request, res: Response) {
+    const { orderId } = req.params;
+    const userId = req.user!.id;
+
+    try {
+      const order = await prisma.orders.findUnique({
+        where: { id: parseInt(orderId) },
+        include: { users: true },
+      });
+      if (!order || order.users.id !== userId) {
+        return res
+          .status(404)
+          .json({ message: "Order not found or you do not have permission." });
+      }
+
+      if (order.paymentStatus !== "PAID") {
+        return res.status(400).json({
+          message: "Order cannot be confirmed as it has not been paid.",
+        });
+      }
+
+      await prisma.orders.update({
+        where: { id: parseInt(orderId) },
+        data: { paymentStatus: "DELIVERED" },
+      });
+
+      res.status(200).json({ message: "Order confirmed successfully." });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Error confirming order", error });
     }
   }
 }
