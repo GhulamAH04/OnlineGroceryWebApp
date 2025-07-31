@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
-import { CartController } from "../controllers/cart.controller";
+import { CartController, GetAllProductCartByUserIdController } from "../controllers/cart.controller";
 import { verifyToken } from "../middlewares/authOrder.middleware"; // DIUBAH: Menggunakan named import
 import { validate } from "../middlewares/validator.middleware";
 import { Role } from "@prisma/client";
@@ -21,6 +21,7 @@ const updateCartSchema = z.object({
 });
 
 cartRouter.get("/", userMiddleware, cartController.getCart);
+cartRouter.get("/products/:userId", userMiddleware, GetAllProductCartByUserIdController);
 cartRouter.get("/total", userMiddleware, cartController.totalCart);
 
 cartRouter.post(

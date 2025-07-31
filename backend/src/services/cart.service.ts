@@ -1,7 +1,7 @@
 // /backend/src/services/cart.service.ts
 
 import { PrismaClient } from "@prisma/client";
-import { haversineDistance } from "../utils/distance"; // Pastikan Anda memiliki utilitas untuk menghitung jarak
+// import { haversineDistance } from "../utils/distance"; // Pastikan Anda memiliki utilitas untuk menghitung jarak
 
 const prisma = new PrismaClient();
 
@@ -16,7 +16,7 @@ const prisma = new PrismaClient();
  * @param userId - ID pengguna.
  * @returns Object keranjang (cart).
  */
-const getOrCreateCart = async (userId: number) => {
+export const getOrCreateCart = async (userId: number) => {
   let cart = await prisma.carts.findFirst({
     where: { userId, isActive: true },
   });
@@ -34,39 +34,39 @@ const getOrCreateCart = async (userId: number) => {
  * @param userId - ID pengguna.
  * @returns Object cabang terdekat (branch).
  */
-const findNearestBranch = async (userId: number) => {
-  const userAddress = await prisma.addresses.findFirst({
-    where: { userId, isPrimary: true }, // Asumsi ada field 'isMain' untuk alamat utama
-  });
+// const findNearestBranch = async (userId: number) => {
+//   const userAddress = await prisma.addresses.findFirst({
+//     where: { userId, isPrimary: true }, // Asumsi ada field 'isMain' untuk alamat utama
+//   });
 
-  if (!userAddress) {
-    throw new Error("Alamat utama pengguna tidak ditemukan.");
-  }
+//   if (!userAddress) {
+//     throw new Error("Alamat utama pengguna tidak ditemukan.");
+//   }
 
-  const allBranches = await prisma.branchs.findMany();
-  if (allBranches.length === 0) {
-    throw new Error("Tidak ada cabang yang tersedia.");
-  }
+//   const allBranches = await prisma.branchs.findMany();
+//   if (allBranches.length === 0) {
+//     throw new Error("Tidak ada cabang yang tersedia.");
+//   }
 
-  // Hitung jarak ke semua cabang dan temukan yang terdekat
-  const closestBranch = allBranches.reduce((prev: any, curr: any) => {
-    const prevDistance = haversineDistance(
-      userAddress.latitude,
-      userAddress.longitude,
-      prev.latitude,
-      prev.longitude
-    );
-    const currDistance = haversineDistance(
-      userAddress.latitude,
-      userAddress.longitude,
-      curr.latitude,
-      curr.longitude
-    );
-    return prevDistance < currDistance ? prev : curr;
-  });
+//   // Hitung jarak ke semua cabang dan temukan yang terdekat
+//   const closestBranch = allBranches.reduce((prev: any, curr: any) => {
+//     const prevDistance = haversineDistance(
+//       userAddress.latitude,
+//       userAddress.longitude,
+//       prev.latitude,
+//       prev.longitude
+//     );
+//     const currDistance = haversineDistance(
+//       userAddress.latitude,
+//       userAddress.longitude,
+//       curr.latitude,
+//       curr.longitude
+//     );
+//     return prevDistance < currDistance ? prev : curr;
+//   });
 
-  return closestBranch;
-};
+//   return closestBranch;
+// };
 
 /**
  * Memvalidasi ketersediaan stok produk di cabang tertentu.
@@ -76,15 +76,18 @@ const findNearestBranch = async (userId: number) => {
  */
 const validateStock = async (
   productId: number,
-  branchId: number,
+  branchId: number | undefined,
   requestedQuantity: number
 ) => {
   const productStock = await prisma.product_branchs.findFirst({
     where: { productId, branchId },
+    include: { branchs: true },
   });
 
   if (!productStock || productStock.stock < requestedQuantity) {
-    throw new Error("Stok produk tidak mencukupi di cabang terdekat.");
+    throw new Error(
+      `Stok produk tidak mencukupi di cabang ${productStock?.branchs.name} .`
+    );
   }
 };
 
@@ -92,29 +95,42 @@ export class CartService {
   /**
    * Menambahkan produk ke keranjang atau mengupdate kuantitas jika sudah ada.
    */
-  static async addToCart(userId: number, productId: number, quantity: number) {
+  static async addToCart(
+    userId: number,
+    productBranchId: number,
+    quantity: number
+  ) {
     const cart = await getOrCreateCart(userId);
-    const nearestBranch = await findNearestBranch(userId);
+    // const nearestBranch = await findNearestBranch(userId);
 
     const existingItem = await prisma.product_carts.findFirst({
-      where: { cartId: cart.id, productId },
+      where: { cartId: cart.id, productBranchId },
+      include: {
+        product_branchs: {
+          include: {
+            branchs: true,
+          },
+        },
+      },
     });
+
+    const branch = existingItem?.product_branchs.branchs;
 
     if (existingItem) {
       // Jika item sudah ada, validasi stok untuk total kuantitas baru
       const newQuantity = existingItem.quantity + quantity;
-      await validateStock(productId, nearestBranch.id, newQuantity);
+      await validateStock(productBranchId, branch?.id, newQuantity);
       return prisma.product_carts.update({
         where: { id: existingItem.id },
         data: { quantity: { increment: quantity } },
       });
     } else {
       // Jika item baru, validasi stok untuk kuantitas yang diminta
-      await validateStock(productId, nearestBranch.id, quantity);
+      await validateStock(productBranchId, branch?.id, quantity);
       return prisma.product_carts.create({
         data: {
           cartId: cart.id,
-          productId,
+          productBranchId,
           quantity,
           updatedAt: new Date(),
         },
@@ -131,7 +147,9 @@ export class CartService {
       include: {
         product_carts: {
           include: {
-            products: true, // Sertakan detail produk
+            product_branchs: {
+              include: { products: true },
+            }, // Sertakan detail produk
           },
           orderBy: {
             createdAt: "asc",
@@ -150,11 +168,18 @@ export class CartService {
     quantity: number
   ) {
     const cart = await getOrCreateCart(userId);
-    const nearestBranch = await findNearestBranch(userId);
+    // const nearestBranch = await findNearestBranch(userId);
 
     const itemToUpdate = await prisma.product_carts.findFirst({
-      where: { id: productCartId, cartId: cart.id }, // Pastikan item milik user yg login
+      where: { id: productCartId, cartId: cart.id },
+      include: {
+        product_branchs: {
+          include: { branchs: true },
+        },
+      }, // Pastikan item milik user yg login
     });
+
+    const branch = itemToUpdate?.product_branchs.branchs;
 
     if (!itemToUpdate) {
       throw new Error("Item keranjang tidak ditemukan atau bukan milik Anda.");
@@ -165,7 +190,7 @@ export class CartService {
       return this.removeItem(userId, productCartId);
     }
 
-    await validateStock(itemToUpdate.productId, nearestBranch.id, quantity);
+    await validateStock(itemToUpdate.productBranchId, branch?.id, quantity);
 
     return prisma.product_carts.update({
       where: { id: productCartId },
@@ -191,5 +216,36 @@ export class CartService {
     return prisma.product_carts.delete({
       where: { id: productCartId },
     });
+  }
+}
+
+export async function GetAllProductCartByUserIdService(userId: number) {
+  try {
+    const cart = await prisma.carts.findFirst({
+      where: { userId },
+    });
+
+    const products = await prisma.product_carts.findMany({
+      where: {
+        cartId: cart?.id
+      },
+      include: {
+        product_branchs: {
+          include: {
+            products: true,
+            branchs: {
+              include: {
+                provinces: true,
+                cities: true,
+                districts: true
+              }
+            }
+          }
+        }
+      }
+    });
+    return products;
+  } catch (err) {
+    throw err;
   }
 }

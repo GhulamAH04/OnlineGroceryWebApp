@@ -7,6 +7,7 @@ export interface CreateProductInput {
   description?: string;
   price: number;
   stock: number;
+  weight: number;
   categoryId: number;
   branchId?: number | null;
 }

@@ -135,6 +135,7 @@ export const productService = {
         description: body.description,
         price: +body.price,
         categoryId: Number(body.categoryId) || 1,
+        weight: body.weight,
         image: firstImageUrl,
         updatedAt: new Date(),
       },

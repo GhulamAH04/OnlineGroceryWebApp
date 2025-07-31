@@ -46,7 +46,7 @@ export default function Category({ image, name }: PageProps) {
             transition-transform
             duration-500
           "
-          src={`${imageUrl}${image}.jpg`}
+          src={`${imageUrl}/${image}`}
           alt={name}
           loading="lazy"
         />

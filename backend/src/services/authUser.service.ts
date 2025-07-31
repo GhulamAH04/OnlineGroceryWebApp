@@ -14,6 +14,7 @@ import {
   ILogin,
   IRegister,
 } from "../interfaces/auth.interface";
+import { getOrCreateCart } from "./cart.service";
 
 export async function FindUserByEmail(email: string) {
   try {
@@ -49,6 +50,8 @@ async function Register(userData: IRegister) {
     });
 
     if (!newUser) throw new Error("Create account failed");
+
+    await getOrCreateCart(newUser.id);
 
     SendVerificationEmail(name, email, "Welcome");
 

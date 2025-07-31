@@ -11,46 +11,12 @@ import { apiUrl } from "@/config";
 import axios from "axios";
 import { getCookie } from "cookies-next";
 
-// --- DATA DUMMY / MOCK DATA ---
-// Data ini seharusnya datang dari state global (Redux/Context) atau props
-const initialCartItems: ICartItems[] = [
-  {
-    id: 1,
-    branchs: {
-      id: 1,
-      name: "Toko Segar Jaya",
-      addresses: {
-        id: 1,
-        name: "Jl. Raya No. 1",
-        phone: "08123456789",
-        address: "Jl. Raya No. 1",
-        districts: { id: 1, name: "kenjeran" },
-        cities: { id: 1, name: "Surabaya" },
-        provinces: { id: 1, name: "Jawa Timur" },
-        postalCode: "12345",
-        isPrimary: true,
-        userId: 1,
-      },
-    },
-    products: {
-      id: 1,
-      name: "Apel Fuji",
-      price: 15000,
-      weight: 1000,
-      image: "https://placehold.co/100x100/a8e6cf/333?text=Apel",
-      categoryId: 1,
-    },
-    quantity: 1,
-  },
-];
-
-// Komponen Utama Checkout
 export default function Checkout() {
   // state in redux
   const user = useAppSelector((state) => state.auth);
+  //local state
+  const [cartItems, setCartItems] = useState<ICartItems[]>([]);
 
-  /* eslint-disable-next-line */
-  const [cartItems, setCartItems] = useState<ICartItems[]>(initialCartItems);
   const [userAddresses, setUserAddresses] = useState<IExistingAddress[]>([]);
   const [selectedAddress, setSelectedAddress] =
     useState<IExistingAddress | null>(null);
@@ -63,22 +29,43 @@ export default function Checkout() {
     [storeName: string]: IShippingOption;
   }>({});
 
+  useEffect(() => {
+    try {
+      const fetchCartItems = async () => {
+        const token = getCookie("access_token") as string;
+        const { data } = await axios.get(
+          `${apiUrl}/api/cart/products/${user.user.id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setCartItems(data.data);
+      };
+      if (user.user.id > 0) fetchCartItems();
+    } catch (err) {
+      alert("Error fetching main adress: " + err);
+    }
+  }, [user.user.id]);
+
   // Mengelompokkan produk berdasarkan toko
   const groupedByStore = useMemo(() => {
     return cartItems.reduce((acc, product) => {
-      const storeName = product.branchs.name;
+      // console.log(product);
+      const storeName = product.product_branchs.branchs.name;
       if (!acc[storeName]) {
         acc[storeName] = [];
       }
       acc[storeName].push({
-        id: product.products.id,
-        name: product.products.name,
-        price: product.products.price,
+        id: product.product_branchs.products.id,
+        name: product.product_branchs.products.name,
+        price: product.product_branchs.products.price,
         quantity: product.quantity,
-        weightInGrams: product.products.weight,
-        imageUrl: product.products.image,
+        weightInGrams: product.product_branchs.products.weight,
+        imageUrl: product.product_branchs.products.image,
         storeName,
-        storeAddress: product.branchs.addresses,
+        storeAddress: product.product_branchs.branchs,
       } as IGroupedItem);
       return acc;
     }, {} as { [key: string]: IGroupedItem[] });
@@ -113,6 +100,7 @@ export default function Checkout() {
           (sum, p) => sum + p.weightInGrams * p.quantity,
           0
         );
+        console.log(totalWeight);
 
         const fetchShippingOptionsForStore = async () => {
           try {
@@ -155,8 +143,6 @@ export default function Checkout() {
       });
     }
   }, [selectedAddress, groupedByStore]);
-
-  console.log(selectedAddress);
 
   useEffect(() => {
     try {
@@ -237,7 +223,8 @@ export default function Checkout() {
   const productsSubtotal = useMemo(
     () =>
       cartItems.reduce(
-        (sum, item) => sum + item.products.price * item.quantity,
+        (sum, item) =>
+          sum + item.product_branchs.products.price * item.quantity,
         0
       ),
     [cartItems]
@@ -308,13 +295,14 @@ export default function Checkout() {
                 >
                   <h3 className="font-bold text-md text-gray-700 mb-3">
                     Dikirim dari:{" "}
-                    {storeName +
-                      " - " +
-                      `(${products[0].storeAddress.cities.name})`}
+                    {
+                      storeName + " - "
+                      // `(${products[0].storeAddress.cities.name})`
+                    }
                   </h3>
-                  {products.map((product) => (
+                  {products.map((product, idx) => (
                     <div
-                      key={product.id}
+                      key={`${product.id}-${product.storeName}-${idx}`}
                       className="flex items-center gap-4 mb-3"
                     >
                       {/* eslint-disable-next-line */}
