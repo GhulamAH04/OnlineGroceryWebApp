@@ -61,7 +61,7 @@ app.use("/api/cities", CityRouter);
 app.use("/api/provinces", ProvinceRouter);
 app.use("/api/districts", DistrictRouter);
 app.use("/api/addresses", AddressRouter);
-app.use("/api/stores", StoreRouter);
+app.use("/api/branches", StoreRouter);
 app.use("/api/shipping-cost", ShippingCostRouter);
 app.use("/api/cart", cartRouter);
 
@@ -74,7 +74,7 @@ app.use("/api/admin/discounts", DiscountAdminRouter);
 app.use("/api/admin/reports", ReportAdminRouter);
 app.use("/api/admin/inventory", InventoryRouter);
 app.use("/api/admin/inventory-journal", InventoryJournalRouter);
-// app.use("/api/admin/branches", BranchAdminRouter);
+ app.use("/api/admin/branches", BranchAdminRouter);
 
 // === STATIC FILES ===
 app.use("/images", express.static("public/images"));

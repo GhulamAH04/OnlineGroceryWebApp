@@ -30,7 +30,8 @@ export default function ProductPage() {
       const res = await axios.get("/admin/products", {
         params: { search: debouncedSearch },
       });
-      setProducts(Array.isArray(res.data?.data) ? res.data.data : []);
+        console.log("prduct tidak muncul",res.data.data.data)
+          setProducts(Array.isArray(res.data?.data.data) ? res.data.data.data : []);
     } catch {
       toast.error("Gagal memuat produk");
     }
@@ -38,14 +39,14 @@ export default function ProductPage() {
 
   // === FETCH STORES ===
   const fetchStores = async () => {
-    try {
-      const res = await axios.get("/admin/branches");
-      setStores(res.data || []);
-      console.log("stores loaded", res.data);
-    } catch (err) {
-      toast.error("Gagal memuat data toko");
-      console.error("Gagal fetch /admin/branches", err);
-    }
+   try {
+     const res = await axios.get("/admin/branches");
+     setStores(res.data?.data || []); // ✅ penting!
+     console.log("stores loaded", res.data?.data);
+   } catch (err) {
+     toast.error("Gagal memuat data toko");
+     console.error("Gagal fetch /admin/branches", err);
+   }
   };
 
   // === FETCH CATEGORIES ===
@@ -58,27 +59,27 @@ export default function ProductPage() {
     }
   };
 
-  // === FETCH DI LOAD AWAL (semua data) ===
+  // === FETCH DI LOAD AWAL ===
   useEffect(() => {
-    fetchProducts(); // ambil semua produk
-    fetchStores(); // ambil toko
-    fetchCategories(); // ambil kategori
+    fetchProducts();
+    fetchStores();
+    fetchCategories();
   }, []);
 
-  // === FETCH JIKA USER KETIK CARI ===
+  // === FETCH SAAT CARI ===
   useEffect(() => {
     if (debouncedSearch !== "") {
-      fetchProducts(); // hanya jika user mulai cari
+      fetchProducts();
     }
   }, [debouncedSearch]);
 
-  // === HANDLE TAMBAH PRODUK ===
+  // === HANDLE TAMBAH ===
   const handleAdd = () => {
     setEditProduct(null);
     setIsModalOpen(true);
   };
 
-  // === HANDLE EDIT PRODUK ===
+  // === HANDLE EDIT ===
   const handleEdit = (product: Product) => {
     setEditProduct(product);
     setIsModalOpen(true);
@@ -120,6 +121,7 @@ export default function ProductPage() {
   };
 
   // === RENDER ===
+  console.log(products.map((p) => p.id));
   return (
     <div className="p-6 space-y-4">
       <h1 className="text-2xl font-bold text-green-700">Product Management</h1>
@@ -153,6 +155,7 @@ export default function ProductPage() {
             <th className="p-2 border">Aksi</th>
           </tr>
         </thead>
+        
         <tbody>
           {products.map((p) => (
             <tr key={p.id} className="hover:bg-green-50">
@@ -169,7 +172,7 @@ export default function ProductPage() {
               <td className="p-2 border">Rp {p.price.toLocaleString()}</td>
               <td className="p-2 border">{p.stock}</td>
               <td className="p-2 border">
-                {stores.find((s) => s.id === p.storeId)?.name || "-"}
+                {stores.find((s) => s.id === p.branchId)?.name || "-"}
               </td>
               <td className="p-2 border">{p.categoryName || "-"}</td>
               <td className="p-2 border space-x-2">
@@ -197,7 +200,7 @@ export default function ProductPage() {
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleSubmit}
         selectedProduct={editProduct}
-        stores={stores}
+        branches={stores}
         categories={categories}
       />
 

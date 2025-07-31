@@ -86,18 +86,6 @@ export const seedProducts = async (prisma: PrismaClient) => {
       });
 
       createdProducts.push({ id: product.id, name: product.name });
-
-      for (const branch of branches) {
-        await prisma.product_branchs.create({
-          data: {
-            productId: product.id,
-            branchId: branch.id,
-            stock: Math.floor(Math.random() * 50) + 5,
-            createdAt: now,
-            updatedAt: now,
-          },
-        });
-      }
     }
   }
 

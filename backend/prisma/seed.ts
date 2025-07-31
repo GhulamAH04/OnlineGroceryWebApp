@@ -10,7 +10,7 @@ import { seedBranches } from "./seeds/seedBranches";
 import { seedUsers } from "./seeds/seedUsers";
 import { seedCategories } from "./seeds/seedCategories";
 import { seedProducts } from "./seeds/seedProducts";
-import { seedProductBranchs } from "./seeds/seedProductBranchs";
+// import { seedProductBranchs } from "./seeds/seedProductBranchs";
 import { seedInventory } from "./seeds/seedInventory";
 import { seedInventoryJournal } from "./seeds/seedInventoryJournal";
 import { seedUserCustomers } from "./seeds/seedUserCustomers";
@@ -36,7 +36,7 @@ async function main() {
   // === Kategori dan Produk
   await seedCategories(prisma);
   await seedProducts(prisma);
-  await seedProductBranchs(prisma);
+//  await seedProductBranchs(prisma);
 
   // === Stok dan Mutasi
   await seedInventory(prisma);
