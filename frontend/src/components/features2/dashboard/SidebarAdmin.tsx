@@ -58,7 +58,7 @@ export default function SidebarAdmin() {
     <aside className="bg-green-600 text-white h-screen px-4 py-6 flex flex-col justify-between fixed left-0 top-0 w-[230px] z-20">
       <div>
         <div className="text-2xl font-bold mb-10 tracking-widest text-white">
-          <span className="text-white">Groceria</span>
+          <span className="text-white">EcoBazar</span>
           <span className="text-yellow-200">.Admin</span>
         </div>
 

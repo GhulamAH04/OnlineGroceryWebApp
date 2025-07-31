@@ -1,4 +1,4 @@
-// File: src/routes/productAdmin.routes.ts
+// File: backend/src/routes/productAdmin.routes.ts
 
 import express from 'express';
 import {
@@ -14,29 +14,42 @@ import { authorizeRoles } from '../middlewares/authorizeRoles.middleware';
 
 const router = express.Router();
 
-router.get('/', getProducts);
-router.get('/:id', getProductById);
-
-router.post(
-  '/',
+// === READ ONLY: SUPER_ADMIN & STORE_ADMIN ===
+router.get(
+  "/",
   authMiddleware,
-  authorizeRoles(['SUPER_ADMIN']),
-  upload.array('images', 3),
+  authorizeRoles(["SUPER_ADMIN", "STORE_ADMIN"]),
+  getProducts
+);
+
+router.get(
+  "/:id",
+  authMiddleware,
+  authorizeRoles(["SUPER_ADMIN", "STORE_ADMIN"]),
+  getProductById
+);
+
+// === WRITE (POST/PUT/DELETE): ONLY SUPER_ADMIN ===
+router.post(
+  "/",
+  authMiddleware,
+  authorizeRoles(["SUPER_ADMIN"]),
+  upload.array("images", 3),
   createProduct
 );
 
 router.put(
-  '/:id',
+  "/:id",
   authMiddleware,
-  authorizeRoles(['SUPER_ADMIN']),
-  upload.array('images', 3),
+  authorizeRoles(["SUPER_ADMIN"]),
+  upload.array("images", 3),
   updateProduct
 );
 
 router.delete(
-  '/:id',
+  "/:id",
   authMiddleware,
-  authorizeRoles(['SUPER_ADMIN']),
+  authorizeRoles(["SUPER_ADMIN"]),
   deleteProduct
 );
 

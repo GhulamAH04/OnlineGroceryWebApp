@@ -1,3 +1,5 @@
+// File: backend/src/routes/reportSalesAdmin.ts
+
 import express from "express";
 import {
   getSalesPerMonth,
@@ -11,6 +13,7 @@ import { authorizeRoles } from "../middlewares/authorizeRoles.middleware";
 
 const router = express.Router();
 
+// ✅ Semua request di bawah ini hanya untuk SUPER_ADMIN & STORE_ADMIN (read-only)
 router.use(authMiddleware);
 
 router.get("/sales/month", authorizeRoles(["SUPER_ADMIN", "STORE_ADMIN"]), getSalesPerMonth);
@@ -20,25 +23,3 @@ router.get("/stock/summary", authorizeRoles(["SUPER_ADMIN", "STORE_ADMIN"]), get
 router.get("/stock/detail", authorizeRoles(["SUPER_ADMIN", "STORE_ADMIN"]), getStockDetail);
 
 export default router;
-
-
-/*
-// File: src/routes/report.routes.ts
-
-import express from 'express';
-import {
-  getSalesReport,
-  getStockReport,
-} from '../controllers/reportSalesAdmin';
-import { authMiddleware } from '../middlewares/authAdmin.middleware';
-import { authorizeRoles } from '../middlewares/authorizeRoles.middleware';
-
-const router = express.Router();
-
-router.use(authMiddleware, authorizeRoles(['SUPER_ADMIN', 'STORE_ADMIN']));
-
-router.get('/sales', getSalesReport);
-router.get('/stock', getStockReport);
-
-export default router;
-*/

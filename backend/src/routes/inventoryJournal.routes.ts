@@ -1,4 +1,4 @@
-// OnlineGroceryWebApp/backend/src/routes/inventoryJournal.routes.ts
+// File: backend/src/routes/inventoryJournal.routes.ts
 
 import express from "express";
 import {
@@ -11,25 +11,20 @@ import { authorizeRoles } from "../middlewares/authorizeRoles.middleware";
 
 const router = express.Router();
 
-// ✅ Middleware diterapkan ke semua route
+// ✅ Terapkan middleware auth ke semua route
 router.use(authMiddleware);
 
+// === GET: SUPER_ADMIN & STORE_ADMIN boleh lihat ===
 router.get(
   "/",
   authorizeRoles(["SUPER_ADMIN", "STORE_ADMIN"]),
   getAllInventoryJournals
 );
 
-router.post(
-  "/",
-  authorizeRoles(["SUPER_ADMIN", "STORE_ADMIN"]),
-  createInventoryJournal
-);
+// === POST: hanya SUPER_ADMIN yang boleh tambah jurnal ===
+router.post("/", authorizeRoles(["SUPER_ADMIN"]), createInventoryJournal);
 
-router.delete(
-  "/:id",
-  authorizeRoles(["SUPER_ADMIN"]),
-  deleteInventoryJournal
-);
+// === DELETE: hanya SUPER_ADMIN yang boleh hapus jurnal ===
+router.delete("/:id", authorizeRoles(["SUPER_ADMIN"]), deleteInventoryJournal);
 
 export default router;

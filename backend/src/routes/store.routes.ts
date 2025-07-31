@@ -1,5 +1,36 @@
+// File: backend/src/routes/store.routes.ts
+
+import { Router } from "express";
+import {
+  AddNewStoreController,
+  AssignStoreAdminController,
+  DeleteStoreController,
+  getAllStoresController,
+  UpdateStoreController,
+} from "../controllers/store.controller";
+
+import { authMiddleware } from "../middlewares/authAdmin.middleware";
+import { authorizeRoles } from "../middlewares/authorizeRoles.middleware";
+
+const router = Router();
+
+// === Semua route butuh autentikasi
+router.use(authMiddleware);
+
+// === GET: Boleh SUPER_ADMIN & STORE_ADMIN (read-only)
+router.get("/", authorizeRoles(["SUPER_ADMIN", "STORE_ADMIN"]), getAllStoresController);
+
+// === POST/PUT/PATCH/DELETE: Hanya SUPER_ADMIN
+router.post("/", authorizeRoles(["SUPER_ADMIN"]), AddNewStoreController);
+router.put("/:id", authorizeRoles(["SUPER_ADMIN"]), UpdateStoreController);
+router.patch("/:id", authorizeRoles(["SUPER_ADMIN"]), AssignStoreAdminController);
+router.delete("/:id", authorizeRoles(["SUPER_ADMIN"]), DeleteStoreController);
+
+export default router;
 
 
+
+/*
 // NAHALIL
 import { Router } from "express";
 import { AddNewStoreController, AssignStoreAdminController, DeleteStoreController, getAllStoresController, UpdateStoreController } from "../controllers/store.controller";
@@ -13,7 +44,7 @@ router.delete("/:id", DeleteStoreController);
 
 export default router;
 
-
+*/
 /* rekomendasi 
 
 // === FILE: src/routes/store.routes.ts ===

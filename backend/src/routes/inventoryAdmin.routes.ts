@@ -1,19 +1,29 @@
-// File: src/routes/inventoryAdmin.routes.ts
+// === FILE: backend/src/routes/inventoryAdmin.routes.ts ===
 
-import express from 'express';
+import express from "express";
 import {
   getInventory,
   updateInventory,
-} from '../controllers/inventoryProduct.controller';
-import { authMiddleware } from '../middlewares/authAdmin.middleware';
-import { authorizeRoles } from '../middlewares/authorizeRoles.middleware';
+} from "../controllers/inventoryProduct.controller";
+import { authMiddleware } from "../middlewares/authAdmin.middleware";
+import { authorizeRoles } from "../middlewares/authorizeRoles.middleware";
 
 const router = express.Router();
 
-// ADMIN Only
-router.use(authMiddleware, authorizeRoles(['SUPER_ADMIN', 'STORE_ADMIN']));
+// === READ: Boleh diakses oleh SUPER_ADMIN dan STORE_ADMIN ===
+router.get(
+  "/",
+  authMiddleware,
+  authorizeRoles(["SUPER_ADMIN", "STORE_ADMIN"]),
+  getInventory
+);
 
-router.get('/', getInventory);
-router.post('/', updateInventory);
+// === UPDATE: Hanya boleh dilakukan oleh SUPER_ADMIN ===
+router.post(
+  "/",
+  authMiddleware,
+  authorizeRoles(["SUPER_ADMIN"]),
+  updateInventory
+);
 
 export default router;
