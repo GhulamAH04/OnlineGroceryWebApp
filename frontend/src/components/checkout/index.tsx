@@ -4,31 +4,26 @@ import { useState, useMemo, useEffect } from "react";
 import { MapPin, Truck, ShoppingCart, CreditCard, Plus } from "lucide-react";
 import AddressModal from "./addressModal";
 import { useAppSelector } from "@/lib/redux/hooks";
+import { ICartItems, IGroupedItem } from "@/interfaces/product.interface";
 import { IShippingOption } from "@/interfaces/shipping.interface";
 import { IExistingAddress } from "@/interfaces/address.interface";
 import { apiUrl } from "@/config";
 import axios from "axios";
 import { getCookie } from "cookies-next";
-import { useCartStore, TotalCartResponse } from "@/stores/cart.store";
 import { createOrder } from "@/stores/order.store";
 
-// --- KOMPONEN UTAMA CHECKOUT ---
 export default function Checkout() {
-  // Redux user
+  // state in redux
   const user = useAppSelector((state) => state.auth);
-  const [paymentMethod, setPaymentMethod] = useState("TRANSFER");
+  //local state
+  const [cartItems, setCartItems] = useState<ICartItems[]>([]);
+   const [paymentMethod, setPaymentMethod] = useState("TRANSFER");
 
-  // Cart store (API)
-  const { items: cartItems, fetchCart, totalCart } = useCartStore();
-  const [cartTotals, setCartTotals] = useState<TotalCartResponse | null>(null);
-
-  // Address
   const [userAddresses, setUserAddresses] = useState<IExistingAddress[]>([]);
   const [selectedAddress, setSelectedAddress] =
     useState<IExistingAddress | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Shipping state
   const [shippingOptions, setShippingOptions] = useState<{
     [storeName: string]: { loading: boolean; data: IShippingOption[] };
   }>({});
@@ -36,143 +31,174 @@ export default function Checkout() {
     [storeName: string]: IShippingOption;
   }>({});
 
-  // --- 1. FETCH DATA CART & TOTAL ---
   useEffect(() => {
-    fetchCart();
-    totalCart().then(setCartTotals).catch(console.error);
-  }, [fetchCart, totalCart]);
+    try {
+      const fetchCartItems = async () => {
+        const token = getCookie("access_token") as string;
+        const { data } = await axios.get(
+          `${apiUrl}/api/cart/products/${user.user.id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setCartItems(data.data);
+      };
+      if (user.user.id > 0) fetchCartItems();
+    } catch (err) {
+      alert("Error fetching main adress: " + err);
+    }
+  }, [user.user.id]);
 
-  // --- 2. FETCH MAIN ADDRESS (utama) ---
+  // Mengelompokkan produk berdasarkan toko
+  const groupedByStore = useMemo(() => {
+    return cartItems.reduce((acc, product) => {
+      // console.log(product);
+      const storeName = product.product_branchs.branchs.name;
+      if (!acc[storeName]) {
+        acc[storeName] = [];
+      }
+      acc[storeName].push({
+        id: product.product_branchs.products.id,
+        name: product.product_branchs.products.name,
+        price: product.product_branchs.products.price,
+        quantity: product.quantity,
+        weightInGrams: product.product_branchs.products.weight,
+        imageUrl: product.product_branchs.products.image,
+        storeName,
+        storeAddress: product.product_branchs.branchs,
+      } as IGroupedItem);
+      return acc;
+    }, {} as { [key: string]: IGroupedItem[] });
+  }, [cartItems]);
+
+  // Hitung ongkir setiap kali alamat tujuan berubah
   useEffect(() => {
-    if (!user?.user?.id) return;
-    const fetchMainAddress = async () => {
-      try {
+    if (selectedAddress) {
+      // 1. Reset all selected shipping options once when the address changes.
+      setSelectedShipping({});
+
+      Object.entries(groupedByStore).forEach(([storeName, products]) => {
+        // 2. Set loading state to true for this specific store before fetching.
+        setShippingOptions((prev) => ({
+          ...prev,
+          [storeName]: { loading: true, data: [] },
+        }));
+
+        // 3. Use the correct path for the origin address.
+        const originAddress = products[0].storeAddress;
+        const origin = {
+          province: originAddress.provinces.name,
+          city: originAddress.cities.name,
+          district: originAddress.districts.name,
+        };
+        const destination = {
+          province: selectedAddress.provinces.name,
+          city: selectedAddress.cities.name,
+          district: selectedAddress.districts.name,
+        };
+        const totalWeight = products.reduce(
+          (sum, p) => sum + p.weightInGrams * p.quantity,
+          0
+        );
+        console.log(totalWeight);
+
+        const fetchShippingOptionsForStore = async () => {
+          try {
+            const token = getCookie("access_token") as string;
+            const { data } = await axios.post(
+              `${apiUrl}/api/shipping-cost`,
+              {
+                origin,
+                destination,
+                weight: totalWeight,
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }
+            );
+
+            // API response might not have data, default to an empty array.
+            const fetchedOptions = data.data || [];
+
+            setShippingOptions((prev) => ({
+              ...prev,
+              [storeName]: { loading: false, data: fetchedOptions },
+            }));
+          } catch (err) {
+            console.error(
+              `Error fetching shipping options for ${storeName}:`,
+              err
+            );
+            // Handle error state for this specific store.
+            setShippingOptions((prev) => ({
+              ...prev,
+              [storeName]: { loading: false, data: [] }, // Or you could add an error flag here
+            }));
+          }
+        };
+
+        fetchShippingOptionsForStore();
+      });
+    }
+  }, [selectedAddress, groupedByStore]);
+
+  useEffect(() => {
+    try {
+      const fetchMainAddress = async () => {
         const token = getCookie("access_token") as string;
         const { data } = await axios.get(
           `${apiUrl}/api/users/address/main/${user.user.id}`,
-          { headers: { Authorization: `Bearer ${token}` } }
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
         );
-        setSelectedAddress(data.data[0] || null);
-      } catch (err) {
-        alert("Error fetching main address");
-      }
-    };
-    fetchMainAddress();
-  }, [user?.user?.id]);
+        setSelectedAddress(data.data[0]);
+      };
+      fetchMainAddress();
+    } catch (err) {
+      alert("Error fetching main adress: " + err);
+    }
+  }, [user.user.id]);
 
-  // --- 3. FETCH ALL ADDRESS USER ---
   useEffect(() => {
-    if (!user?.user?.id) return;
-    const fetchUserAddresses = async () => {
-      try {
+    try {
+      const fetchUserAddresses = async () => {
         const token = getCookie("access_token") as string;
         const { data } = await axios.get(
           `${apiUrl}/api/addresses/${user.user.id}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        setUserAddresses(data.data || []);
-      } catch (err) {
-        alert("Error fetching user addresses");
-      }
-    };
-    fetchUserAddresses();
-  }, [user?.user?.id]);
-
-  // --- 4. GROUP CART BY STORE (JIKA ADA) ---
-  // Jika data cart tidak punya store, hapus dan gunakan satu group saja
-  const groupedByStore = useMemo(() => {
-    return cartItems.reduce((acc, item) => {
-      const storeName = item.product.branch || "Toko Default";
-      if (!acc[storeName]) acc[storeName] = [];
-      acc[storeName].push(item);
-      return acc;
-    }, {} as { [key: string]: typeof cartItems });
-  }, [cartItems]);
-
-  // --- 5. SHIPPING: FETCH OPTIONS PER TOKO JIKA ADDRESS DIUBAH ---
-  useEffect(() => {
-    if (!selectedAddress) return;
-    setSelectedShipping({}); // Reset shipping
-    Object.entries(groupedByStore).forEach(([storeName, products]) => {
-      setShippingOptions((prev) => ({
-        ...prev,
-        [storeName]: { loading: true, data: [] },
-      }));
-
-      // Ambil origin dari product store, sesuaikan dengan struktur API
-      // Di sini diambil dari produk pertama di group
-      const originAddress = products[0]?.product?.branch?.addresses;
-      const origin = originAddress
-        ? {
-            province: originAddress.provinces.name,
-            city: originAddress.cities.name,
-            district: originAddress.districts.name,
+          {
+            headers: { Authorization: `Bearer ${token}` },
           }
-        : { province: "", city: "", district: "" };
-      const destination = {
-        province: selectedAddress.provinces.name,
-        city: selectedAddress.cities.name,
-        district: selectedAddress.districts.name,
+        );
+        setUserAddresses(data.data);
       };
-      const totalWeight = products.reduce(
-        (sum, p: any) => sum + (p.product?.weight || 0) * p.quantity,
-        0
-      );
+      fetchUserAddresses();
+    } catch (err) {
+      alert("Error fetching user addresses: " + err);
+    }
+  }, [user.user.id]);
 
-      const fetchShippingOptionsForStore = async () => {
-        try {
-          const token = getCookie("access_token") as string;
-          const { data } = await axios.post(
-            `${apiUrl}/api/shipping-cost`,
-            { origin, destination, weight: totalWeight },
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
+  const handleSelectAddress = (address: IExistingAddress) => {
+    setSelectedAddress(address);
+    setIsModalOpen(false);
+  };
 
-          // === CEK, JIKA NULL/KOSONG, MASUKKAN DUMMY ===
-          const fetchedOptions =
-            data.data && data.data.length > 0
-              ? data.data
-              : [
-                  {
-                    name: "JNE",
-                    code: "jne",
-                    service: "jne",
-                    description: "Pengiriman JNE",
-                    cost: 10000,
-                    etd: "1-2 hari",
-                  },
-                ];
+  const handleAddNewAddress = (
+    newAddressData: Omit<IExistingAddress, "id">
+  ) => {
+    const newAddress: IExistingAddress = {
+      id: Date.now(), // temporary ID
+      ...newAddressData,
+    };
+    setUserAddresses((prev) => [...prev, newAddress]);
+    setSelectedAddress(newAddress);
+    setIsModalOpen(false);
+  };
 
-          setShippingOptions((prev) => ({
-            ...prev,
-            [storeName]: { loading: false, data: fetchedOptions },
-          }));
-        } catch (err) {
-          // Error juga, tampilkan dummy option
-          setShippingOptions((prev) => ({
-            ...prev,
-            [storeName]: {
-              loading: false,
-              data: [
-                {
-                  name: "JNE",
-                  code: "jne",
-                  service: "jne",
-                  description: "Pengiriman JNE",
-                  cost: 10000,
-                  etd: "1-2 hari",
-                },
-              ],
-            },
-          }));
-        }
-      };
-
-      fetchShippingOptionsForStore();
-    });
-  }, [selectedAddress, groupedByStore]);
-
-  // --- 6. SHIPPING: SELECT HANDLER ---
   const handleShippingSelectionChange = (storeName: string, value: string) => {
     if (!value) {
       const newSelected = { ...selectedShipping };
@@ -180,10 +206,13 @@ export default function Checkout() {
       setSelectedShipping(newSelected);
       return;
     }
+
     const selectedOptionService = value;
+
     const selectedCourier = shippingOptions[storeName]?.data.find(
       (c) => c.service === selectedOptionService
     );
+
     if (selectedCourier) {
       setSelectedShipping((prev) => ({
         ...prev,
@@ -192,21 +221,16 @@ export default function Checkout() {
     }
   };
 
-  // --- 7. MODAL ADDRESS HANDLER ---
-  const handleSelectAddress = (address: IExistingAddress) => {
-    setSelectedAddress(address);
-    setIsModalOpen(false);
-  };
-  const handleAddNewAddress = (
-    newAddressData: Omit<IExistingAddress, "id">
-  ) => {
-    const newAddress: IExistingAddress = { id: Date.now(), ...newAddressData };
-    setUserAddresses((prev) => [...prev, newAddress]);
-    setSelectedAddress(newAddress);
-    setIsModalOpen(false);
-  };
-
-  // --- 8. TOTAL SHIPPING ---
+  // Kalkulasi Total
+  const productsSubtotal = useMemo(
+    () =>
+      cartItems.reduce(
+        (sum, item) =>
+          sum + item.product_branchs.products.price * item.quantity,
+        0
+      ),
+    [cartItems]
+  );
   const shippingTotal = useMemo(
     () =>
       Object.values(selectedShipping).reduce(
@@ -215,13 +239,7 @@ export default function Checkout() {
       ),
     [selectedShipping]
   );
-  // --- 9. GRAND TOTAL ---
-  const grandTotal = (cartTotals?.totalPrice || 0) + shippingTotal;
-
-  // --- 10. BUTTON CHECKOUT ENABLE ---
-  const isReadyToCheckout =
-    selectedAddress &&
-    Object.keys(selectedShipping).length === Object.keys(groupedByStore).length;
+  const grandTotal = productsSubtotal + shippingTotal;
 
   // --- 11. HANDLE CHECKOUT ---
   const handleCheckout = async () => {
@@ -262,7 +280,6 @@ export default function Checkout() {
         courier,
       });
 
-      fetchCart();
 
       alert("Pesanan berhasil dibuat!");
       // Redirect, reset cart, dsb bisa di sini jika perlu
@@ -271,20 +288,24 @@ export default function Checkout() {
       alert("Gagal membuat pesanan. Silakan coba lagi.");
     }
   };
-  // --- RENDER ---
+
+  const isReadyToCheckout =
+    selectedAddress &&
+    Object.keys(selectedShipping).length === Object.keys(groupedByStore).length;
+
   return (
     <div className="min-h-screen">
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold text-gray-800 mb-6">Checkout</h1>
         <div className="flex flex-col gap-4">
           <div className="space-y-6">
-            {/* SECTION: ALAMAT */}
+            {/* Seksi Alamat */}
             <div className="bg-white p-6 rounded-lg shadow">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
                   <MapPin className="text-green-500" /> Alamat Pengiriman
                 </h2>
-                {selectedAddress?.isPrimary && (
+                {selectedAddress && selectedAddress.isPrimary && (
                   <p className="text-sm h-6 text-center rounded-sm text-green-500 border-2 border-green-500 px-2">
                     Alamat Utama
                   </p>
@@ -294,9 +315,7 @@ export default function Checkout() {
                 <div>
                   <p className="font-bold">{selectedAddress.name}</p>
                   <p className="text-gray-600">{selectedAddress.phone}</p>
-                  <p className="text-gray-600 mt-1">
-                    {`${selectedAddress.address}, ${selectedAddress.districts.name}, ${selectedAddress.cities.name}, ${selectedAddress.provinces.name} ${selectedAddress.postalCode}`}
-                  </p>
+                  <p className="text-gray-600 mt-1">{`${selectedAddress.address}, ${selectedAddress.districts.name}, ${selectedAddress.cities.name}, ${selectedAddress.provinces.name} ${selectedAddress.postalCode}`}</p>
                   <button
                     onClick={() => setIsModalOpen(true)}
                     className="mt-3 text-sm font-semibold text-green-600 hover:text-green-800"
@@ -314,7 +333,7 @@ export default function Checkout() {
               )}
             </div>
 
-            {/* SECTION: RINGKASAN PESANAN (FROM API) */}
+            {/* Seksi Ringkasan Pesanan */}
             <div className="bg-white p-6 rounded-lg shadow">
               <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
                 <ShoppingCart className="text-green-500" /> Ringkasan Pesanan
@@ -325,26 +344,34 @@ export default function Checkout() {
                   className="mb-6 last:mb-0 border border-gray-200 rounded-lg p-4"
                 >
                   <h3 className="font-bold text-md text-gray-700 mb-3">
-                    Dikirim dari: {storeName}
+                    Dikirim dari:{" "}
+                    {
+                      storeName + " - "
+                      // `(${products[0].storeAddress.cities.name})`
+                    }
                   </h3>
-                  {products.map((item) => (
-                    <div key={item.id} className="flex items-center gap-4 mb-3">
+                  {products.map((product, idx) => (
+                    <div
+                      key={`${product.id}-${product.storeName}-${idx}`}
+                      className="flex items-center gap-4 mb-3"
+                    >
+                      {/* eslint-disable-next-line */}
                       <img
-                        src={item.product.image || ""}
-                        alt={item.product.name}
+                        src={product.imageUrl}
+                        alt={product.name}
                         className="w-16 h-16 object-cover rounded-md"
                       />
                       <div className="flex-grow">
                         <p className="font-semibold text-gray-800">
-                          {item.product.name}
+                          {product.name}
                         </p>
                         <p className="text-sm text-gray-500">
-                          {item.quantity} x{" "}
+                          {product.quantity} x{" "}
                           {new Intl.NumberFormat("id-ID", {
                             style: "currency",
                             currency: "IDR",
                             minimumFractionDigits: 0,
-                          }).format(item.product.price)}
+                          }).format(product.price)}
                         </p>
                       </div>
                       <p className="font-semibold text-gray-800">
@@ -352,12 +379,12 @@ export default function Checkout() {
                           style: "currency",
                           currency: "IDR",
                           minimumFractionDigits: 0,
-                        }).format(item.product.price * item.quantity)}
+                        }).format(product.price * product.quantity)}
                       </p>
                     </div>
                   ))}
 
-                  {/* OPSI PENGIRIMAN PER TOKO */}
+                  {/* Opsi Pengiriman per Toko (Bentuk Select) */}
                   <div className="mt-4 border-t pt-4">
                     <h4 className="font-semibold text-sm text-gray-600 mb-2 flex items-center gap-2">
                       <Truck size={16} /> Opsi Pengiriman
@@ -395,51 +422,15 @@ export default function Checkout() {
                             }).format(option.cost)}`}
                           </option>
                         ))}
-                        {/* add dummy options if shippingOptions null like JNE, JNT and update state setSelectedShipping */}
-                        {shippingOptions[storeName]?.data.length === 0 && (
-                          <>
-                            <option
-                              value="jne"
-                              onClick={() =>
-                                handleShippingSelectionChange(storeName, "jne")
-                              }
-                            >
-                              JNE - 3-5 hari
-                            </option>
-                          </>
-                        )}
                       </select>
                     )}
-                  </div>
-
-                  {/* OPSI PAYMENT METHOD, TRANSFER or  */}
-                  <div className="mt-4 border-t pt-4">
-                    <h4 className="font-semibold text-sm text-gray-600 mb-2 flex items-center gap-2">
-                      <CreditCard size={16} /> Metode Pembayaran
-                    </h4>
-                    <p className="text-sm text-gray-500">
-                      Pilih metode pembayaran yang Anda inginkan.
-                    </p>
-                    <select
-                      name={`payment-${storeName}`}
-                      id={`payment-${storeName}`}
-                      className="block w-full p-2 border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 bg-white mt-2"
-                      defaultValue="TRANSFER"
-                      onChange={(e) => {
-                        setPaymentMethod(e.target.value);
-                      }}
-                    >
-                      <option value="TRANSFER">Transfer Bank</option>
-                      <option value="COD">Bayar di Tempat (COD)</option>
-                      <option value="E-WALLET">E-Wallet</option>
-                    </select>
                   </div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* SECTION: RANGKUMAN BELANJA */}
+          {/* Kolom Kanan: Rangkuman Belanja */}
           <div>
             <div className="bg-white p-6 rounded-lg shadow sticky top-8">
               <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
@@ -453,7 +444,7 @@ export default function Checkout() {
                       style: "currency",
                       currency: "IDR",
                       minimumFractionDigits: 0,
-                    }).format(cartTotals?.totalPrice || 0)}
+                    }).format(productsSubtotal)}
                   </p>
                 </div>
                 <div className="flex justify-between">
@@ -480,8 +471,8 @@ export default function Checkout() {
               </div>
               <button
                 disabled={!isReadyToCheckout}
+                onClick={handleCheckout}
                 className="w-full mt-6 bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
-                onClick={() => handleCheckout()}
               >
                 {isReadyToCheckout
                   ? "Lanjutkan ke Pembayaran"
@@ -492,7 +483,6 @@ export default function Checkout() {
         </div>
       </div>
 
-      {/* MODAL ADDRESS */}
       <AddressModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

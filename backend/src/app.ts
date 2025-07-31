@@ -29,7 +29,7 @@ import AddressRouter from "./routes/address.routes";
 import DistrictRouter from "./routes/district.routes";
 import StoreRouter from "./routes/store.routes";
 import ShippingCostRouter from "./routes/shippingCost.routes";
-import cartRouter from "./routes/cart.router";
+import cartRouter from "./routes/cart.routes";
 import orderRouter from "./routes/order.router";
 
 // === ROUTES - ADMIN ===

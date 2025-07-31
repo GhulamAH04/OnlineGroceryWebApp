@@ -1,9 +1,14 @@
-import { IExistingAddress, ILocation } from "./address.interface";
+import { ILocation } from "./address.interface";
 
 export interface IBranch {
   id: number;
   name: string;
-  addresses: IExistingAddress;
+  postalCode: string;
+  phone?: string | null;
+  address?: string | null;
+  cities: ILocation;
+  provinces: ILocation;
+  districts: ILocation;
 }
 
 export interface INewStore {

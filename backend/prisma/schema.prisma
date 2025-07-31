@@ -164,18 +164,20 @@ model product_branchs {
   journal_mutations journal_mutations[]
   branchs           branchs             @relation(fields: [branchId], references: [id])
   products          products            @relation(fields: [productId], references: [id])
+  product_carts     product_carts[]
 
   @@unique([productId, branchId])
 }
 
 model product_carts {
-  id              Int      @id @default(autoincrement())
+  id              Int             @id @default(autoincrement())
   quantity        Int
   cartId          Int
-  createdAt       DateTime @default(now())
+  createdAt       DateTime        @default(now())
   updatedAt       DateTime
   productBranchId Int
-  carts           carts    @relation(fields: [cartId], references: [id])
+  product_branchs product_branchs @relation(fields: [productBranchId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_product_branch")
+  carts           carts           @relation(fields: [cartId], references: [id])
 }
 
 model products {
@@ -189,6 +191,7 @@ model products {
   categoryId      Int
   createdAt       DateTime          @default(now())
   updatedAt       DateTime
+  weight          Int
   Discount        Discount[]
   mutations       mutations[]
   order_products  order_products[]

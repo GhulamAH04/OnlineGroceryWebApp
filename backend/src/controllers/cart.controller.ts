@@ -1,6 +1,7 @@
-import { Response, Request } from "express";
+import { Request, Response, NextFunction } from "express";
 import { PrismaClient } from "@prisma/client";
 import { haversineDistance } from "../utils/distance";
+import { GetAllProductCartByUserIdService } from "../services/cart.service";
 
 const prisma = new PrismaClient();
 
@@ -300,5 +301,25 @@ export class CartController {
       // DIUBAH: 'return' dihapus
       res.status(500).json({ message: "Terjadi kesalahan pada server", error });
     }
+  }
+}
+
+// nahalil //
+export async function GetAllProductCartByUserIdController(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const userId = parseInt(req.params.userId);
+
+    const products = await GetAllProductCartByUserIdService(userId);
+
+    res.status(200).send({
+      message: `Get all product in user cart success`,
+      data: products,
+    });
+  } catch (err) {
+    next(err);
   }
 }

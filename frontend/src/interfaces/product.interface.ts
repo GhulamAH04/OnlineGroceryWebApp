@@ -19,8 +19,8 @@ interface IProduct {
 
 export interface ICartItems {
   id: number;
-  branchs: IBranch;
-  products: IProduct;
+  product_branchs: IProductBranch;
+  cartId: number;
   quantity: number;
 }
 

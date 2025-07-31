@@ -4,6 +4,7 @@
 import { useCartStore } from "@/stores/cart.store";
 import Image from "next/image";
 import { Trash2 } from "lucide-react"; // contoh ikon
+import { imageUrl } from "@/config";
 
 // Tipe data disamakan dengan store
 interface ProductCart {
@@ -34,7 +35,7 @@ export default function CartItem({ item }: CartItemProps) {
     <div className="flex items-center justify-between p-4 border-b">
       <div className="flex items-center gap-4">
         <Image
-          src={item.product.image || "/product.jpg"}
+          src={`${imageUrl}/${item.product.image}`}
           alt={item.product.name}
           width={80}
           height={80}
