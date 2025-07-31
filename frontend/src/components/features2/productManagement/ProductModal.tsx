@@ -54,6 +54,7 @@ export default function ProductModal({
     },
   });
 
+  // === SET DEFAULT VALUE SAAT EDIT / RESET SAAT TAMBAH ===
   useEffect(() => {
     if (selectedProduct) {
       reset({
@@ -70,6 +71,7 @@ export default function ProductModal({
     setImage(null);
   }, [selectedProduct, reset]);
 
+  // === HANDLE SUBMIT FORM ===
   const handleFormSubmit = (data: ProductAdminInput) => {
     const formData = new FormData();
     Object.entries(data).forEach(([key, value]) => {
@@ -81,6 +83,7 @@ export default function ProductModal({
     onSubmit(formData);
   };
 
+  // === RENDER ===
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-lg">
@@ -101,7 +104,7 @@ export default function ProductModal({
               className="w-full border px-3 py-2 rounded"
               {...register("name")}
             />
-            {errors?.name && (
+            {errors.name && (
               <p className="text-sm text-red-500">{errors.name.message}</p>
             )}
           </div>
@@ -114,7 +117,7 @@ export default function ProductModal({
               className="w-full border px-3 py-2 rounded"
               {...register("price")}
             />
-            {errors?.price && (
+            {errors.price && (
               <p className="text-sm text-red-500">{errors.price.message}</p>
             )}
           </div>
@@ -127,7 +130,7 @@ export default function ProductModal({
               className="w-full border px-3 py-2 rounded"
               {...register("stock")}
             />
-            {errors?.stock && (
+            {errors.stock && (
               <p className="text-sm text-red-500">{errors.stock.message}</p>
             )}
           </div>
@@ -139,7 +142,7 @@ export default function ProductModal({
               className="w-full border px-3 py-2 rounded"
               {...register("description")}
             />
-            {errors?.description && (
+            {errors.description && (
               <p className="text-sm text-red-500">
                 {errors.description.message}
               </p>
@@ -154,14 +157,13 @@ export default function ProductModal({
               className="w-full border px-3 py-2 rounded"
             >
               <option value="">-- Pilih Toko --</option>
-              {Array.isArray(branches) &&
-                branches.map((branch) => (
-                  <option key={branch.id} value={branch.id}>
-                    {branch.name}
-                  </option>
-                ))}
+              {branches.map((branch) => (
+                <option key={branch.id} value={branch.id}>
+                  {branch.name}
+                </option>
+              ))}
             </select>
-            {errors?.branchId && (
+            {errors.branchId && (
               <p className="text-sm text-red-500">{errors.branchId.message}</p>
             )}
           </div>
@@ -180,7 +182,7 @@ export default function ProductModal({
                 </option>
               ))}
             </select>
-            {errors?.categoryId && (
+            {errors.categoryId && (
               <p className="text-sm text-red-500">
                 {errors.categoryId.message}
               </p>

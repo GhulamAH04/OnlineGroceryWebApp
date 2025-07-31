@@ -30,8 +30,7 @@ export default function ProductPage() {
       const res = await axios.get("/admin/products", {
         params: { search: debouncedSearch },
       });
-        console.log("prduct tidak muncul",res.data.data.data)
-          setProducts(Array.isArray(res.data?.data.data) ? res.data.data.data : []);
+      setProducts(Array.isArray(res.data?.data.data) ? res.data.data.data : []);
     } catch {
       toast.error("Gagal memuat produk");
     }
@@ -39,14 +38,12 @@ export default function ProductPage() {
 
   // === FETCH STORES ===
   const fetchStores = async () => {
-   try {
-     const res = await axios.get("/admin/branches");
-     setStores(res.data?.data || []); // ✅ penting!
-     console.log("stores loaded", res.data?.data);
-   } catch (err) {
-     toast.error("Gagal memuat data toko");
-     console.error("Gagal fetch /admin/branches", err);
-   }
+    try {
+      const res = await axios.get("/admin/branches");
+      setStores(res.data?.data || []);
+    } catch {
+      toast.error("Gagal memuat data toko");
+    }
   };
 
   // === FETCH CATEGORIES ===
@@ -59,14 +56,14 @@ export default function ProductPage() {
     }
   };
 
-  // === FETCH DI LOAD AWAL ===
+  // === FETCH ON LOAD ===
   useEffect(() => {
     fetchProducts();
     fetchStores();
     fetchCategories();
   }, []);
 
-  // === FETCH SAAT CARI ===
+  // === FETCH ON SEARCH ===
   useEffect(() => {
     if (debouncedSearch !== "") {
       fetchProducts();
@@ -121,7 +118,6 @@ export default function ProductPage() {
   };
 
   // === RENDER ===
-  console.log(products.map((p) => p.id));
   return (
     <div className="p-6 space-y-4">
       <h1 className="text-2xl font-bold text-green-700">Product Management</h1>
@@ -155,10 +151,10 @@ export default function ProductPage() {
             <th className="p-2 border">Aksi</th>
           </tr>
         </thead>
-        
+
         <tbody>
           {products.map((p) => (
-            <tr key={p.id} className="hover:bg-green-50">
+            <tr key={`${p.id}-${p.branchId}`} className="hover:bg-green-50">
               <td className="p-2 border">
                 <Image
                   src={p.image || "/default.png"}
