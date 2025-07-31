@@ -3,6 +3,6 @@ import { CalculateShippingCostController } from "../controllers/shippingCost.con
 import { VerifyToken } from "../middlewares/authUser.middleware";
 const router = Router();
 
-router.post("/", CalculateShippingCostController);
+router.post("/",VerifyToken, CalculateShippingCostController);
 
 export default router;

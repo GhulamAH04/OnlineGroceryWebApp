@@ -84,6 +84,18 @@ async function AssignStoreAdmin(storeId: number, userId: number) {
   }
 }
 
+export async function getAllBranchesForDropdownService() {
+  return prisma.branchs.findMany({
+    select: {
+      id: true,
+      name: true,
+    },
+    orderBy: {
+      name: "asc",
+    },
+  });
+}
+
 export async function getAllStoresService() {
   try {
     const stores = await prisma.branchs.findMany({

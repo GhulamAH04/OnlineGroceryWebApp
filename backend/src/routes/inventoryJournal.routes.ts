@@ -15,19 +15,19 @@ const router = express.Router();
 router.use(authMiddleware);
 
 router.get(
-  "/admin/inventory-journal",
+  "/",
   authorizeRoles(["SUPER_ADMIN", "STORE_ADMIN"]),
   getAllInventoryJournals
 );
 
 router.post(
-  "/admin/inventory-journal",
+  "/",
   authorizeRoles(["SUPER_ADMIN", "STORE_ADMIN"]),
   createInventoryJournal
 );
 
 router.delete(
-  "/admin/inventory-journal/:id",
+  "/:id",
   authorizeRoles(["SUPER_ADMIN"]),
   deleteInventoryJournal
 );

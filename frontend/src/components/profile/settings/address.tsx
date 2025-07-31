@@ -6,7 +6,7 @@ import { useAppSelector } from "@/lib/redux/hooks";
 import axios from "axios";
 import { getCookie } from "cookies-next";
 import { useEffect, useState } from "react";
-import AddAddressModal from "./addAddressModal";
+import AddAddressModal from "./AddAddressModal";
 import EditAddressModal from "./editAddressModal";
 
 export default function BillingInformationForm() {

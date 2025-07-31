@@ -1,10 +1,10 @@
 // FILE: frontend/src/stores/cart.store.ts
 
 import { create } from "zustand";
-import axios from "axios"; // Asumsi axios sudah ter-setup
+import axios from "axios";
+import { getAxiosConfig } from "@/helper/getAxiosConfig";
+import { apiUrl } from "@/config";
 
-// Definisikan tipe data yang sesuai dengan respons API
-// Ini harus cocok dengan apa yang dikirim dari `backend/src/controllers/cart.controller.ts`
 interface Product {
   id: number;
   name: string;
@@ -25,6 +25,7 @@ interface CartState {
   isLoading: boolean;
   error: string | null;
   fetchCart: () => Promise<void>;
+  totalCart: () => Promise<TotalCartResponse>;
   addToCart: (productId: number, quantity: number) => Promise<void>;
   updateItemQuantity: (
     productCartId: number,
@@ -34,22 +35,20 @@ interface CartState {
   getCartItemCount: () => number;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+export interface TotalCartResponse {
+  totalQuantity: number;
+  totalPrice: number;
+}
 
 export const useCartStore = create<CartState>((set, get) => ({
   items: [],
-  isLoading: true,
+  isLoading: false,
   error: null,
 
-  /**
-   * Mengambil data keranjang dari server dan memperbarui state.
-   */
   fetchCart: async () => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.get(`${API_URL}/cart`, {
-        withCredentials: true,
-      }); // Asumsi setup token/cookie
+      const response = await axios.get(`${apiUrl}/api/cart`, getAxiosConfig());
       set({ items: response.data, isLoading: false });
     } catch (err: any) {
       set({
@@ -59,78 +58,84 @@ export const useCartStore = create<CartState>((set, get) => ({
     }
   },
 
-  /**
-   * Menambahkan produk ke keranjang.
-   */
+  totalCart: async (): Promise<TotalCartResponse> => {
+    try {
+      const response = await axios.get<TotalCartResponse>(
+        `${apiUrl}/api/cart/total`,
+        getAxiosConfig()
+      );
+      return response.data;
+    } catch (err: any) {
+      throw err;
+    }
+  },
+
   addToCart: async (productId: number, quantity: number) => {
     set({ isLoading: true, error: null });
     try {
       await axios.post(
-        `${API_URL}/cart`,
+        `${apiUrl}/api/cart`,
         { productId, quantity },
-        { withCredentials: true }
+        getAxiosConfig()
       );
-      await get().fetchCart(); // Muat ulang keranjang untuk mendapatkan state terbaru
+      alert("Item berhasil ditambahkan ke keranjang.");
+      set({ isLoading: false });
     } catch (err: any) {
       set({
         error: err.response?.data?.message || "Gagal menambah item.",
         isLoading: false,
       });
-      throw err; // Lempar kembali error agar bisa ditangkap di komponen
+      console.error("Error adding to cart:", err);
+      alert(err.response?.data?.message || "Gagal menambah item.");
+      throw err;
     }
   },
 
-  /**
-   * Memperbarui kuantitas item di keranjang.
-   */
   updateItemQuantity: async (productCartId: number, quantity: number) => {
-    // Optimistic update
     const originalItems = get().items;
     const updatedItems = originalItems.map((item) =>
       item.id === productCartId ? { ...item, quantity } : item
     );
-    set({ items: updatedItems });
+    set({ items: updatedItems, isLoading: true });
 
     try {
       await axios.put(
-        `${API_URL}/cart/item/${productCartId}`,
+        `${apiUrl}/api/cart/item/${productCartId}`,
         { quantity },
-        { withCredentials: true }
+        getAxiosConfig()
       );
-      // fetchCart tidak perlu jika optimistic update berhasil
+      set({ isLoading: false });
     } catch (err: any) {
+      console.error("Error updating item quantity:", err);
       set({
         error: err.response?.data?.message || "Gagal mengubah kuantitas.",
         items: originalItems,
-      }); // Rollback
+        isLoading: false,
+      });
     }
   },
 
-  /**
-   * Menghapus item dari keranjang.
-   */
   removeItem: async (productCartId: number) => {
     const originalItems = get().items;
     const updatedItems = originalItems.filter(
       (item) => item.id !== productCartId
     );
-    set({ items: updatedItems });
-
+    set({ items: updatedItems, isLoading: true });
     try {
-      await axios.delete(`${API_URL}/cart/item/${productCartId}`, {
-        withCredentials: true,
-      });
+      await axios.delete(
+        `${apiUrl}/api/cart/item/${productCartId}`,
+        getAxiosConfig()
+      );
+      set({ isLoading: false });
     } catch (err: any) {
       set({
         error: err.response?.data?.message || "Gagal menghapus item.",
         items: originalItems,
-      }); // Rollback
+        isLoading: false,
+      });
     }
   },
 
-  /**
-   * Mengembalikan jumlah item unik di keranjang.
-   */
   getCartItemCount: () => {
     return get().items.length;
   },

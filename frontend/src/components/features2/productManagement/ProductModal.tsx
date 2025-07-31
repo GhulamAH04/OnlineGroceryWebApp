@@ -1,3 +1,5 @@
+// === FILE: ProductModal.tsx ===
+
 "use client";
 
 import {
@@ -21,7 +23,7 @@ interface Props {
   onClose: () => void;
   onSubmit: (formData: FormData) => void;
   selectedProduct: (ProductAdminInput & { id?: number }) | null;
-  stores: { id: number; name: string }[];
+  branches: { id: number; name: string }[];
   categories: { id: number; name: string }[];
 }
 
@@ -30,7 +32,7 @@ export default function ProductModal({
   onClose,
   onSubmit,
   selectedProduct,
-  stores,
+  branches,
   categories,
 }: Props) {
   const [image, setImage] = useState<File | null>(null);
@@ -47,7 +49,7 @@ export default function ProductModal({
       price: 0,
       stock: 0,
       description: "",
-      storeId: 0,
+      branchId: 0,
       categoryId: 0,
     },
   });
@@ -59,7 +61,7 @@ export default function ProductModal({
         price: selectedProduct.price || 0,
         stock: selectedProduct.stock || 0,
         description: selectedProduct.description || "",
-        storeId: selectedProduct.storeId,
+        branchId: selectedProduct.branchId,
         categoryId: selectedProduct.categoryId,
       });
     } else {
@@ -148,18 +150,19 @@ export default function ProductModal({
           <div>
             <label className="block text-sm mb-1 font-medium">Toko</label>
             <select
-              {...register("storeId")}
+              {...register("branchId")}
               className="w-full border px-3 py-2 rounded"
             >
               <option value="">-- Pilih Toko --</option>
-              {stores.map((store) => (
-                <option key={store.id} value={store.id}>
-                  {store.name}
-                </option>
-              ))}
+              {Array.isArray(branches) &&
+                branches.map((branch) => (
+                  <option key={branch.id} value={branch.id}>
+                    {branch.name}
+                  </option>
+                ))}
             </select>
-            {errors?.storeId && (
-              <p className="text-sm text-red-500">{errors.storeId.message}</p>
+            {errors?.branchId && (
+              <p className="text-sm text-red-500">{errors.branchId.message}</p>
             )}
           </div>
 

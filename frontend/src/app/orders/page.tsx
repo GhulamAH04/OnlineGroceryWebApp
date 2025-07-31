@@ -5,7 +5,6 @@ import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
-import { debounce } from "lodash";
 
 // Tipe data harus cocok dengan respons API dari `getMyOrders`
 interface Order {

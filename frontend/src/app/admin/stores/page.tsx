@@ -5,7 +5,7 @@ import AddStoreModal from "@/components/features2/storeManagement/AddStoreModal"
 import EditStoreModal from "@/components/features2/storeManagement/EditStoreModal";
 import DeleteStoreModal from "@/components/features2/storeManagement/DeleteStoreModal";
 import { IStore } from "@/interfaces";
-import axios from "axios";
+import axios from "@/lib/axios";
 import { apiUrl } from "@/config";
 import AssignStoreModal from "@/components/features2/storeManagement/AssignStoreModal";
 import { getCookie } from "cookies-next";
@@ -22,7 +22,7 @@ export default function StoresPage() {
     try {
       setLoading(true);
       const token = getCookie("access_token") as string;
-      const { data } = await axios.get(`${apiUrl}/api/stores`, {
+      const { data } = await axios.get(`${apiUrl}/api/branches`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

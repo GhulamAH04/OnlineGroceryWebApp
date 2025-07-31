@@ -1,70 +1,95 @@
 // === SERVICE: PRODUCT ADMIN ===
-import { PrismaClient } from '@prisma/client';
-import { CreateProductInput } from '../interfaces/productAdmin.interface';
-import { uploadToCloudinary } from '../utils/cloudinary';
+import { PrismaClient } from "@prisma/client";
+import { CreateProductInput, ProductAdminItem } from "../interfaces/productAdmin.interface";
+import { uploadToCloudinary } from "../utils/cloudinary";
 
 const prisma = new PrismaClient();
 
 export const productService = {
-  // === GET ALL PRODUCTS (with branch & stock) ===
+  // === GET ALL PRODUCTS ===
   getAll: async (params: any) => {
     const {
       page = 1,
       limit = 10,
       search = '',
-      sortBy = 'createdAt',
       sortOrder = 'desc',
     } = params;
 
     const take = parseInt(limit);
     const skip = (parseInt(page) - 1) * take;
+    const finalSearch = search || '';
 
-    const productBranches = await prisma.product_branchs.findMany({
+    const products = await prisma.products.findMany({
       where: {
-        products: {
-          name: {
-            contains: search,
-            mode: 'insensitive',
-          },
+        name: {
+          contains: finalSearch,
+          mode: 'insensitive',
         },
       },
       include: {
-        products: { include: { categories: true } },
-        branchs: true,
+        categories: true,
+        product_branchs: {
+          include: {
+            branchs: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: sortOrder,
       },
       skip,
       take,
-      orderBy: { createdAt: sortOrder },
     });
 
-    const total = await prisma.product_branchs.count({
+    const total = await prisma.products.count({
       where: {
-        products: {
-          name: { contains: search, mode: 'insensitive' },
+        name: {
+          contains: finalSearch,
+          mode: 'insensitive',
         },
       },
     });
 
-    return {
-      data: productBranches.map((pb) => ({
-        id: pb.products.id,
-        name: pb.products.name,
-        slug: pb.products.slug,
-        image: pb.products.image,
-        price: pb.products.price,
+    // === Transform data ===
+    const result = products.flatMap<ProductAdminItem>((product) => {
+      if (product.product_branchs.length === 0) {
+        return [{
+          id: product.id,
+          name: product.name,
+          slug: product.slug,
+          image: product.image,
+          price: product.price,
+          stock: 0,
+          branchId: null,
+          branchName: '-',
+          categoryName: product.categories?.name || '-',
+          description: product.description || '',
+        }];
+      }
+
+      return product.product_branchs.map((pb) => ({
+        id: product.id,
+        name: product.name,
+        slug: product.slug,
+        image: product.image,
+        price: product.price,
         stock: pb.stock,
-        storeId: pb.branchs.id,
-        storeName: pb.branchs.name,
-        categoryName: pb.products.categories?.name || '-',
-        description: pb.products.description || '',
-      })),
+        branchId: pb.branchId,
+        branchName: pb.branchs.name,
+        categoryName: product.categories?.name || '-',
+        description: product.description || '',
+      }));
+    });
+
+    return {
+      data: result,
       total,
       page: +page,
       totalPages: Math.ceil(total / take),
     };
   },
 
-  // === GET PRODUCT BY ID (with branch & stock) ===
+  // === GET PRODUCT BY ID ===
   getById: async (id: number) => {
     const pb = await prisma.product_branchs.findFirst({
       where: { productId: id },
@@ -83,8 +108,8 @@ export const productService = {
       image: pb.products.image,
       price: pb.products.price,
       stock: pb.stock,
-      storeId: pb.branchs.id,
-      storeName: pb.branchs.name,
+      branchId: pb.branchs.id,
+      branchName: pb.branchs.name,
       categoryName: pb.products.categories?.name || '-',
       description: pb.products.description || '',
     };
@@ -92,8 +117,10 @@ export const productService = {
 
   // === CREATE PRODUCT ===
   create: async (body: CreateProductInput, files: Express.Multer.File[]) => {
-    const existing = await prisma.products.findUnique({ where: { name: body.name } });
-    if (existing) throw new Error('Produk dengan nama ini sudah ada');
+    const existing = await prisma.products.findUnique({
+      where: { name: body.name },
+    });
+    if (existing) throw new Error("Produk dengan nama ini sudah ada");
 
     const uploads = await Promise.all(
       files.map((file) => uploadToCloudinary(file.buffer))
@@ -134,7 +161,7 @@ export const productService = {
     const existing = await prisma.products.findFirst({
       where: { name: body.name, NOT: { id } },
     });
-    if (existing) throw new Error('Produk dengan nama ini sudah ada');
+    if (existing) throw new Error("Produk dengan nama ini sudah ada");
 
     const slug = body.name.toLowerCase().replace(/\s+/g, '-');
 
