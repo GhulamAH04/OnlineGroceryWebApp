@@ -10,12 +10,14 @@ import { IExistingAddress } from "@/interfaces/address.interface";
 import { apiUrl } from "@/config";
 import axios from "axios";
 import { getCookie } from "cookies-next";
+import { createOrder } from "@/stores/order.store";
 
 export default function Checkout() {
   // state in redux
   const user = useAppSelector((state) => state.auth);
   //local state
   const [cartItems, setCartItems] = useState<ICartItems[]>([]);
+   const [paymentMethod, setPaymentMethod] = useState("TRANSFER");
 
   const [userAddresses, setUserAddresses] = useState<IExistingAddress[]>([]);
   const [selectedAddress, setSelectedAddress] =
@@ -239,6 +241,54 @@ export default function Checkout() {
   );
   const grandTotal = productsSubtotal + shippingTotal;
 
+  // --- 11. HANDLE CHECKOUT ---
+  const handleCheckout = async () => {
+    if (!isReadyToCheckout) {
+      alert("Lengkapi alamat dan pengiriman terlebih dahulu.");
+      return;
+    }
+
+    try {
+      const cartId = cartItems.length > 0 ? cartItems[0].cartId : null;
+      if (!cartId) {
+        alert("Keranjang tidak ditemukan.");
+        return;
+      }
+
+      const addressId = selectedAddress?.id;
+      if (!addressId) {
+        alert("Alamat belum dipilih.");
+        return;
+      }
+
+      // Jika 1 toko, ambil shipping yg dipilih. Jika >1, kamu bisa modif sesuai kebutuhan backend
+      const shippingOptionsArr = Object.values(selectedShipping);
+      const shippingCost = shippingOptionsArr.reduce(
+        (acc, curr) => acc + (curr?.cost || 0),
+        0
+      );
+
+      // Jika multi toko, gabung nama kurir
+      const courier = shippingOptionsArr.map((opt) => opt?.name).join(", ");
+
+      // Kirim order ke API
+      await createOrder({
+        cartId,
+        addressId,
+        paymentMethod: paymentMethod,
+        shippingCost,
+        courier,
+      });
+
+
+      alert("Pesanan berhasil dibuat!");
+      // Redirect, reset cart, dsb bisa di sini jika perlu
+    } catch (err) {
+      console.error("Error creating order:", err);
+      alert("Gagal membuat pesanan. Silakan coba lagi.");
+    }
+  };
+
   const isReadyToCheckout =
     selectedAddress &&
     Object.keys(selectedShipping).length === Object.keys(groupedByStore).length;
@@ -421,6 +471,7 @@ export default function Checkout() {
               </div>
               <button
                 disabled={!isReadyToCheckout}
+                onClick={handleCheckout}
                 className="w-full mt-6 bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
                 {isReadyToCheckout

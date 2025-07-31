@@ -8,7 +8,13 @@ const orderRouter = Router();
 const orderController = new OrderController();
 const userMiddleware = verifyToken([Role.USER]);
 
-orderRouter.get("/", userMiddleware, orderController.getOrders);
+orderRouter.get(
+  "/",
+  userMiddleware,
+  (req: Request, res: Response, next: NextFunction) => {
+    orderController.getOrders(req, res).catch(next);
+  }
+);
 orderRouter.post(
   "/",
   userMiddleware,
@@ -29,6 +35,13 @@ orderRouter.put(
   userMiddleware,
   (req: Request, res: Response, next: NextFunction) => {
     orderController.cancelOrder(req, res).catch(next);
+  }
+);
+orderRouter.put(
+  "/confirm/:orderId",
+  userMiddleware,
+  (req: Request, res: Response, next: NextFunction) => {
+    orderController.confirmOrder(req, res).catch(next);
   }
 );
 export default orderRouter;

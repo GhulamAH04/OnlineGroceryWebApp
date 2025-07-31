@@ -6,6 +6,7 @@ import { getAxiosConfig } from "@/helper/getAxiosConfig";
 import { apiUrl } from "@/config";
 
 interface Product {
+  branch: any;
   id: number;
   name: string;
   price: number;
