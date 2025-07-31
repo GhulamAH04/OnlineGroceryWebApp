@@ -1,18 +1,14 @@
 "use client";
 
 import Link from "next/link";
-<<<<<<< HEAD
-import { UserCog, Package, Percent, BarChart, Boxes, Store } from "lucide-react";
-=======
 import {
   UserCog,
   Package,
   Percent,
   BarChart,
   Boxes,
-  RotateCcw,
+  Store,
 } from "lucide-react";
->>>>>>> 14ecee8d3fd2d5bd07a05c728a65525c68d9ef31
 
 export default function AdminDashboardHome() {
   return (
@@ -49,9 +45,7 @@ export default function AdminDashboardHome() {
           <div className="text-lg font-semibold text-green-700">
             Store Management
           </div>
-          <div className="text-gray-500 text-sm">
-            Kelola data toko.
-          </div>
+          <div className="text-gray-500 text-sm">Kelola data toko.</div>
         </Link>
 
         {/* Product Management */}
