@@ -13,11 +13,13 @@ const app: Application = express();
 const port = PORT || 8080;
 
 // ✅ === CORS harus sebelum semua routes ===
-app.use(cors({
-  origin: FE_URL,
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: FE_URL,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+    credentials: true,
+  })
+);
 
 // === MIDDLEWARES ===
 import { authMiddleware } from "./middlewares/authAdmin.middleware";
@@ -36,6 +38,7 @@ import DistrictRouter from "./routes/district.routes";
 import StoreRouter from "./routes/store.routes";
 import ShippingCostRouter from "./routes/shippingCost.routes";
 import cartRouter from "./routes/cart.router";
+import orderRouter from "./routes/order.router";
 
 // === ROUTES - ADMIN ===
 import AdminRouter from "./routes/admin.routes";
@@ -46,7 +49,7 @@ import DiscountAdminRouter from "./routes/discountAdmin.routes";
 import ReportAdminRouter from "./routes/reportSalesAdmin";
 import InventoryJournalRouter from "./routes/inventoryJournal.routes";
 import InventoryRouter from "./routes/inventoryAdmin.routes";
- import BranchAdminRouter from "./routes/branchAdmin.routes";
+import BranchAdminRouter from "./routes/branchAdmin.routes";
 
 // === BODY PARSER ===
 app.use(express.json());
@@ -64,17 +67,23 @@ app.use("/api/addresses", AddressRouter);
 app.use("/api/branches", StoreRouter);
 app.use("/api/shipping-cost", ShippingCostRouter);
 app.use("/api/cart", cartRouter);
+app.use("/api/order", orderRouter);
 
 // --- ADMIN ---
 app.use("/api/admin/auth", AuthAdminRouter);
-app.use("/api/admin/users", authMiddleware, authorizeRoles(["SUPER_ADMIN"]), AdminRouter);
+app.use(
+  "/api/admin/users",
+  authMiddleware,
+  authorizeRoles(["SUPER_ADMIN"]),
+  AdminRouter
+);
 app.use("/api/admin/categories", CategoryAdminRouter);
 app.use("/api/admin/products", ProductAdminRouter);
 app.use("/api/admin/discounts", DiscountAdminRouter);
 app.use("/api/admin/reports", ReportAdminRouter);
 app.use("/api/admin/inventory", InventoryRouter);
 app.use("/api/admin/inventory-journal", InventoryJournalRouter);
- app.use("/api/admin/branches", BranchAdminRouter);
+app.use("/api/admin/branches", BranchAdminRouter);
 
 // === STATIC FILES ===
 app.use("/images", express.static("public/images"));

@@ -21,6 +21,7 @@ const updateCartSchema = z.object({
 });
 
 cartRouter.get("/", userMiddleware, cartController.getCart);
+cartRouter.get("/total", userMiddleware, cartController.totalCart);
 
 cartRouter.post(
   "/",

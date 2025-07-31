@@ -3,15 +3,25 @@
 import { EyeIcon, Heart, Star, ShoppingCart } from "lucide-react";
 import { useState } from "react";
 import { imageUrl } from "@/config";
+import { useCartStore } from "@/stores/cart.store";
 
 interface PageProps {
+  productId?: number;
   image: string;
   name: string;
   price: number;
 }
 
-export default function Product({ image, name, price }: PageProps) {
+export default function Product({ image, name, price, productId }: PageProps) {
   const [isHovered, setIsHovered] = useState(false);
+  const { addToCart, isLoading } = useCartStore();
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (typeof productId === "number") {
+      addToCart(productId, 1);
+    }
+  };
 
   return (
     <article
@@ -85,9 +95,7 @@ export default function Product({ image, name, price }: PageProps) {
 
       {/* Product Info */}
       <div className="p-4 space-y-2">
-        <h3 className="text-sm text-gray-700 line-clamp-2">
-          {name}
-        </h3>
+        <h3 className="text-sm text-gray-700 line-clamp-2">{name}</h3>
 
         {/* Rating */}
         <div className="flex items-center space-x-1">
@@ -120,7 +128,11 @@ export default function Product({ image, name, price }: PageProps) {
             "
             aria-label="Add to cart"
           >
-            <ShoppingCart className="w-5 h-5" />
+            <ShoppingCart
+              // add disabled cursor when loading
+              className={`w-5 h-5 ${isLoading ? "cursor-not-allowed" : ""}`}
+              onClick={(e) => handleAddToCart(e)}
+            />
           </button>
         </div>
       </div>
