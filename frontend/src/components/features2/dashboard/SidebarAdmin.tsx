@@ -11,7 +11,6 @@ import {
   LayoutGrid,
   RotateCcw,
   LogOut,
-  MapPin,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -23,11 +22,6 @@ const menu = [
     label: "Store Management",
     icon: <Store size={18} />,
     href: "/admin/stores",
-  },
-  {
-    label: "Branch Management",
-    icon: <MapPin size={18} />,
-    href: "/admin/branches",
   },
   {
     label: "Product Management",
@@ -54,8 +48,10 @@ export default function SidebarAdmin() {
   const router = useRouter();
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    router.push("/admin/login");
+    // Hapus cookie token dengan expired date
+    document.cookie =
+      "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; secure; samesite=strict";
+    router.replace("/admin/login");
   };
 
   return (

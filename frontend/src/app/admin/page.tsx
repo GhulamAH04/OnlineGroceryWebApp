@@ -9,7 +9,6 @@ import {
   Boxes,
   Store,
   RotateCcw,
-  MapPin,
 } from "lucide-react";
 
 export default function AdminDashboardHome() {
@@ -127,22 +126,6 @@ export default function AdminDashboardHome() {
           </div>
           <div className="text-gray-500 text-sm">
             Atur promo, diskon khusus, dan syarat penggunaan.
-          </div>
-        </Link>
-
-        {/* Branch Management */}
-        <Link
-          href="/admin/branches"
-          className="group bg-white border border-green-100 rounded-xl p-6 flex flex-col gap-2 shadow hover:shadow-lg hover:bg-green-50 transition"
-        >
-          <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-green-100 text-green-700 mb-2">
-            <MapPin size={28} />
-          </div>
-          <div className="text-lg font-semibold text-green-700">
-            Branch Management
-          </div>
-          <div className="text-gray-500 text-sm">
-            Kelola data cabang, alamat, koordinat, dan admin toko.
           </div>
         </Link>
 

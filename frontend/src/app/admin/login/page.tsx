@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { apiUrl } from "@/config"; // gunakan ini saja, tidak perlu pakai process.env lagi
+import { apiUrl } from "@/config";
 
 export default function Login() {
   const [formData, setFormData] = useState({
@@ -13,6 +13,16 @@ export default function Login() {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [loginError, setLoginError] = useState("");
   const router = useRouter();
+
+  // === Auto-redirect if already logged in ===
+  useEffect(() => {
+    const token = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("token="));
+    if (token) {
+      router.replace("/admin/products");
+    }
+  }, [router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -58,7 +68,8 @@ export default function Login() {
         const data = await res.json();
 
         if (data.success && data.data.token) {
-          localStorage.setItem("token", data.data.token);
+          // ✅ Simpan token ke cookie (dibaca oleh middleware)
+          document.cookie = `token=${data.data.token}; path=/; secure; samesite=strict`;
           router.push("/admin/products");
         } else {
           setLoginError(data.message || "Invalid email or password");
@@ -81,13 +92,16 @@ export default function Login() {
             Sign in to access the admin dashboard
           </p>
         </div>
+
         {loginError && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
             {loginError}
           </div>
         )}
+
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm -space-y-px">
+            {/* === EMAIL === */}
             <div>
               <label htmlFor="email" className="sr-only">
                 Email address
@@ -101,13 +115,15 @@ export default function Login() {
                 onChange={handleChange}
                 className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${
                   errors.email ? "border-red-300" : "border-gray-300"
-                } placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
+                } placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
                 placeholder="Email address"
               />
               {errors.email && (
                 <p className="text-red-500 text-xs mt-1">{errors.email}</p>
               )}
             </div>
+
+            {/* === PASSWORD === */}
             <div>
               <label htmlFor="password" className="sr-only">
                 Password
@@ -121,7 +137,7 @@ export default function Login() {
                 onChange={handleChange}
                 className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${
                   errors.password ? "border-red-300" : "border-gray-300"
-                } placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
+                } placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
                 placeholder="Password"
               />
               {errors.password && (
@@ -129,6 +145,7 @@ export default function Login() {
               )}
             </div>
           </div>
+
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <input
@@ -153,6 +170,7 @@ export default function Login() {
               </a>
             </div>
           </div>
+
           <div>
             <button
               type="submit"
@@ -162,6 +180,7 @@ export default function Login() {
             </button>
           </div>
         </form>
+
         <div className="text-center mt-4">
           <Link
             href="/"
