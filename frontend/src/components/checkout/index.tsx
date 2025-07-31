@@ -1,18 +1,19 @@
 "use client";
-
-import { useState, useMemo, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { MapPin, Truck, ShoppingCart, CreditCard, Plus } from "lucide-react";
 import AddressModal from "./addressModal";
 import { useAppSelector } from "@/lib/redux/hooks";
 import { getCookie } from "cookies-next";
 import { ICartItems, IGroupedItem } from "@/interfaces/product.interface";
 import { IShippingOption } from "@/interfaces/shipping.interface";
-import { getMainAddress, getShippingOptions, getUserAddresses } from "@/lib/data";
+import {
+  getMainAddress,
+  getShippingOptions,
+  getUserAddresses,
+} from "@/lib/data";
 import { IExistingAddress } from "@/interfaces/address.interface";
 
-
 // --- DATA DUMMY / MOCK DATA ---
-// Data ini seharusnya datang dari state global (Redux/Context) atau props
 const initialCartItems: ICartItems[] = [
   {
     id: 1,
@@ -26,7 +27,7 @@ const initialCartItems: ICartItems[] = [
         address: "Jl. Raya No. 1",
         districts: { id: 1, name: "kenjeran" },
         cities: { id: 1, name: "Surabaya" },
-        provinces: {id: 1, name: "Jawa Timur"},
+        provinces: { id: 1, name: "Jawa Timur" },
         postalCode: "12345",
         isPrimary: true,
         userId: 1,
@@ -44,17 +45,13 @@ const initialCartItems: ICartItems[] = [
   },
 ];
 
-// Komponen Utama Checkout
 export default function Checkout() {
-  // state in redux
   const user = useAppSelector((state) => state.auth);
-
-  /* eslint-disable-next-line */
   const [cartItems, setCartItems] = useState<ICartItems[]>(initialCartItems);
   const [userAddresses, setUserAddresses] = useState<IExistingAddress[]>([]);
-  const [selectedAddress, setSelectedAddress] = useState<IExistingAddress | null>(null);
+  const [selectedAddress, setSelectedAddress] =
+    useState<IExistingAddress | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
   const [shippingOptions, setShippingOptions] = useState<{
     [storeName: string]: { loading: boolean; data: IShippingOption[] };
   }>({});
@@ -62,7 +59,7 @@ export default function Checkout() {
     [storeName: string]: IShippingOption;
   }>({});
 
-  // Mengelompokkan produk berdasarkan toko
+  // Group products by store
   const groupedByStore = useMemo(() => {
     return cartItems.reduce((acc, product) => {
       const storeName = product.branchs.name;
@@ -78,97 +75,95 @@ export default function Checkout() {
         imageUrl: product.products.image,
         storeName,
         storeAddress: product.branchs.addresses,
-      } as IGroupedItem);
+      });
       return acc;
     }, {} as { [key: string]: IGroupedItem[] });
   }, [cartItems]);
 
-  // Hitung ongkir setiap kali alamat tujuan berubah
-  useEffect(() => {
-    if (selectedAddress) {
-      // 1. Reset all selected shipping options once when the address changes.
-      setSelectedShipping({});
+  const fetchShippingOptionsForStore = useCallback(
+    async (
+      storeName: string,
+      products: IGroupedItem[],
+      selectedAddress: IExistingAddress
+    ) => {
+      setShippingOptions((prev) => ({
+        ...prev,
+        [storeName]: { loading: true, data: [] },
+      }));
 
-      Object.entries(groupedByStore).forEach(([storeName, products]) => {
-        // 2. Set loading state to true for this specific store before fetching.
+      const originAddress = products[0].storeAddress;
+      const totalWeight = products.reduce(
+        (sum, p) => sum + p.weightInGrams * p.quantity,
+        0
+      );
+
+      try {
+        const data = await getShippingOptions(
+          originAddress,
+          selectedAddress,
+          totalWeight
+        );
         setShippingOptions((prev) => ({
           ...prev,
-          [storeName]: { loading: true, data: [] },
+          [storeName]: { loading: false, data: data || [] },
         }));
+      } catch (err) {
+        console.error(`Error fetching shipping options for ${storeName}:`, err);
+        setShippingOptions((prev) => ({
+          ...prev,
+          [storeName]: { loading: false, data: [] },
+        }));
+      }
+    },
+    []
+  );
 
-        // 3. Use the correct path for the origin address.
-        const originAddress = products[0].storeAddress;
-        const totalWeight = products.reduce(
-          (sum, p) => sum + p.weightInGrams * p.quantity,
-          0
-        );
+  // Handle fetching user addresses
+  useEffect(() => {
+    const fetchUserAddressesData = async () => {
+      try {
+        const data = await getUserAddresses(user.user.id);
+        setUserAddresses(data);
+      } catch (err) {
+        console.error("Error fetching user addresses:", err);
+      }
+    };
 
-        const fetchShippingOptionsForStore = async () => {
-          try {
-            const data = await getShippingOptions(originAddress, selectedAddress, totalWeight);
+    fetchUserAddressesData();
+  }, [user.user.id]);
 
-            // API response might not have data, default to an empty array.
-            const fetchedOptions = data || [];
+  useEffect(() => {
+    const fetchMainAddress = async () => {
+      try {
+        const token = getCookie("access_token") as string;
+        const data = await getMainAddress(user.user.id, token);
+        console.log("Main address:", data);
+        setSelectedAddress(data[0]);
+      } catch (err) {
+        console.error("Error fetching main address:", err);
+      }
+    };
 
-            setShippingOptions((prev) => ({
-              ...prev,
-              [storeName]: { loading: false, data: fetchedOptions },
-            }));
-          } catch (err) {
-            console.error(
-              `Error fetching shipping options for ${storeName}:`,
-              err
-            );
-            // Handle error state for this specific store.
-            setShippingOptions((prev) => ({
-              ...prev,
-              [storeName]: { loading: false, data: [] }, // Or you could add an error flag here
-            }));
-          }
-        };
+    fetchMainAddress();
+  }, [user.user.id]);
 
-        fetchShippingOptionsForStore();
+  useEffect(() => {
+    if (selectedAddress) {
+      Object.entries(groupedByStore).forEach(([storeName, products]) => {
+        fetchShippingOptionsForStore(storeName, products, selectedAddress);
       });
     }
-  }, [selectedAddress, groupedByStore]);
-  
-  console.log("Shipping Options:", shippingOptions);
-
-  useEffect(() => {
-    try {
-      const token = getCookie("access_token") as string;
-      const fetchMainAddress = async () => {
-        const data = await getMainAddress(user.user.id, token)
-        setSelectedAddress(data || null);
-      };
-      fetchMainAddress();
-    } catch (err) {
-      alert("Error fetching main adress: " + err);
-    }
-  }, [user.user.id]);
-
-  useEffect(() => {
-    try {
-      const fetchUserAddresses = async () => {
-        const data = await getUserAddresses(user.user.id)
-        setUserAddresses(data);
-      };
-      fetchUserAddresses();
-    } catch (err) {
-      alert("Error fetching user addresses: " + err);
-    }
-  }, [user.user.id]);
+  }, [selectedAddress, groupedByStore, fetchShippingOptionsForStore]);
 
   const handleSelectAddress = (address: IExistingAddress) => {
     setSelectedAddress(address);
     setIsModalOpen(false);
   };
 
-  const handleAddNewAddress = (newAddressData: Omit<IExistingAddress, "id">) => {
-    const newAddress: IExistingAddress = {
-      id: Date.now(), // temporary ID
-      ...newAddressData,
-    };
+  const handleAddNewAddress = (
+    newAddressData: Omit<IExistingAddress, "id">
+  ) => {
+    const newAddress: IExistingAddress = { id: Date.now(), ...newAddressData };
     setUserAddresses((prev) => [...prev, newAddress]);
     setSelectedAddress(newAddress);
     setIsModalOpen(false);
@@ -182,25 +177,21 @@ export default function Checkout() {
       return;
     }
 
-    const selectedOptionService = value;
-
-    const selectedCourier = shippingOptions[storeName]?.data.find(
-      (c) => c.service === selectedOptionService
+    const selectedOption = shippingOptions[storeName]?.data.find(
+      (c) => c.service === value
     );
-
-    console.log(selectedCourier);
-
-    if (selectedCourier) {
-      setSelectedShipping((prev) => ({
-        ...prev,
-        [storeName]: selectedCourier,
-      }));
+    if (selectedOption) {
+      setSelectedShipping((prev) => ({ ...prev, [storeName]: selectedOption }));
     }
   };
 
-  // Kalkulasi Total
+  // Calculate totals
   const productsSubtotal = useMemo(
-    () => cartItems.reduce((sum, item) => sum + item.products.price * item.quantity, 0),
+    () =>
+      cartItems.reduce(
+        (sum, item) => sum + item.products.price * item.quantity,
+        0
+      ),
     [cartItems]
   );
   const shippingTotal = useMemo(
@@ -223,7 +214,6 @@ export default function Checkout() {
         <h1 className="text-3xl font-bold text-gray-800 mb-6">Checkout</h1>
         <div className="flex flex-col gap-4">
           <div className="space-y-6">
-            {/* Seksi Alamat */}
             <div className="bg-white p-6 rounded-lg shadow">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
@@ -237,9 +227,9 @@ export default function Checkout() {
               </div>
               {selectedAddress ? (
                 <div>
-                  <p className="font-bold">{selectedAddress.name}</p>
-                  <p className="text-gray-600">{selectedAddress.phone}</p>
-                  <p className="text-gray-600 mt-1">{`${selectedAddress.address}, ${selectedAddress.districts.name}, ${selectedAddress.cities.name}, ${selectedAddress.provinces.name} ${selectedAddress.postalCode}`}</p>
+                  <p className="font-bold">{selectedAddress?.name}</p>
+                  <p className="text-gray-600">{selectedAddress?.phone}</p>
+                  <p className="text-gray-600 mt-1">{`${selectedAddress?.address}, ${selectedAddress?.districts?.name}, ${selectedAddress?.cities?.name}, ${selectedAddress?.provinces?.name} ${selectedAddress?.postalCode}`}</p>
                   <button
                     onClick={() => setIsModalOpen(true)}
                     className="mt-3 text-sm font-semibold text-green-600 hover:text-green-800"
@@ -257,7 +247,6 @@ export default function Checkout() {
               )}
             </div>
 
-            {/* Seksi Ringkasan Pesanan */}
             <div className="bg-white p-6 rounded-lg shadow">
               <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
                 <ShoppingCart className="text-green-500" /> Ringkasan Pesanan
@@ -268,14 +257,14 @@ export default function Checkout() {
                   className="mb-6 last:mb-0 border border-gray-200 rounded-lg p-4"
                 >
                   <h3 className="font-bold text-md text-gray-700 mb-3">
-                    Dikirim dari: {storeName + " - " + `(${products[0].storeAddress.cities.name})`}
+                    Dikirim dari: {storeName} -{" "}
+                    {products[0].storeAddress.cities.name}
                   </h3>
                   {products.map((product) => (
                     <div
                       key={product.id}
                       className="flex items-center gap-4 mb-3"
                     >
-                      {/* eslint-disable-next-line */}
                       <img
                         src={product.imageUrl}
                         alt={product.name}
@@ -304,7 +293,6 @@ export default function Checkout() {
                     </div>
                   ))}
 
-                  {/* Opsi Pengiriman per Toko (Bentuk Select) */}
                   <div className="mt-4 border-t pt-4">
                     <h4 className="font-semibold text-sm text-gray-600 mb-2 flex items-center gap-2">
                       <Truck size={16} /> Opsi Pengiriman
@@ -350,7 +338,6 @@ export default function Checkout() {
             </div>
           </div>
 
-          {/* Kolom Kanan: Rangkuman Belanja */}
           <div>
             <div className="bg-white p-6 rounded-lg shadow sticky top-8">
               <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
