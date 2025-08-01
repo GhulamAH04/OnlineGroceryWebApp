@@ -78,7 +78,7 @@ const token = getCookie("access_token") as string;
               src={
                 userState.user.image === "/profile.jpg"
                   ? `${userState.user.image}`
-                  : `${imageUrl}${userState.user.image}`
+                  : `${imageUrl}/${userState.user.image}`
               }
               alt="profile-picture"
               className="rounded-full w-6 h-6 border-black border-solid border-1"

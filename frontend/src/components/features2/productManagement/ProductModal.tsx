@@ -48,6 +48,7 @@ export default function ProductModal({
       name: "",
       price: 0,
       stock: 0,
+      weight: 0,
       description: "",
       branchId: 0,
       categoryId: 0,
@@ -61,6 +62,7 @@ export default function ProductModal({
         name: selectedProduct.name || "",
         price: selectedProduct.price || 0,
         stock: selectedProduct.stock || 0,
+        weight: selectedProduct.weight || 0,
         description: selectedProduct.description || "",
         branchId: selectedProduct.branchId,
         categoryId: selectedProduct.categoryId,
@@ -129,6 +131,19 @@ export default function ProductModal({
               type="number"
               className="w-full border px-3 py-2 rounded"
               {...register("stock")}
+            />
+            {errors.stock && (
+              <p className="text-sm text-red-500">{errors.stock.message}</p>
+            )}
+          </div>
+
+          {/* === Berat === */}
+          <div>
+            <label className="block text-sm mb-1 font-medium">Berat</label>
+            <input
+              type="number"
+              className="w-full border px-3 py-2 rounded"
+              {...register("weight")}
             />
             {errors.stock && (
               <p className="text-sm text-red-500">{errors.stock.message}</p>

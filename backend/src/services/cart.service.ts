@@ -189,7 +189,20 @@ export async function GetAllProductCartByUserIdService(userId: number) {
 
     const products = await prisma.product_carts.findMany({
       where: { cartId: cart.id },
-      include: {},
+      include: {
+        product_branchs: {
+          include: {
+            products: true,
+            branchs: {
+              include: {
+                provinces: true,
+                cities: true,
+                districts: true,
+              },
+            },
+          },
+        },
+      },
       orderBy: { createdAt: "asc" },
     });
     return products;

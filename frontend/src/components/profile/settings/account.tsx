@@ -264,7 +264,7 @@ export default function AccountSettings({ onChangeImageClick }: PageProps) {
             src={
               user.user.image === "/profile.jpg"
               ? `${user.user.image}`
-              : `${imageUrl}${user.user.image}`
+              : `${imageUrl}/${user.user.image}`
             }
             alt="User Avatar"
             className="w-32 h-32 border border-s-2 rounded-full object-cover mb-4"
