@@ -9,7 +9,7 @@ interface OrderData {
   courier?: string;
 }
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
+const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
 export const getOrders = async (
   limit: number,

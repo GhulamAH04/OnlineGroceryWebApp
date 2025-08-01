@@ -1,207 +1,251 @@
-import { Response, Request } from "express"; // Menggunakan Request dari express
-import {
-  PrismaClient,
-  PaymentStatus,
-  Prisma,
-  Role,
-  TransactionType,
-} from "@prisma/client";
+// admin.order.controller.ts
+import { Response, Request } from "express";
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
 export class AdminOrderController {
+  /**
+   * Admin: Lihat semua pesanan, filter by branch
+   */
   async getAllOrders(req: Request, res: Response) {
-    const {
-      page = "1",
-      limit = "10",
-      status,
-      branchId,
-      sort = "date_desc",
-    } = req.query;
-
-    const pageNum = parseInt(page as string);
-    const limitNum = parseInt(limit as string);
-    const skip = (pageNum - 1) * limitNum;
-
     try {
-      const where: Prisma.ordersWhereInput = {};
-      const user = req.user!; // req.user sudah dikenali secara global
+      const { branchId, limit = 10, page = 1 } = req.query;
 
-      // Jika STORE_ADMIN, paksa filter berdasarkan branchId mereka
-      if (user.role === Role.STORE_ADMIN) {
-        const adminBranch = await prisma.branchs.findUnique({
-          where: { userId: user.id },
-        });
-        if (adminBranch) {
-          where.branchId = adminBranch.id;
-        } else {
-          // Admin toko tidak terhubung ke cabang manapun
-          // DIUBAH: 'return' dihapus
-          res.status(200).json({ data: [], pagination: { total: 0 } });
-          return;
-        }
-      }
-      // Jika SUPER_ADMIN, mereka bisa filter berdasarkan branchId dari query param
-      else if (user.role === Role.SUPER_ADMIN && branchId) {
-        where.branchId = parseInt(branchId as string);
+      const whereClause: any = {};
+      if (branchId) {
+        whereClause.branchId = Number(branchId);
       }
 
-      if (status) {
-        where.paymentStatus = status as PaymentStatus;
-      }
+      // Hitung total order (untuk pagination)
+      const total = await prisma.orders.count({ where: whereClause });
 
-      const orderBy: Prisma.ordersOrderByWithRelationInput = {};
-      if (sort === "date_asc") {
-        orderBy.createdAt = "asc";
-      } else {
-        orderBy.createdAt = "desc";
-      }
-
+      // Data order dengan limit & offset
       const orders = await prisma.orders.findMany({
-        where,
-        orderBy,
-        skip,
-        take: limitNum,
+        where: whereClause,
+        skip: (Number(page) - 1) * Number(limit),
+        take: Number(limit),
+        orderBy: { createdAt: "desc" },
         include: {
-          users: { select: { username: true, email: true } },
-          branchs: { select: { name: true } },
+          users: true,
+          order_products: true,
+          branchs: true,
+          addresses: true,
         },
       });
 
-      const totalOrders = await prisma.orders.count({ where });
+      const totalPage = Math.ceil(total / Number(limit));
 
-      // DIUBAH: 'return' dihapus
       res.status(200).json({
         data: orders,
         pagination: {
-          total: totalOrders,
-          page: pageNum,
-          limit: limitNum,
-          totalPages: Math.ceil(totalOrders / limitNum),
+          total,
+          totalPage,
+          page: Number(page),
+          limit: Number(limit),
         },
       });
     } catch (error) {
-      // DIUBAH: 'return' dihapus
-      res.status(500).json({ message: "Terjadi kesalahan pada server." });
+      console.error(error);
+      res.status(500).json({ message: "Error retrieving orders", error });
     }
   }
 
-  async confirmOrRejectPayment(req: Request, res: Response) {
-    const { orderId } = req.params;
-    const { action } = req.body; // 'confirm' or 'reject'
-
-    if (!["confirm", "reject"].includes(action)) {
-      // DIUBAH: 'return' dihapus
-      res.status(400).json({
-        message: 'Aksi tidak valid. Gunakan "confirm" atau "reject".',
-      });
-      return;
-    }
-
+  /**
+   * Store Admin: Lihat hanya pesanan di gudang sendiri (branch)
+   */
+  async getOrdersByBranch(req: Request, res: Response) {
     try {
-      const order = await prisma.orders.findUnique({
-        where: { id: parseInt(orderId) },
+      const { branchId } = req.user!; // diasumsikan branchId dari req.user
+      const orders = await prisma.orders.findMany({
+        where: { branchId: branchId },
+        orderBy: { createdAt: "desc" },
+        include: {
+          users: true,
+          order_products: true,
+          addresses: true,
+        },
       });
-      if (!order || order.paymentStatus !== "PROCESSING") {
-        // DIUBAH: 'return' dihapus
-        res.status(404).json({
-          message:
-            "Pesanan tidak ditemukan atau statusnya tidak sedang diproses.",
-        });
-        return;
-      }
-
-      if (action === "confirm") {
-        const updatedOrder = await prisma.orders.update({
-          where: { id: parseInt(orderId) },
-          data: { paymentStatus: "PAID" },
-        });
-        // DIUBAH: 'return' dihapus
-        res
-          .status(200)
-          .json({ message: "Pembayaran dikonfirmasi.", order: updatedOrder });
-      } else {
-        // reject
-        const updatedOrder = await prisma.orders.update({
-          where: { id: parseInt(orderId) },
-          data: { paymentStatus: "UNPAID", paymentProof: null }, // Hapus bukti bayar
-        });
-        // DIUBAH: 'return' dihapus
-        res
-          .status(200)
-          .json({ message: "Pembayaran ditolak.", order: updatedOrder });
-      }
+      res.status(200).json(orders);
     } catch (error) {
-      // DIUBAH: 'return' dihapus
-      res.status(500).json({ message: "Terjadi kesalahan pada server." });
+      res
+        .status(500)
+        .json({ message: "Error retrieving branch orders", error });
     }
   }
 
-  async shipOrder(req: Request, res: Response) {
-    const { orderId } = req.params;
+  /**
+   * Admin: Konfirmasi pembayaran manual transfer
+   */
+  async confirmPaymentManual(req: Request, res: Response) {
     try {
+      const { orderId } = req.params;
+      const { status } = req.body; // status: 'ACCEPTED' | 'REJECTED'
+      // Step konfirmasi (opsional: bisa popup di FE sebelum submit request)
+
       const order = await prisma.orders.findUnique({
-        where: { id: parseInt(orderId) },
+        where: { id: Number(orderId) },
       });
-      if (!order || order.paymentStatus !== "PAID") {
-        // DIUBAH: 'return' dihapus
-        res.status(400).json({
-          message: "Hanya pesanan yang sudah dibayar yang dapat dikirim.",
-        });
-        return;
-      }
-      const updatedOrder = await prisma.orders.update({
-        where: { id: parseInt(orderId) },
-        data: { paymentStatus: "SHIPPED", shippedAt: new Date() },
-      });
-      // DIUBAH: 'return' dihapus
-      res.status(200).json({
-        message: "Status pesanan diubah menjadi DIKIRIM.",
-        order: updatedOrder,
-      });
-    } catch (error) {
-      // DIUBAH: 'return' dihapus
-      res.status(500).json({ message: "Terjadi kesalahan pada server." });
-    }
-  }
-
-  async cancelOrder(req: Request, res: Response) {
-    const { orderId } = req.params;
-    try {
-      const orderToCancel = await prisma.orders.findUnique({
-        where: { id: parseInt(orderId) },
-      });
-
-      if (!orderToCancel) {
-        // DIUBAH: 'return' dihapus
-        res.status(404).json({ message: "Pesanan tidak ditemukan." });
-        return;
-      }
       if (
-        ["SHIPPED", "DELIVERED", "CANCELED"].includes(
-          orderToCancel.paymentStatus
-        )
+        !order ||
+        order.paymentMethod !== "TRANSFER" ||
+        order.paymentStatus !== "PROCESSING"
       ) {
-        // DIUBAH: 'return' dihapus
-        res.status(400).json({
-          message: `Pesanan dengan status ${orderToCancel.paymentStatus} tidak dapat dibatalkan oleh admin.`,
-        });
-        return;
+        return res
+          .status(400)
+          .json({ message: "Order tidak valid untuk konfirmasi manual" });
       }
 
-      await prisma.$transaction(async (tx) => {
-        // ... logika transaksi ...
+      if (status === "REJECTED") {
+        await prisma.orders.update({
+          where: { id: Number(orderId) },
+          data: {
+            paymentStatus: "UNPAID",
+            paymentProof: null,
+          },
+        });
+        // Opsional: kirim notifikasi ke user
+        return res.status(200).json({
+          message: "Pembayaran ditolak. Status kembali ke Menunggu Pembayaran.",
+        });
+      }
+
+      if (status === "ACCEPTED") {
+        await prisma.orders.update({
+          where: { id: Number(orderId) },
+          data: {
+            paymentStatus: "PAID",
+          },
+        });
+        // Opsional: kirim notifikasi ke user
+        return res.status(200).json({
+          message: "Pembayaran diterima. Status berubah menjadi Diproses.",
+        });
+      }
+
+      res.status(400).json({ message: "Status tidak valid" });
+    } catch (error) {
+      res
+        .status(500)
+        .json({ message: "Error manual payment confirmation", error });
+    }
+  }
+
+  /**
+   * Admin: Update status pesanan menjadi Dikirim
+   * Perlu validasi stok (stok mutasi harus tiba secara fisik)
+   */
+  async sendOrder(req: Request, res: Response) {
+    try {
+      const { orderId } = req.params;
+      const order = await prisma.orders.findUnique({
+        where: { id: Number(orderId) },
+        include: { order_products: true, branchs: true },
       });
 
-      // DIUBAH: 'return' dihapus
+      if (!order || order.paymentStatus !== "PAID") {
+        return res.status(400).json({
+          message:
+            "Pesanan belum siap dikirim (belum dibayar atau tidak ditemukan)",
+        });
+      }
+
+      // Cek apakah stok sudah benar-benar tersedia di branch
+      // Ini hanya contoh, asumsikan field 'stock' di product_branchs dan produk di order_products
+      for (const op of order.order_products) {
+        const branchStock = await prisma.product_branchs.findFirst({
+          where: { productId: op.productId, branchId: order.branchId },
+        });
+        if (!branchStock || branchStock.stock < op.quantity) {
+          return res.status(400).json({
+            message: `Stok produk ${op.productId} belum tersedia sepenuhnya di gudang`,
+          });
+        }
+      }
+
+      // Update status order jadi Dikirim, set tanggal pengiriman
+      await prisma.orders.update({
+        where: { id: Number(orderId) },
+        data: {
+          paymentStatus: "DELIVERED",
+          updatedAt: new Date(),
+        },
+      });
+
+      // Opsional: kirim notifikasi ke user
       res
         .status(200)
-        .json({ message: "Pesanan berhasil dibatalkan oleh admin." });
+        .json({ message: "Order dikirim, menunggu approval user." });
     } catch (error) {
-      // DIUBAH: 'return' dihapus
-      res.status(500).json({
-        message: "Terjadi kesalahan pada server saat membatalkan pesanan.",
+      res.status(500).json({ message: "Error sending order", error });
+    }
+  }
+
+  /**
+   * Auto-confirm setelah 7 hari jika user tidak mengkonfirmasi pesanan
+   * (Ini hanya logic dasar, sebaiknya jalan di cron job)
+   */
+  async autoConfirmOrders() {
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    await prisma.orders.updateMany({
+      where: {
+        paymentStatus: "DELIVERED",
+        updatedAt: { lte: sevenDaysAgo },
+      },
+      data: { paymentStatus: "DELIVERED" },
+    });
+  }
+
+  /**
+   * Admin: Cancel pesanan (hanya sebelum Dikirim)
+   * Kembalikan stok dan catat jurnal stok
+   */
+  async adminCancelOrder(req: Request, res: Response) {
+    try {
+      const { orderId } = req.params;
+      const order = await prisma.orders.findUnique({
+        where: { id: Number(orderId) },
+        include: { order_products: true },
       });
+
+      if (!order)
+        return res.status(404).json({ message: "Pesanan tidak ditemukan." });
+      if (order.paymentStatus === "DELIVERED") {
+        return res
+          .status(400)
+          .json({ message: "Pesanan tidak dapat dibatalkan setelah dikirim." });
+      }
+
+      // Rollback stok setiap produk di branch
+      for (const op of order.order_products) {
+        await prisma.product_branchs.updateMany({
+          where: { productId: op.productId, branchId: order.branchId },
+          data: { stock: { increment: op.quantity } },
+        });
+        // Catat jurnal history perubahan stok (asumsi ada tabel product_stock_journal)
+        await prisma.journal_mutations.create({
+          data: {
+            productBranchId: op.productId,
+            branchId: order.branchId,
+            transactionType: "IN",
+            quantity: op.quantity,
+            description: "Restock karena order dibatalkan admin",
+            updatedAt: new Date(),
+          },
+        });
+      }
+
+      // Update status pesanan jadi DIBATALKAN
+      await prisma.orders.update({
+        where: { id: order.id },
+        data: { paymentStatus: "CANCELED", updatedAt: new Date() },
+      });
+
+      res
+        .status(200)
+        .json({ message: "Pesanan dibatalkan dan stok sudah direstore." });
+    } catch (error) {
+      res.status(500).json({ message: "Error membatalkan pesanan", error });
     }
   }
 }

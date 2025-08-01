@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import { AdminOrderController } from "../controllers/admin.order.controller";
 import { verifyToken } from "../middlewares/authOrder.middleware";
 import { Role } from "@prisma/client";
@@ -6,25 +6,46 @@ import { Role } from "@prisma/client";
 const adminOrderRouter = Router();
 const adminOrderController = new AdminOrderController();
 
-// Panggil verifyToken untuk membuat middleware
 const adminMiddleware = verifyToken([Role.SUPER_ADMIN, Role.STORE_ADMIN]);
 
-// Gunakan middleware yang sudah dibuat
-adminOrderRouter.get("/", adminMiddleware, adminOrderController.getAllOrders);
-adminOrderRouter.post(
-  "/:orderId/confirm-payment",
+adminOrderRouter.get(
+  "/",
   adminMiddleware,
-  adminOrderController.confirmOrRejectPayment
+  (req: Request, res: Response, next: NextFunction) => {
+    adminOrderController.getAllOrders(req, res).catch(next);
+  }
 );
-adminOrderRouter.post(
-  "/:orderId/ship",
+
+adminOrderRouter.get(
+  "/branch",
   adminMiddleware,
-  adminOrderController.shipOrder
+  (req: Request, res: Response, next: NextFunction) => {
+    adminOrderController.getOrdersByBranch(req, res).catch(next);
+  }
 );
+
 adminOrderRouter.post(
-  "/:orderId/cancel",
+  "/confirm-payment/:orderId",
   adminMiddleware,
-  adminOrderController.cancelOrder
+  (req: Request, res: Response, next: NextFunction) => {
+    adminOrderController.confirmPaymentManual(req, res).catch(next);
+  }
+);
+
+adminOrderRouter.post(
+  "/ship/:orderId",
+  adminMiddleware,
+  (req: Request, res: Response, next: NextFunction) => {
+    adminOrderController.sendOrder(req, res).catch(next);
+  }
+);
+
+adminOrderRouter.post(
+  "/cancel/:orderId",
+  adminMiddleware,
+  (req: Request, res: Response, next: NextFunction) => {
+    adminOrderController.adminCancelOrder(req, res).catch(next);
+  }
 );
 
 export default adminOrderRouter;

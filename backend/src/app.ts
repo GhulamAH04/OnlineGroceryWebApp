@@ -1,4 +1,3 @@
-
 // === FILE: backend/src/app.ts ===
 
 import express, { Application, Request, Response, NextFunction } from "express";
@@ -41,6 +40,7 @@ import ReportAdminRouter from "./routes/reportSalesAdmin";
 import InventoryJournalRouter from "./routes/inventoryJournal.routes";
 import InventoryRouter from "./routes/inventoryAdmin.routes";
 import BranchAdminRouter from "./routes/branchAdmin.routes";
+import adminOrderRouter from "./routes/admin.order.routes";
 
 // === BODY PARSER ===
 app.use(express.json());
@@ -83,6 +83,7 @@ app.use("/api/admin/reports", ReportAdminRouter);
 app.use("/api/admin/inventory", InventoryRouter);
 app.use("/api/admin/inventory-journal", InventoryJournalRouter);
 app.use("/api/admin/branches", BranchAdminRouter);
+app.use("/api/admin/order", adminOrderRouter);
 
 // === STATIC FILES ===
 app.use("/images", express.static("public/images"));
@@ -97,7 +98,6 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 app.listen(port, () => {
   console.log(`🚀 Server ready at http://localhost:${port}`);
 });
-
 
 /*
 import express, { Application, Request, Response, NextFunction } from "express";
