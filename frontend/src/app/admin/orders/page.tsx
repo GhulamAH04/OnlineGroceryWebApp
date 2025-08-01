@@ -6,6 +6,7 @@ import {
   getOrdersAdmin,
   shipOrderAdmin,
 } from "@/stores/admin.order.store";
+import { getBranches } from "@/stores/branch.store";
 import React, { useEffect, useState } from "react";
 
 type Order = {
@@ -55,16 +56,32 @@ export default function OrderPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
-  const [limit] = useState(10); // Bisa dijadikan dropdown jika perlu
+  const [limit] = useState(10);
   const [totalPage, setTotalPage] = useState(1);
+  const [branches, setBranches] = useState<Array<{ id: number; name: string }>>(
+    []
+  );
+  const [selectedBranch, setSelectedBranch] = useState<number | "">("");
 
   // For action loading
   const [actionLoading, setActionLoading] = useState<number | null>(null);
+  const [actionLoadingRejected, setActionLoadingRejected] = useState<
+    number | null
+  >(null);
+
+  async function fetchBranches() {
+    try {
+      const res = await getBranches();
+      setBranches(res?.data || []);
+    } catch (e) {
+      alert("Gagal mengambil data branch!");
+    }
+  }
 
   async function fetchOrders() {
     setLoading(true);
     try {
-      const res = await getOrdersAdmin(page, limit);
+      const res = await getOrdersAdmin(page, limit, selectedBranch as number);
       setOrders(res.data || []);
       setTotalPage(res?.pagination?.totalPage || 1);
     } catch (e) {
@@ -75,20 +92,42 @@ export default function OrderPage() {
   }
 
   useEffect(() => {
+    fetchBranches();
+  }, []);
+
+  useEffect(() => {
     fetchOrders();
     // eslint-disable-next-line
-  }, [page]);
+  }, [page, selectedBranch]);
 
-  const handleConfirmPayment = async (id: number) => {
+  const handleConfirmPayment = async (id: number, paymentProof: string) => {
+    // if paymentProof null or undefined, set alert
+    if (!paymentProof) {
+      alert("User belum mengirim bukti bayar");
+      return;
+    }
     setActionLoading(id);
     try {
-      await ConfirmPaymentAdmin(id, "PROCESSING");
+      await ConfirmPaymentAdmin(id, "PAID");
       alert("Konfirmasi pembayaran berhasil");
       fetchOrders();
     } catch {
       alert("Gagal konfirmasi pembayaran");
     } finally {
       setActionLoading(null);
+    }
+  };
+
+  const handleConfirmNotReceived = async (id: number) => {
+    setActionLoadingRejected(id);
+    try {
+      await ConfirmPaymentAdmin(id, "REJECTED");
+      alert("Pembayaran belum diterima");
+      fetchOrders();
+    } catch {
+      alert("Gagal mengonfirmasi pembayaran belum diterima");
+    } finally {
+      setActionLoadingRejected(null);
     }
   };
 
@@ -126,6 +165,29 @@ export default function OrderPage() {
           Order Management
         </h1>
 
+        <div className="mb-4 flex gap-2 items-center">
+          <label htmlFor="branch" className="font-medium">
+            Filter Branch:
+          </label>
+          <select
+            id="branch"
+            className="border rounded px-2 py-1"
+            value={selectedBranch}
+            onChange={(e) => {
+              setSelectedBranch(
+                e.target.value === "" ? "" : Number(e.target.value)
+              );
+              setPage(1);
+            }}
+          >
+            <option value="">Semua Branch</option>
+            {branches.map((branch) => (
+              <option key={branch.id} value={branch.id}>
+                {branch.name}
+              </option>
+            ))}
+          </select>
+        </div>
         {loading ? (
           <div className="text-center py-10">Loading orders...</div>
         ) : (
@@ -139,6 +201,7 @@ export default function OrderPage() {
                   <th className="py-2 px-3 border">Status</th>
                   <th className="py-2 px-3 border">Total</th>
                   <th className="py-2 px-3 border">Branch</th>
+                  <th className="py-2 px-3 border">Bukti Bayar</th>
                   <th className="py-2 px-3 border">Aksi</th>
                 </tr>
               </thead>
@@ -196,16 +259,46 @@ export default function OrderPage() {
                           {order.branchs?.address}
                         </div>
                       </td>
-                      <td className="py-2 px-3 border space-x-1">
-                        {order.paymentStatus === "PENDING" && (
+                      <td className="py-2 px-3 border">
+                        {order.paymentProof ? (
+                          <a
+                            href={order.paymentProof}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 underline hover:text-blue-800"
+                          >
+                            Lihat Bukti
+                          </a>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </td>
+                      <td className="py-2 px-3 border space-x-1 flex items-center gap-2">
+                        {order.paymentStatus === "PAID" && (
                           <button
                             className="bg-blue-600 text-white px-3 py-1 rounded disabled:opacity-50"
-                            onClick={() => handleConfirmPayment(order.id)}
+                            onClick={() =>
+                              handleConfirmPayment(
+                                order.id,
+                                order?.paymentProof ?? ""
+                              )
+                            }
                             disabled={actionLoading === order.id}
                           >
                             {actionLoading === order.id
                               ? "..."
                               : "Konfirmasi Bayar"}
+                          </button>
+                        )}
+                        {order.paymentStatus === "PAID" && (
+                          <button
+                            className="bg-yellow-600 text-white px-3 py-1 rounded disabled:opacity-50"
+                            onClick={() => handleConfirmNotReceived(order.id)}
+                            disabled={actionLoadingRejected === order.id}
+                          >
+                            {actionLoadingRejected === order.id
+                              ? "..."
+                              : "Belum Menerima Pembayaran"}
                           </button>
                         )}
                         {order.paymentStatus === "PROCESSING" &&
@@ -223,7 +316,8 @@ export default function OrderPage() {
                         {/* TOMBOL BATALKAN: hanya tampil jika status bukan PROCESSING dan bukan CANCELED */}
                         {order.paymentStatus !== "PROCESSING" &&
                           order.paymentStatus !== "CANCELED" &&
-                          order.paymentStatus !== "DELIVERED" && (
+                          order.paymentStatus !== "DELIVERED" &&
+                          order.paymentStatus !== "PAID" && (
                             <button
                               className="bg-red-600 text-white px-3 py-1 rounded disabled:opacity-50"
                               onClick={() => handleCancelOrder(order.id)}

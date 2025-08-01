@@ -3,7 +3,11 @@
 import { Request, Response, NextFunction } from "express";
 import { branchService } from "../services/branchAdmin.service"; // ✅ FIXED
 
-export const getAllBranches = async (req: Request, res: Response, next: NextFunction) => {
+export const getAllBranches = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const data = await branchService.getAll();
     res.json({ success: true, message: "OK", data });
@@ -12,7 +16,11 @@ export const getAllBranches = async (req: Request, res: Response, next: NextFunc
   }
 };
 
-export const createBranch = async (req: Request, res: Response, next: NextFunction) => {
+export const createBranch = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const data = await branchService.create(req.body);
     res.status(201).json({ success: true, message: "Created", data });
@@ -21,7 +29,11 @@ export const createBranch = async (req: Request, res: Response, next: NextFuncti
   }
 };
 
-export const updateBranch = async (req: Request, res: Response, next: NextFunction) => {
+export const updateBranch = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const id = +req.params.id;
     const data = await branchService.update(id, req.body);
@@ -31,7 +43,11 @@ export const updateBranch = async (req: Request, res: Response, next: NextFuncti
   }
 };
 
-export const deleteBranch = async (req: Request, res: Response, next: NextFunction) => {
+export const deleteBranch = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const id = +req.params.id;
     await branchService.delete(id); // ✅ FIXED: was `remove`
@@ -41,7 +57,11 @@ export const deleteBranch = async (req: Request, res: Response, next: NextFuncti
   }
 };
 
-export const assignStoreAdmin = async (req: Request, res: Response, next: NextFunction) => {
+export const assignStoreAdmin = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const branchId = +req.params.id;
     const { userId } = req.body;
