@@ -4,41 +4,29 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { apiUrl } from "@/config";
+import { jwtDecode } from "jwt-decode";
+import { JwtPayload } from "@/interfaces/jwtPayload";
+import { isTokenExpired } from "@/utils/isTokenExpired";
 
 export default function Login() {
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [loginError, setLoginError] = useState("");
   const router = useRouter();
 
-  // === Auto-redirect if already logged in ===
+  // === Redirect jika token valid ===
   useEffect(() => {
-    const token = document.cookie
-      .split("; ")
-      .find((row) => row.startsWith("token="));
-    if (token) {
+    const token = localStorage.getItem("token");
+    if (token && !isTokenExpired(token)) {
       router.replace("/admin/products");
     }
   }, [router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-    if (errors[name]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: "",
-      }));
-    }
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
   };
-
-  console.log(formData);
 
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
@@ -60,26 +48,31 @@ export default function Login() {
     e.preventDefault();
     setLoginError("");
 
-    if (validateForm()) {
-      try {
-        const res = await fetch(`${apiUrl}/api/admin/auth/login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
-        });
-        const data = await res.json();
+    if (!validateForm()) return;
 
-        if (data.success && data.data.token) {
-          // ✅ Simpan token ke cookie (dibaca oleh middleware)
-          document.cookie = `token=${data.data.token}; path=/; secure; samesite=strict`;
-          router.push("/admin/products");
-        } else {
-          setLoginError(data.message || "Invalid email or password");
-        }
-      } catch (err) {
-        console.error("Login error:", err);
-        setLoginError("Server error, please try again later.");
+    try {
+      const res = await fetch(`${apiUrl}/admin/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+
+      if (data.success && data.data.token) {
+        const token = data.data.token;
+        const decoded = jwtDecode<JwtPayload>(token);
+
+        // ✅ Simpan token dan role ke localStorage
+        localStorage.setItem("token", token);
+        localStorage.setItem("role", decoded.role);
+        router.push("/admin/products");
+      } else {
+        setLoginError(data.message || "Invalid email or password");
       }
+    } catch (err) {
+      console.error("Login error:", err);
+      setLoginError("Server error, please try again later.");
     }
   };
 
@@ -103,7 +96,6 @@ export default function Login() {
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm -space-y-px">
-            {/* === EMAIL === */}
             <div>
               <label htmlFor="email" className="sr-only">
                 Email address
@@ -125,7 +117,6 @@ export default function Login() {
               )}
             </div>
 
-            {/* === PASSWORD === */}
             <div>
               <label htmlFor="password" className="sr-only">
                 Password

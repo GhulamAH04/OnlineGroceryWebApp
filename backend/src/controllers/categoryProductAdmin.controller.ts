@@ -1,18 +1,35 @@
-// File: OnlineGroceryWebApp/backend/src/controllers/categoryProductAdmin.controller.ts
+// backend/src/controllers/categoryProductAdmin.controller.ts
 
 import { Request, Response, NextFunction } from "express";
-import { categoryService } from "../services/categoryProductAdmin"; // <-- 1. Impor service
+import { categoryService } from "../services/categoryProductAdmin";
+import { parsePaginationQuery } from "../utils/paginationHelper";
 
 // === GET ALL CATEGORIES ===
 export const getAllCategories = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // 2. Panggil service untuk mengambil data
-    const categories = await categoryService.getAll();
+    const { page, limit, skip, sortBy, sortOrder } = parsePaginationQuery(req.query, "name");
+    const search = (req.query.search as string) || "";
+
+    const { data, total } = await categoryService.getAll({
+      skip,
+      limit,
+      sortBy,
+      sortOrder,
+      search,
+    });
+
+    const totalPages = Math.ceil(total / limit);
 
     res.status(200).json({
       success: true,
       message: "Berhasil mengambil data kategori",
-      data: categories,
+      data,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+      },
     });
   } catch (error) {
     next(error);
@@ -22,10 +39,7 @@ export const getAllCategories = async (req: Request, res: Response, next: NextFu
 // === CREATE CATEGORY ===
 export const createCategory = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // Service Anda membuat slug dari nama, jadi kita hanya butuh 'name'
     const { name } = req.body;
-
-    // 3. Panggil service untuk membuat kategori
     const newCategory = await categoryService.create(name);
 
     res.status(201).json({
@@ -34,7 +48,6 @@ export const createCategory = async (req: Request, res: Response, next: NextFunc
       data: newCategory,
     });
   } catch (error) {
-    // Service akan melempar error jika kategori sudah ada, yang akan ditangkap di sini
     next(error);
   }
 };
@@ -43,9 +56,7 @@ export const createCategory = async (req: Request, res: Response, next: NextFunc
 export const updateCategory = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const { name } = req.body; // Service hanya butuh 'name' untuk update
-
-    // 4. Panggil service untuk update
+    const { name } = req.body;
     const updatedCategory = await categoryService.update(Number(id), name);
 
     res.status(200).json({
@@ -62,8 +73,6 @@ export const updateCategory = async (req: Request, res: Response, next: NextFunc
 export const deleteCategory = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-
-    // 5. Panggil service untuk menghapus
     await categoryService.delete(Number(id));
 
     res.status(200).json({

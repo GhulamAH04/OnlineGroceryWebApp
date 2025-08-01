@@ -47,6 +47,7 @@ export default function PopularProducts({ products }: PageProps) {
             image={product.products.image}
             name={product.products.name}
             price={product.products.price}
+            stock={product.stock} // ✅ ini penting agar disable button berfungsi
           />
         ))}
       </div>

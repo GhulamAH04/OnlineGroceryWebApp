@@ -1,38 +1,78 @@
-// === FILE: backend/src/services/inventoryAdmin.service.ts ===
-import { PrismaClient, Role, TransactionType } from '@prisma/client';
+import { PrismaClient, Role, TransactionType, Prisma } from '@prisma/client';
 import { UpdateStockInput } from '../interfaces/inventoryProductAdmin.interfaces';
 
 const prisma = new PrismaClient();
 
 export const inventoryService = {
-  // === GET INVENTORY ===
-  getInventory: async ({ branchId, userId, role }: { branchId?: number; userId: number; role: Role }) => {
+  // === GET INVENTORY with pagination & sorting ===
+  getInventory: async ({
+    branchId,
+    userId,
+    role,
+    skip,
+    limit,
+    sortBy,
+    sortOrder,
+    search,
+  }: {
+    branchId?: number;
+    userId: number;
+    role: Role;
+    skip: number;
+    limit: number;
+    sortBy: string;
+    sortOrder: 'asc' | 'desc';
+    search?: string;
+  }) => {
     let resolvedBranchId: number | undefined = branchId;
 
-    // Jika STORE_ADMIN, ambil branch berdasarkan userId
     if (role === 'STORE_ADMIN') {
       const branch = await prisma.branchs.findFirst({ where: { userId } });
       if (!branch) throw new Error('Branch not found for Store Admin');
       resolvedBranchId = branch.id;
     }
 
-    // Ambil daftar stok produk
-    return prisma.product_branchs.findMany({
-      where: {
-        ...(resolvedBranchId ? { branchId: resolvedBranchId } : {}), // hanya tambahkan filter jika ada
-      },
-      include: {
-        products: true,
-        branchs: true,
-      },
-    });
+    const whereClause: Prisma.product_branchsWhereInput = {
+      ...(resolvedBranchId ? { branchId: resolvedBranchId } : {}),
+      ...(search
+        ? {
+            products: {
+              is: {
+                name: {
+                  contains: search,
+                  mode: Prisma.QueryMode.insensitive,
+                },
+              },
+            },
+          }
+        : {}),
+    };
+
+    const [items, total] = await Promise.all([
+      prisma.product_branchs.findMany({
+        where: whereClause,
+        include: {
+          products: true,
+          branchs: true,
+        },
+        skip,
+        take: limit,
+        orderBy: {
+          [sortBy]: sortOrder,
+        },
+      }),
+      prisma.product_branchs.count({
+        where: whereClause,
+      }),
+    ]);
+
+    return { items, total };
   },
 
   // === UPDATE STOCK ===
   updateStock: async (input: UpdateStockInput) => {
     const { user, productId, branchId, quantity, transactionType, description } = input;
 
-    // Store Admin hanya boleh update branch miliknya
     if (user.role === 'STORE_ADMIN') {
       const branch = await prisma.branchs.findFirst({ where: { userId: user.id } });
       if (!branch || branch.id !== branchId) {
@@ -40,7 +80,6 @@ export const inventoryService = {
       }
     }
 
-    // Cari data stok yang sudah ada
     const existing = await prisma.product_branchs.findUnique({
       where: {
         productId_branchId: {
@@ -50,12 +89,11 @@ export const inventoryService = {
       },
     });
 
-    // Hitung stok baru
-    const newStock = transactionType === 'IN'
-      ? (existing?.stock || 0) + quantity
-      : (existing?.stock || 0) - quantity;
+    const newStock =
+      transactionType === 'IN'
+        ? (existing?.stock || 0) + quantity
+        : (existing?.stock || 0) - quantity;
 
-    // Simpan stok baru
     const productBranch = existing
       ? await prisma.product_branchs.update({
           where: {
@@ -76,7 +114,6 @@ export const inventoryService = {
           },
         });
 
-    // Catat ke jurnal mutasi
     await prisma.journal_mutations.create({
       data: {
         productBranchId: productBranch.id,

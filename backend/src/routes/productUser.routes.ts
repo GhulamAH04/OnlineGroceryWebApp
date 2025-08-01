@@ -1,10 +1,10 @@
-// OnlineGroceryWebApp/backend/src/routers/product.router.ts
+//backend/src/routes/productUser.routes.ts
 
 import { Router } from "express";
-import { GetNearbyProductsController } from "../controllers/productUser.controller";
+import { GetNearbyProductsController } from "../controllers/productUser.controller"; // ✅ NAMED IMPORT
+
 const router = Router();
 
-// read
-router.get("/nearby/:userCity", GetNearbyProductsController);
+router.get("/nearby/:userCity", GetNearbyProductsController); // ✅
 
 export default router;

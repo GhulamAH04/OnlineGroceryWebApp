@@ -24,6 +24,9 @@ import {
   Branch,
 } from "@/interfaces/reportSales.interface";
 
+import { getRoleFromToken } from "@/utils/getRoleFromToken";
+import { getBranchIdFromToken } from "@/utils/getBranchIdFromToken";
+
 const COLORS = ["#22c55e", "#16a34a", "#15803d", "#166534"];
 
 export default function ReportsPage() {
@@ -35,34 +38,15 @@ export default function ReportsPage() {
   const [branches, setBranches] = useState<Branch[]>([]);
   const [selectedBranchId, setSelectedBranchId] = useState<number | null>(null);
   const [selectedMonth, setSelectedMonth] = useState("2025-07");
+  const [role, setRole] = useState<string | null>(null);
 
   const fetchReports = async (branchId?: number) => {
     try {
       const [month, category, product, stock] = await Promise.all([
-        axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/admin/reports/sales/month`,
-          {
-            params: { branchId },
-          }
-        ),
-        axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/admin/reports/sales/category`,
-          {
-            params: { branchId },
-          }
-        ),
-        axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/admin/reports/sales/product`,
-          {
-            params: { branchId },
-          }
-        ),
-        axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/admin/reports/stock/summary`,
-          {
-            params: { branchId },
-          }
-        ),
+        axios.get("/admin/reports/sales/month", { params: { branchId } }),
+        axios.get("/admin/reports/sales/category", { params: { branchId } }),
+        axios.get("/admin/reports/sales/product", { params: { branchId } }),
+        axios.get("/admin/reports/stock/summary", { params: { branchId } }),
       ]);
 
       setSalesByMonth(month.data.data);
@@ -76,15 +60,12 @@ export default function ReportsPage() {
 
   const fetchMutations = async () => {
     try {
-      const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/reports/stock/detail`,
-        {
-          params: {
-            branchId: selectedBranchId,
-            month: selectedMonth,
-          },
-        }
-      );
+      const res = await axios.get("/admin/reports/stock/detail", {
+        params: {
+          branchId: selectedBranchId,
+          month: selectedMonth,
+        },
+      });
       setStockMutations(res.data.data);
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
@@ -92,14 +73,11 @@ export default function ReportsPage() {
         error?.response?.data?.message || "Gagal mengambil detail mutasi stok"
       );
     }
-
   };
 
   const fetchBranches = async () => {
     try {
-      const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/branches`
-      );
+      const res = await axios.get("/admin/branches");
       setBranches(res.data.data);
     } catch {
       toast.error("Gagal mengambil data cabang");
@@ -113,8 +91,17 @@ export default function ReportsPage() {
   useEffect(() => {
     fetchReports(selectedBranchId ?? undefined);
     fetchMutations();
-    /* eslint-disable-next-line */
   }, [selectedBranchId, selectedMonth]);
+
+  useEffect(() => {
+    const r = getRoleFromToken();
+    const b = getBranchIdFromToken();
+    setRole(r);
+
+    if (r === "STORE_ADMIN" && b) {
+      setSelectedBranchId(b);
+    }
+  }, []);
 
   return (
     <div className="min-h-screen p-4 bg-gray-50 space-y-8">
@@ -122,22 +109,26 @@ export default function ReportsPage() {
         Laporan & Analisis
       </h1>
 
-      {/* === Filter Cabang & Bulan === */}
+      {/* === FILTER CABANG & BULAN === */}
       <div className="max-w-md mx-auto mb-4 flex flex-col gap-2">
-        <select
-          value={selectedBranchId ?? ""}
-          onChange={(e) =>
-            setSelectedBranchId(e.target.value ? Number(e.target.value) : null)
-          }
-          className="w-full border rounded p-2"
-        >
-          <option value="">Semua Cabang</option>
-          {branches.map((branch) => (
-            <option key={branch.id} value={branch.id}>
-              {branch.name}
-            </option>
-          ))}
-        </select>
+        {role === "SUPER_ADMIN" && (
+          <select
+            value={selectedBranchId ?? ""}
+            onChange={(e) =>
+              setSelectedBranchId(
+                e.target.value ? Number(e.target.value) : null
+              )
+            }
+            className="w-full border rounded p-2"
+          >
+            <option value="">Semua Cabang</option>
+            {branches.map((branch) => (
+              <option key={branch.id} value={branch.id}>
+                {branch.name}
+              </option>
+            ))}
+          </select>
+        )}
 
         <input
           type="month"
@@ -147,7 +138,7 @@ export default function ReportsPage() {
         />
       </div>
 
-      {/* === Sales per Bulan === */}
+      {/* === SALES: PER BULAN === */}
       <div className="bg-white p-6 rounded-xl shadow">
         <h2 className="text-xl font-semibold mb-4 text-green-700">
           Penjualan per Bulan
@@ -162,7 +153,7 @@ export default function ReportsPage() {
         </ResponsiveContainer>
       </div>
 
-      {/* === Sales per Kategori & Produk === */}
+      {/* === SALES: PER KATEGORI & PRODUK === */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-white p-6 rounded-xl shadow">
           <h2 className="text-xl font-semibold mb-4 text-green-700">
@@ -209,7 +200,7 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      {/* === Stock Summary === */}
+      {/* === STOCK SUMMARY === */}
       <div className="bg-white p-6 rounded-xl shadow">
         <h2 className="text-xl font-semibold mb-4 text-green-700">
           Ringkasan Mutasi Stok
@@ -226,7 +217,7 @@ export default function ReportsPage() {
         </ResponsiveContainer>
       </div>
 
-      {/* === Detail Mutasi === */}
+      {/* === DETAIL MUTASI === */}
       <div className="bg-white p-6 rounded-xl shadow">
         <h2 className="text-xl font-semibold mb-4 text-green-700">
           Detail Mutasi Stok per Produk

@@ -1,5 +1,6 @@
 // === CATEGORY MANAGEMENT PAGE ===
 // OnlineGroceryWebApp/frontend/src/app/admin/categories/page.tsx
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -11,6 +12,8 @@ import { toast } from "sonner";
 import { useDebounceSearch } from "@/hooks/useDebounceSearch";
 import ConfirmModal from "@/components/features2/common/ConfirmModal";
 import { Category } from "@/interfaces/categoryAdmin";
+import { PaginationResponse } from "@/interfaces/pagination";
+import { getRoleFromToken } from "@/utils/getRoleFromToken";
 
 // === SCHEMA & TYPES ===
 const categorySchema = yup.object({
@@ -19,7 +22,6 @@ const categorySchema = yup.object({
 
 type CategoryInput = yup.InferType<typeof categorySchema>;
 
-// === FUNCTION UNTUK GENERATE SLUG ===
 const generateSlug = (text: string) =>
   text
     .toLowerCase()
@@ -27,14 +29,17 @@ const generateSlug = (text: string) =>
     .replace(/(^-|-$)+/g, "");
 
 export default function CategoryPage() {
-  // === STATE ===
   const [categories, setCategories] = useState<Category[]>([]);
+  const [pagination, setPagination] =
+    useState<PaginationResponse<Category>["pagination"]>();
   const [editId, setEditId] = useState<number | null>(null);
   const [confirmId, setConfirmId] = useState<number | null>(null);
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [role, setRole] = useState<"SUPER_ADMIN" | "STORE_ADMIN" | null>(null);
   const debouncedSearch = useDebounceSearch(search);
 
-  // === FORM SETUP ===
   const {
     register,
     handleSubmit,
@@ -44,14 +49,29 @@ export default function CategoryPage() {
     resolver: yupResolver(categorySchema),
   });
 
-  // === FETCH DATA KATEGORI ===
+  // === GET ROLE FROM TOKEN ===
+  useEffect(() => {
+    const userRole = getRoleFromToken();
+    setRole(userRole);
+  }, []);
+
+  // === FETCH DATA ===
   const fetchData = async () => {
     try {
-      const res = await axios.get(
+      const res = await axios.get<PaginationResponse<Category>>(
         `${process.env.NEXT_PUBLIC_API_URL}/admin/categories`,
-        { params: { search: debouncedSearch } }
+        {
+          params: {
+            page,
+            limit: 10,
+            search: debouncedSearch,
+            sortBy: "name",
+            sortOrder,
+          },
+        }
       );
       setCategories(res.data.data);
+      setPagination(res.data.pagination);
     } catch {
       toast.error("Gagal mengambil data kategori");
     }
@@ -59,8 +79,7 @@ export default function CategoryPage() {
 
   useEffect(() => {
     fetchData();
-    /* eslint-disable-next-line */
-  }, [debouncedSearch]);
+  }, [debouncedSearch, page, sortOrder]);
 
   // === SUBMIT FORM TAMBAH / EDIT ===
   const onSubmit = async (data: CategoryInput) => {
@@ -92,13 +111,11 @@ export default function CategoryPage() {
     }
   };
 
-  // === HANDLE EDIT ===
   const handleEdit = (category: Category) => {
     reset({ name: category.name });
     setEditId(category.id);
   };
 
-  // === HANDLE DELETE ===
   const handleDelete = async () => {
     if (!confirmId) return;
     try {
@@ -114,7 +131,6 @@ export default function CategoryPage() {
     }
   };
 
-  // === RENDER ===
   return (
     <div className="min-h-screen p-4 bg-gray-50">
       <div className="bg-white p-6 rounded-xl shadow-lg max-w-4xl mx-auto">
@@ -122,46 +138,54 @@ export default function CategoryPage() {
           Kategori Produk
         </h1>
 
-        {/* === FORM TAMBAH / EDIT === */}
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"
-        >
-          <div className="md:col-span-2">
-            <input
-              type="text"
-              {...register("name")}
-              placeholder="Nama Kategori"
-              className="w-full border rounded p-2"
-            />
-            {errors.name && (
-              <p className="text-red-500 text-sm">{errors.name.message}</p>
-            )}
-          </div>
-          <div>
-            <button
-              type="submit"
-              className="bg-green-600 text-white w-full py-2 rounded"
-            >
-              {editId ? "Update" : "Tambah"}
-            </button>
-            {editId && (
+        {/* === FORM TAMBAH / EDIT (HANYA SUPER ADMIN) === */}
+        {role === "SUPER_ADMIN" && (
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"
+          >
+            <div className="md:col-span-2">
+              <input
+                type="text"
+                {...register("name")}
+                placeholder="Nama Kategori"
+                className="w-full border rounded p-2"
+              />
+              {errors.name && (
+                <p className="text-red-500 text-sm">{errors.name.message}</p>
+              )}
+            </div>
+            <div>
               <button
-                type="button"
-                onClick={() => {
-                  reset();
-                  setEditId(null);
-                }}
-                className="bg-gray-300 text-gray-800 w-full mt-2 py-2 rounded"
+                type="submit"
+                className="bg-green-600 text-white w-full py-2 rounded"
               >
-                Batal
+                {editId ? "Update" : "Tambah"}
               </button>
-            )}
-          </div>
-        </form>
+              {editId && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    reset();
+                    setEditId(null);
+                  }}
+                  className="bg-gray-300 text-gray-800 w-full mt-2 py-2 rounded"
+                >
+                  Batal
+                </button>
+              )}
+            </div>
+          </form>
+        )}
 
-        {/* === SEARCH INPUT === */}
-        <div className="mb-4">
+        {role === "STORE_ADMIN" && (
+          <p className="text-sm text-gray-500 italic mb-4 text-center">
+            Anda hanya memiliki akses baca kategori (read-only).
+          </p>
+        )}
+
+        {/* === SEARCH & SORT === */}
+        <div className="mb-4 flex flex-col md:flex-row gap-2 justify-between items-center">
           <input
             type="text"
             placeholder="Cari kategori..."
@@ -169,15 +193,23 @@ export default function CategoryPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+          <select
+            value={sortOrder}
+            onChange={(e) => setSortOrder(e.target.value as "asc" | "desc")}
+            className="border rounded p-2"
+          >
+            <option value="asc">A - Z</option>
+            <option value="desc">Z - A</option>
+          </select>
         </div>
 
-        {/* === TABEL KATEGORI === */}
+        {/* === TABEL === */}
         <table className="w-full border text-sm">
           <thead className="bg-green-100">
             <tr>
               <th className="p-2 border">Nama</th>
               <th className="p-2 border">Slug</th>
-              <th className="p-2 border">Aksi</th>
+              {role === "SUPER_ADMIN" && <th className="p-2 border">Aksi</th>}
             </tr>
           </thead>
           <tbody>
@@ -185,27 +217,58 @@ export default function CategoryPage() {
               <tr key={cat.id} className="border">
                 <td className="p-2">{cat.name}</td>
                 <td className="p-2">{cat.slug}</td>
-                <td className="p-2 flex gap-2">
-                  <button
-                    onClick={() => handleEdit(cat)}
-                    className="text-blue-600"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => setConfirmId(cat.id)}
-                    className="text-red-600"
-                  >
-                    Hapus
-                  </button>
-                </td>
+                {role === "SUPER_ADMIN" && (
+                  <td className="p-2 flex gap-2">
+                    <button
+                      onClick={() => handleEdit(cat)}
+                      className="text-blue-600"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => setConfirmId(cat.id)}
+                      className="text-red-600"
+                    >
+                      Hapus
+                    </button>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
         </table>
 
-        {/* === MODAL KONFIRMASI HAPUS === */}
-        {confirmId && (
+        {/* === PAGINATION === */}
+        {pagination && (
+          <div className="flex justify-between items-center mt-4 text-sm">
+            <p>
+              Halaman {pagination.page} dari {pagination.totalPages}
+            </p>
+            <div className="flex gap-2">
+              <button
+                className="px-3 py-1 border rounded disabled:opacity-50"
+                onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+                disabled={pagination.page === 1}
+              >
+                Prev
+              </button>
+              <button
+                className="px-3 py-1 border rounded disabled:opacity-50"
+                onClick={() =>
+                  setPage((prev) =>
+                    prev < pagination.totalPages ? prev + 1 : prev
+                  )
+                }
+                disabled={pagination.page === pagination.totalPages}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* === MODAL KONFIRMASI HAPUS (HANYA SUPER ADMIN) === */}
+        {confirmId && role === "SUPER_ADMIN" && (
           <ConfirmModal
             open={Boolean(confirmId)}
             onCancel={() => setConfirmId(null)}

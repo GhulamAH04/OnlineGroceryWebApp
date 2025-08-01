@@ -30,6 +30,7 @@ import DistrictRouter from "./routes/district.routes";
 import StoreRouter from "./routes/store.routes";
 import ShippingCostRouter from "./routes/shippingCost.routes";
 import cartRouter from "./routes/cart.router";
+
 import orderRouter from "./routes/order.router";
 
 // === ROUTES - ADMIN ===
@@ -75,7 +76,7 @@ app.use("/api/admin/categories", CategoryAdminRouter);
 app.use(
   "/api/admin/products",
   authMiddleware,
-  authorizeRoles(["SUPER_ADMIN", "STORE_ADMIN"]), // hanya GET yang boleh di routes
+  authorizeRoles(["SUPER_ADMIN", "STORE_ADMIN"]),
   ProductAdminRouter
 );
 app.use("/api/admin/discounts", DiscountAdminRouter);

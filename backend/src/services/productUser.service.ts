@@ -1,4 +1,45 @@
 import prisma from "../lib/prisma";
+
+// === Ambil Semua Produk dari Cabang di Kota Tertentu ===
+export async function GetNearbyProductsService(userCity: string) {
+  try {
+    const branches = await prisma.branchs.findMany({
+      where: {
+        cities: {
+          name: {
+            equals: userCity.toUpperCase(),
+            mode: "insensitive",
+          },
+        },
+      },
+      select: { id: true },
+    });
+
+    const branchIds = branches.map((b) => b.id);
+
+    const productBranches = await prisma.product_branchs.findMany({
+      where: {
+        branchId: { in: branchIds },
+      },
+      include: {
+        products: true,
+        branchs: true,
+      },
+    });
+
+    return {
+      products: productBranches,
+      userCity,
+    };
+  } catch (err) {
+    throw err;
+  }
+}
+
+
+/*
+
+import prisma from "../lib/prisma";
 import { getCityFromCoordinates } from "./city.service";
 
 // === Get Produk Per Cabang ===
@@ -54,3 +95,4 @@ export async function GetNearbyProductsService(
     throw err;
   }
 }
+  */

@@ -1,3 +1,5 @@
+// === FILE: frontend/src/components/homepage/Product.tsx ===
+// frontend/src/components/homepage/popular-products/product.tsx
 "use client";
 
 import { EyeIcon, Heart, Star, ShoppingCart } from "lucide-react";
@@ -10,15 +12,22 @@ interface PageProps {
   image: string;
   name: string;
   price: number;
+  stock: number; // ✅ ditambahkan
 }
 
-export default function Product({ image, name, price, productId }: PageProps) {
+export default function Product({
+  image,
+  name,
+  price,
+  productId,
+  stock,
+}: PageProps) {
   const [isHovered, setIsHovered] = useState(false);
   const { addToCart, isLoading } = useCartStore();
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (typeof productId === "number") {
+    if (typeof productId === "number" && stock > 0) {
       addToCart(productId, 1);
     }
   };
@@ -42,7 +51,6 @@ export default function Product({ image, name, price, productId }: PageProps) {
     >
       {/* Product Image Container */}
       <div className="relative aspect-square overflow-hidden">
-        {/* Product Image */}
         {/* eslint-disable-next-line */}
         <img
           className="
@@ -118,23 +126,31 @@ export default function Product({ image, name, price, productId }: PageProps) {
           </span>
 
           <button
-            className="
+            className={`
               w-10 h-10
-              bg-gray-100 hover:bg-green-600
               rounded-full
               flex items-center justify-center
-              text-gray-700 hover:text-white
               transition-colors
-            "
+              ${
+                stock === 0
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-gray-100 hover:bg-green-600 text-gray-700 hover:text-white"
+              }
+            `}
             aria-label="Add to cart"
+            disabled={stock === 0}
           >
             <ShoppingCart
-              // add disabled cursor when loading
               className={`w-5 h-5 ${isLoading ? "cursor-not-allowed" : ""}`}
               onClick={(e) => handleAddToCart(e)}
             />
           </button>
         </div>
+
+        {/* Stok Habis Indicator */}
+        {stock === 0 && (
+          <p className="text-xs text-red-500 font-medium mt-1">Stok Habis</p>
+        )}
       </div>
     </article>
   );

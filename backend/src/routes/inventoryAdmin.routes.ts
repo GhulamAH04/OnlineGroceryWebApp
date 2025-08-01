@@ -4,7 +4,7 @@ import express from "express";
 import {
   getInventory,
   updateInventory,
-} from "../controllers/inventoryProduct.controller";
+} from "../controllers/inventoryAdmin.controller";
 import { authMiddleware } from "../middlewares/authAdmin.middleware";
 import { authorizeRoles } from "../middlewares/authorizeRoles.middleware";
 
