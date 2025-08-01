@@ -17,7 +17,7 @@ export default function Checkout() {
   const user = useAppSelector((state) => state.auth);
   //local state
   const [cartItems, setCartItems] = useState<ICartItems[]>([]);
-   const [paymentMethod, setPaymentMethod] = useState("TRANSFER");
+  const [paymentMethod, setPaymentMethod] = useState("TRANSFER");
 
   const [userAddresses, setUserAddresses] = useState<IExistingAddress[]>([]);
   const [selectedAddress, setSelectedAddress] =
@@ -279,7 +279,6 @@ export default function Checkout() {
         shippingCost,
         courier,
       });
-
 
       alert("Pesanan berhasil dibuat!");
       // Redirect, reset cart, dsb bisa di sini jika perlu

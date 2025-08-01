@@ -1,20 +1,3 @@
-function getStatusClass(status: string) {
-  switch (status) {
-    case "Processing":
-      return "bg-yellow-100 text-yellow-800";
-    case "On the way":
-      return "bg-blue-100 text-blue-800";
-    case "Completed":
-      return "bg-green-100 text-green-800";
-    case "Canceled":
-      return "bg-red-100 text-red-800";
-    case "Unpaid":
-      return "bg-gray-100 text-gray-800";
-    default:
-      return "bg-gray-100 text-gray-800";
-  }
-}
-
 function formatDate(date: string) {
   if (!date) return "-";
   const d = new Date(date);
@@ -25,14 +8,35 @@ function formatDate(date: string) {
   });
 }
 
-function mapOrderStatus(order: any): string {
-  if (order.paymentStatus === "CANCELED") return "Canceled";
-  if (order.paymentStatus === "UNPAID") return "Unpaid";
-  if (order.paymentStatus === "PAID") {
-    if (!order.shippedAt) return "Processing";
-    if (order.shippedAt && !order.completedAt) return "On the way";
-    if (order.completedAt) return "Completed";
+function getStatusClass(paymentStatus: string) {
+  switch (paymentStatus) {
+    case "UNPAID":
+      return "bg-gray-100 text-gray-800";
+    case "PAID":
+      return "bg-yellow-100 text-yellow-800";
+    case "PROCESSING":
+      return "bg-yellow-100 text-yellow-800";
+    case "SHIPPED":
+      return "bg-blue-100 text-blue-800";
+    case "DELIVERED":
+      return "bg-blue-100 text-blue-800";
+    case "RECEIVED":
+      return "bg-green-100 text-green-800";
+    case "CANCELED":
+      return "bg-red-100 text-red-800";
+    default:
+      return "bg-gray-100 text-gray-800";
   }
+}
+
+function mapOrderStatus(order: any): string {
+  if (order.paymentStatus === "CANCELED") return "Dibatalkan";
+  if (order.paymentStatus === "UNPAID") return "Menunggu Pembayaran";
+  if (order.paymentStatus === "PROCESSING") return "Sedang Diproses";
+  if (order.paymentStatus === "SHIPPED") return "Dikirim";
+  if (order.paymentStatus === "PAID") return "Sedang Diproses";
+  if (order.paymentStatus === "DELIVERED") return "Dikirim";
+  if (order.paymentStatus === "RECEIVED") return "Diterima";
   return "Unknown";
 }
 
@@ -86,7 +90,7 @@ export default function AllOrderHistoryTable({ orders }: any) {
                       <td className="py-4 px-4">
                         <span
                           className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusClass(
-                            status
+                            order.paymentStatus
                           )}`}
                         >
                           {status}

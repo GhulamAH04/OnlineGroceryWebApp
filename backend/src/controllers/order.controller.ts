@@ -1,9 +1,7 @@
 import { Response, Request } from "express";
 import { PrismaClient } from "@prisma/client";
 import { haversineDistance } from "../utils/distance";
-import fs from "fs";
-import path from "path";
-import { cloudinaryUploadMulter } from "../utils/cloudinary";
+import { uploadToCloudinary } from "../utils/cloudinary";
 
 const midtransClient = require("midtrans-client");
 
@@ -225,7 +223,7 @@ export class OrderController {
 
       // Coba upload ke Cloudinary
       try {
-        const uploadResult = await cloudinaryUploadMulter(paymentProof);
+        const uploadResult = await uploadToCloudinary(paymentProof.buffer);
         paymentProofUrl = uploadResult.secure_url;
 
         await prisma.orders.update({
@@ -241,33 +239,11 @@ export class OrderController {
           url: paymentProofUrl,
         });
       } catch (err) {
-        // Fallback: upload ke storage lokal (multer)
-        try {
-          const fileName = `${Date.now()}-${paymentProof.originalname}`;
-          const uploadDir = path.join(__dirname, "../uploads/payment_proofs");
-          if (!fs.existsSync(uploadDir)) {
-            fs.mkdirSync(uploadDir, { recursive: true });
-          }
-          const filePath = path.join(uploadDir, fileName);
-          fs.writeFileSync(filePath, paymentProof.buffer);
-
-          await prisma.orders.update({
-            where: { id: parseInt(orderId) },
-            data: {
-              paymentProof: filePath,
-              paymentStatus: "PROCESSING",
-            },
-          });
-
-          return res.status(200).json({
-            message: "Payment proof uploaded locally (Cloudinary failed).",
-            url: filePath,
-          });
-        } catch (err2) {
-          return res
-            .status(500)
-            .json({ message: "Error uploading payment proof", error: err2 });
-        }
+        console.error("Cloudinary upload failed:", err);
+        return res.status(500).json({
+          message: "Error uploading payment proof to Cloudinary",
+          error: err,
+        });
       }
     } catch (error) {
       console.error(error);
@@ -425,7 +401,7 @@ export class OrderController {
           .json({ message: "Order not found or you do not have permission." });
       }
 
-      if (order.paymentStatus !== "PAID") {
+      if (order.paymentStatus !== "DELIVERED") {
         return res.status(400).json({
           message: "Order cannot be confirmed as it has not been paid.",
         });
@@ -433,7 +409,7 @@ export class OrderController {
 
       await prisma.orders.update({
         where: { id: parseInt(orderId) },
-        data: { paymentStatus: "DELIVERED" },
+        data: { paymentStatus: "RECEIVED" },
       });
 
       res.status(200).json({ message: "Order confirmed successfully." });

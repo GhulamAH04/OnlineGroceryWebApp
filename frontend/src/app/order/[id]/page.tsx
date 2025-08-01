@@ -80,12 +80,12 @@ export default function OrderDetailPage() {
   // Handle confirm order
   const handleConfirmOrder = async () => {
     if (!order) return;
-    if (!confirm("Yakin ingin mengkonfirmasi pesanan ini?")) return;
+    if (!confirm("Yakin Anda telah menerima pesanan ini?")) return;
     setConfirming(true);
     setError(null);
     try {
       await confirmOrder(order.id);
-      alert("Pesanan berhasil dikonfirmasi.");
+      alert("Pesanan berhasil diterima.");
       // Refresh data
       const res = await getOrders(1, order.id);
       setOrder(Array.isArray(res) ? res[0] : res);
@@ -100,8 +100,11 @@ export default function OrderDetailPage() {
   const getStatus = (o: any) => {
     if (o.paymentStatus === "CANCELED") return "Dibatalkan";
     if (o.paymentStatus === "UNPAID") return "Menunggu Pembayaran";
-    if (o.paymentStatus === "PAID" && !o.shippedAt) return "Sedang Diproses";
-    if (o.paymentStatus === "PAID" && o.shippedAt) return "Dikirim";
+    if (o.paymentStatus === "PROCESSING") return "Sedang Diproses";
+    if (o.paymentStatus === "SHIPPED") return "Dikirim";
+    if (o.paymentStatus === "PAID") return "Sedang Diproses";
+    if (o.paymentStatus === "DELIVERED") return "Dikirim";
+    if (o.paymentStatus === "RECEIVED") return "Diterima";
     return o.paymentStatus;
   };
 
@@ -283,22 +286,22 @@ export default function OrderDetailPage() {
       )}
       {/* Action: Confirm Order */}
       {/* bisa tambahkan kondisi !order.shippedAt && */}
-      {order.paymentStatus === "PAID" && (
+      {order.paymentStatus === "DELIVERED" && (
         <div className="mb-8">
           <button
             onClick={handleConfirmOrder}
             className="bg-blue-600 text-white px-5 py-2 rounded font-bold hover:bg-blue-700 disabled:bg-gray-400"
             disabled={confirming}
           >
-            {confirming ? "Mengkonfirmasi..." : "Konfirmasi Pesanan"}
+            {confirming ? "Menerima..." : "Konfirmasi Pesanan Diterima"}
           </button>
         </div>
       )}
       {/* Show Button Disabled order is DELIVERED */}
-      {order.paymentStatus === "DELIVERED" && (
+      {order.paymentStatus === "RECEIVED" && (
         <div className="mb-8">
           <button
-            className="bg-gray-400 text-white px-5 py-2 rounded font-bold cursor-not-allowed"
+            className="bg-green-400 text-white px-5 py-2 rounded font-bold cursor-not-allowed"
             disabled
           >
             Pesanan Sudah Diterima

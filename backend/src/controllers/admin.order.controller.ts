@@ -86,11 +86,7 @@ export class AdminOrderController {
       const order = await prisma.orders.findUnique({
         where: { id: Number(orderId) },
       });
-      if (
-        !order ||
-        order.paymentMethod !== "TRANSFER" ||
-        order.paymentStatus !== "PROCESSING"
-      ) {
+      if (!order || order.paymentMethod !== "TRANSFER") {
         return res
           .status(400)
           .json({ message: "Order tidak valid untuk konfirmasi manual" });
@@ -123,6 +119,19 @@ export class AdminOrderController {
         });
       }
 
+      if (status === "PAID") {
+        await prisma.orders.update({
+          where: { id: Number(orderId) },
+          data: {
+            paymentStatus: "PROCESSING",
+            updatedAt: new Date(),
+          },
+        });
+        return res.status(200).json({
+          message: "Pembayaran diterima. Status berubah menjadi Diproses.",
+        });
+      }
+
       res.status(400).json({ message: "Status tidak valid" });
     } catch (error) {
       res
@@ -143,7 +152,7 @@ export class AdminOrderController {
         include: { order_products: true, branchs: true },
       });
 
-      if (!order || order.paymentStatus !== "PAID") {
+      if (!order || order.paymentStatus !== "PROCESSING") {
         return res.status(400).json({
           message:
             "Pesanan belum siap dikirim (belum dibayar atau tidak ditemukan)",
@@ -222,10 +231,26 @@ export class AdminOrderController {
           where: { productId: op.productId, branchId: order.branchId },
           data: { stock: { increment: op.quantity } },
         });
-        // Catat jurnal history perubahan stok (asumsi ada tabel product_stock_journal)
+
+        // --- Ambil id product_branchs (bukan productId!) ---
+        const pb = await prisma.product_branchs.findUnique({
+          where: {
+            productId_branchId: {
+              productId: op.productId,
+              branchId: order.branchId,
+            },
+          },
+        });
+        if (!pb) {
+          throw new Error(
+            `Product branch tidak ditemukan untuk productId=${op.productId} branchId=${order.branchId}`
+          );
+        }
+
+        // Catat jurnal history perubahan stok
         await prisma.journal_mutations.create({
           data: {
-            productBranchId: op.productId,
+            productBranchId: pb.id, // HARUS ID dari tabel product_branchs
             branchId: order.branchId,
             transactionType: "IN",
             quantity: op.quantity,
