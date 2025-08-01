@@ -15,7 +15,7 @@ export default function ProfileHeader() {
           src={
             (userState.user.image === "/profile.jpg")
             ? `${userState.user.image}`
-            : `${imageUrl}${userState.user.image}`
+            : `${imageUrl}/${userState.user.image}`
           }
           alt="User Avatar"
           width={100}
