@@ -7,6 +7,7 @@ export interface Product {
   image?: string;
   price: number;
   stock: number;
+  weight: number;
   branchId: number;
   branchName?: string;
   categoryId: number;
@@ -18,6 +19,7 @@ export interface CreateProductInput {
   name: string;
   price: number;
   stock: number;
+  weight: number;
   description?: string;
   branchId: number;
   categoryId: number;
@@ -29,5 +31,5 @@ export interface CartItem {
   name: string;
   price: number;
   quantity: number;
-  image: string;
+  image: string | undefined;
 }

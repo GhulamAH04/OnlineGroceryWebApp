@@ -9,6 +9,7 @@ import ConfirmModal from "@/components/features2/common/ConfirmModal";
 import ProductModal from "@/components/features2/productManagement/ProductModal";
 import { useDebounceSearch } from "@/hooks/useDebounceSearch";
 import { Product } from "@/interfaces/productAdmin.interface";
+import { apiUrl, imageUrl } from "@/config";
 
 export default function ProductPage() {
   // === STATE ===
@@ -27,7 +28,7 @@ export default function ProductPage() {
   // === FETCH PRODUCTS ===
   const fetchProducts = async () => {
     try {
-      const res = await axios.get("/admin/products", {
+      const res = await axios.get(`${apiUrl}/api/admin/products`, {
         params: { search: debouncedSearch },
       });
       setProducts(Array.isArray(res.data?.data.data) ? res.data.data.data : []);
@@ -39,7 +40,7 @@ export default function ProductPage() {
   // === FETCH STORES ===
   const fetchStores = async () => {
     try {
-      const res = await axios.get("/admin/branches");
+      const res = await axios.get(`${apiUrl}/api/admin/branches`);
       setStores(res.data?.data || []);
     } catch {
       toast.error("Gagal memuat data toko");
@@ -49,7 +50,7 @@ export default function ProductPage() {
   // === FETCH CATEGORIES ===
   const fetchCategories = async () => {
     try {
-      const res = await axios.get("/admin/categories");
+      const res = await axios.get(`${apiUrl}/api/admin/categories`);
       setCategories(res.data?.data || []);
     } catch {
       toast.error("Gagal memuat kategori");
@@ -90,7 +91,7 @@ export default function ProductPage() {
   // === HANDLE DELETE ===
   const handleDelete = async () => {
     try {
-      await axios.delete(`/admin/products/${confirmId}`);
+      await axios.delete(`${apiUrl}/api/admin/products/${confirmId}`);
       toast.success("Produk dihapus");
       setConfirmId(null);
       fetchProducts();
@@ -103,12 +104,12 @@ export default function ProductPage() {
   const handleSubmit = async (formData: FormData) => {
     try {
       if (editProduct) {
-        await axios.put(`/admin/products/${editProduct.id}`, formData, {
+        await axios.put(`${apiUrl}/api/admin/products/${editProduct.id}`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
         toast.success("Produk berhasil diperbarui!");
       } else {
-        await axios.post("/admin/products", formData, {
+        await axios.post(`${apiUrl}/api/admin/products`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
         toast.success("Produk berhasil ditambahkan!");
@@ -151,6 +152,7 @@ export default function ProductPage() {
             <th className="p-2 border">Nama</th>
             <th className="p-2 border">Harga</th>
             <th className="p-2 border">Stok</th>
+            <th className="p-2 border">Berat</th>
             <th className="p-2 border">Toko</th>
             <th className="p-2 border">Kategori</th>
             <th className="p-2 border">Aksi</th>
@@ -162,7 +164,7 @@ export default function ProductPage() {
             <tr key={`${p.id}-${p.branchId}`} className="hover:bg-green-50">
               <td className="p-2 border">
                 <Image
-                  src={p.image || "/default.png"}
+                   src={`${imageUrl}/${p.image}`}
                   alt={p.name}
                   width={56}
                   height={56}
@@ -172,6 +174,7 @@ export default function ProductPage() {
               <td className="p-2 border">{p.name}</td>
               <td className="p-2 border">Rp {p.price.toLocaleString()}</td>
               <td className="p-2 border">{p.stock}</td>
+              <td className="p-2 border">{p.weight}</td>
               <td className="p-2 border">
                 {stores.find((s) => s.id === p.branchId)?.name || "-"}
               </td>

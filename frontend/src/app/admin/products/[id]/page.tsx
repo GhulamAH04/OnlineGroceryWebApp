@@ -5,10 +5,10 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Image from "next/image";
 import axios from "@/lib/axios";
 import { toast } from "sonner";
 import { Product, CartItem } from "@/interfaces/productAdmin.interface";
+import { imageUrl } from "@/config";
 
 export default function ProductDetailPage() {
   const { id } = useParams();
@@ -81,12 +81,13 @@ export default function ProductDetailPage() {
       {/* === INFO TAMBAHAN === */}
       <p className="text-sm text-gray-500">
         Kategori: <span className="font-medium">{product.categoryName}</span> |
-        Toko: <span className="font-medium">{product.storeName}</span>
+        Toko: <span className="font-medium">{product.branchName}</span>
       </p>
 
       {/* === GAMBAR PRODUK === */}
-      <Image
-        src={product.image || "/default.png"}
+      {/* eslint-disable-next-line */}
+      <img
+        src={`${imageUrl}/${product.image}`}
         alt={product.name}
         width={600}
         height={400}

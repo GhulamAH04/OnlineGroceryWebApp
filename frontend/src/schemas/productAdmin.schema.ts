@@ -17,6 +17,11 @@ export const productAdminSchema = yup
       .typeError("Harga harus berupa angka")
       .positive("Harga harus lebih dari 0")
       .required("Harga wajib diisi"),
+    weight: yup
+      .number()
+      .typeError("Berat harus berupa angka")
+      .positive("Berat harus lebih dari 0")
+      .required("Berat wajib diisi"),
     stock: yup
       .number()
       .typeError("Stok harus berupa angka")
@@ -37,10 +42,14 @@ export const productAdminSchema = yup
     // === VALIDASI FILE UPLOAD ===
     images: yup
       .mixed<FileListType>()
-      .test("fileType", "Format gambar tidak valid (jpg, jpeg, png, gif)", (files) => {
-        if (!files || !Array.isArray(files)) return true;
-        return files.every((file) => SUPPORTED_FORMATS.includes(file.type));
-      })
+      .test(
+        "fileType",
+        "Format gambar tidak valid (jpg, jpeg, png, gif)",
+        (files) => {
+          if (!files || !Array.isArray(files)) return true;
+          return files.every((file) => SUPPORTED_FORMATS.includes(file.type));
+        }
+      )
       .test("fileSize", "Ukuran gambar maksimal 1MB", (files) => {
         if (!files || !Array.isArray(files)) return true;
         return files.every((file) => file.size <= 1024 * 1024);
