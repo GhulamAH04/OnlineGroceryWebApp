@@ -11,6 +11,7 @@ import {
   LayoutGrid,
   RotateCcw,
   LogOut,
+  ShoppingBasket,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -40,6 +41,11 @@ const menu = [
     label: "Category Management",
     icon: <LayoutGrid size={18} />,
     href: "/admin/categories",
+  },
+  {
+    label: "Orders",
+    icon: <ShoppingBasket size={18} />,
+    href: "/admin/orders",
   },
 ];
 
