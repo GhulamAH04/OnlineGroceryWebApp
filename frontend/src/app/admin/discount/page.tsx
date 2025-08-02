@@ -42,7 +42,7 @@ export default function DiscountPage() {
       ]);
 
       setDiscounts(discRes?.data?.data ?? []);
-      setProducts(Array.isArray(prodRes?.data?.data) ? prodRes.data.data : []);
+      setProducts(Array.isArray(prodRes?.data?.data.data) ? prodRes.data.data.data : []);
     } catch {
       toast.error("Gagal mengambil data diskon");
     }
@@ -75,18 +75,17 @@ export default function DiscountPage() {
       toast.error("Gagal menyimpan diskon");
     }
   };
-
-  const handleEdit = (item: Discount) => {
-    reset({
-      productId: item.productId,
-      type: item.type,
-      value: item.value,
-      isPercentage: item.isPercentage,
-      minPurchase: item.minPurchase,
-      expiredAt: item.expiredAt.slice(0, 10),
-    });
-    setEditId(item.id);
-  };
+const handleEdit = (item: Discount) => {
+  reset({
+    productId: item.productId ?? undefined,
+    type: item.type,
+    value: item.value,
+    isPercentage: item.isPercentage,
+    minPurchase: item.minPurchase ?? undefined,
+    expiredAt: item.expiredAt.slice(0, 10),
+  });
+  setEditId(item.id);
+};
 
   const handleDelete = async () => {
     if (!confirmId) return;
@@ -224,7 +223,8 @@ export default function DiscountPage() {
           <tbody>
             {discounts.map((d) => (
               <tr key={d.id}>
-                <td className="p-2 border">{d.productName}</td>
+                <td className="p-2 border">{d.products?.name || "-"}</td>
+
                 <td className="p-2 border">{d.type}</td>
                 <td className="p-2 border">
                   {d.isPercentage

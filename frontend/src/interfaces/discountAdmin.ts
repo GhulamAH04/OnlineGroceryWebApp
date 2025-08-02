@@ -19,15 +19,17 @@ export interface Discount {
 */
 
 // File: src/interfaces/discountAdmin.ts
+import { Product } from "./productAdmin.interface";
+
 export interface Discount {
   id: number;
+  productId: number | null;
   type: "PERCENTAGE" | "NOMINAL" | "BUY1GET1";
   value: number;
   isPercentage: boolean;
-  minPurchase?: number;
+  minPurchase: number | null;
   expiredAt: string;
-  productId: number;
-  productName: string;
+  products?: Product | null; // ✅ Tambahkan ini
 }
 
 export interface DiscountAdminForm {
