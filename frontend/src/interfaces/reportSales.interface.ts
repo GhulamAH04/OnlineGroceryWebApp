@@ -25,3 +25,16 @@ export interface Branch {
   id: number;
   name: string;
 }
+
+export interface DiscountReportItem {
+  discountType: string;
+  productName: string;
+  branchName: string;
+  isPercentage: boolean;
+  discountValue: number;
+  minPurchase: number | null;
+  buyX: number | null;
+  getY: number | null;
+  timesUsed: number;
+  totalDiscountGiven: number;
+}

@@ -76,6 +76,68 @@ export const getStockSummary = async (branchId?: number) => {
   `;
 };
 
+export const getDiscountUsageReport = async (branchId?: number) => {
+  const branchFilter = branchId
+    ? Prisma.sql`AND o."branchId" = ${branchId}`
+    : Prisma.empty;
+
+  const result = await prisma.$queryRaw<
+    {
+      discountType: string;
+      isPercentage: boolean;
+      discountValue: number;
+      minPurchase: number | null;
+      buyX: number | null;
+      getY: number | null;
+      branchName: string;
+      productName: string;
+      timesUsed: bigint;
+      totalDiscountGiven: bigint;
+    }[]
+  >(Prisma.sql`
+    SELECT 
+      d.type AS "discountType",
+      d."isPercentage",
+      d.value AS "discountValue",
+      d."minPurchase",
+      d."buyX",
+      d."getY",
+      b.name AS "branchName",
+      p.name AS "productName",
+      COUNT(op.id) AS "timesUsed",
+      SUM(
+        CASE 
+          WHEN d."isPercentage" = TRUE THEN COALESCE(op.total, 0) * COALESCE(d.value, 0) / 100.0
+          ELSE COALESCE(d.value, 0)
+        END
+      ) AS "totalDiscountGiven"
+    FROM orders o
+    JOIN order_products op ON o.id = op."orderId"
+    JOIN products p ON p.id = op."productId"
+    JOIN branchs b ON b.id = o."branchId"
+    JOIN "Discount" d ON d."productId" = p.id AND d."branchId" = o."branchId"
+      AND o."createdAt" <= d."expiredAt"
+    WHERE o."paymentStatus" = 'PAID'
+    ${branchFilter}
+    GROUP BY d.type, d."isPercentage", d.value, d."minPurchase", d."buyX", d."getY", b.name, p.name
+    ORDER BY "timesUsed" DESC
+  `);
+
+  // === Konversi bigint ke number (untuk JSON)
+  const parsed = result.map((item) => {
+    const newItem: any = { ...item };
+    for (const key in newItem) {
+      if (typeof newItem[key] === "bigint") {
+        newItem[key] = Number(newItem[key]);
+      }
+    }
+    return newItem;
+  });
+
+  return parsed;
+};
+
+
 export const getStockDetail = async (branchId?: number, month?: string) => {
   let filters = Prisma.sql``;
 

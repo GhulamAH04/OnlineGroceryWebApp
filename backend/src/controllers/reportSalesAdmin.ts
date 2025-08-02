@@ -3,6 +3,7 @@
 import { Request, Response, NextFunction } from "express";
 import * as reportService from "../services/reportSalesAdmin.service";
 import { sanitizeBigInt } from "../utils/sanitizeBigInt"; // helper baru
+import { getDiscountUsageReport } from "../services/reportSalesAdmin.service";
 
 const resolveBranchId = (req: Request): number | undefined => {
   if (!req.user) return undefined;
@@ -80,6 +81,29 @@ export const getStockDetail = async (
     const month = req.query.month as string;
     const result = await reportService.getStockDetail(branchId, month);
     res.json({ success: true, message: "OK", data: sanitizeBigInt(result) });
+  } catch (err) {
+    next(err);
+  }
+};
+
+
+// ==== DISKON REPORT ====
+export const getDiscountReportController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const user = req.user!;
+    const role = user.role;
+    const branchId = role === "STORE_ADMIN" ? user.branchId : undefined;
+
+    const data = await getDiscountUsageReport(branchId);
+    res.json({
+      success: true,
+      message: "Laporan penggunaan diskon berhasil diambil",
+      data,
+    });
   } catch (err) {
     next(err);
   }
