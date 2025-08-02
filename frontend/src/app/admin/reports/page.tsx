@@ -27,6 +27,7 @@ import {
 const COLORS = ["#22c55e", "#16a34a", "#15803d", "#166534"];
 
 export default function ReportsPage() {
+  // === STATE ===
   const [salesByMonth, setSalesByMonth] = useState<SalesReportItem[]>([]);
   const [salesByCategory, setSalesByCategory] = useState<SalesReportItem[]>([]);
   const [salesByProduct, setSalesByProduct] = useState<SalesReportItem[]>([]);
@@ -36,84 +37,68 @@ export default function ReportsPage() {
   const [selectedBranchId, setSelectedBranchId] = useState<number | null>(null);
   const [selectedMonth, setSelectedMonth] = useState("2025-07");
 
+  // === FETCH BRANCH LIST ===
+  const fetchBranches = async () => {
+    try {
+      const res = await axios.get("/api/admin/branches");
+      setBranches(Array.isArray(res.data?.data) ? res.data.data : []);
+    } catch {
+      toast.error("Gagal mengambil data cabang");
+    }
+  };
+
+  // === FETCH SALES & STOCK SUMMARY REPORT ===
   const fetchReports = async (branchId?: number) => {
     try {
       const [month, category, product, stock] = await Promise.all([
-        axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/admin/reports/sales/month`,
-          {
-            params: { branchId },
-          }
-        ),
-        axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/admin/reports/sales/category`,
-          {
-            params: { branchId },
-          }
-        ),
-        axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/admin/reports/sales/product`,
-          {
-            params: { branchId },
-          }
-        ),
-        axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/admin/reports/stock/summary`,
-          {
-            params: { branchId },
-          }
-        ),
+        axios.get("/api/admin/reports/sales/month", { params: { branchId } }),
+        axios.get("/api/admin/reports/sales/category", {
+          params: { branchId },
+        }),
+        axios.get("/api/admin/reports/sales/product", { params: { branchId } }),
+        axios.get("/api/admin/reports/stock/summary", { params: { branchId } }),
       ]);
 
-      setSalesByMonth(month.data.data);
-      setSalesByCategory(category.data.data);
-      setSalesByProduct(product.data.data);
-      setStockReport(stock.data.data);
+      setSalesByMonth(Array.isArray(month.data?.data) ? month.data.data : []);
+      setSalesByCategory(
+        Array.isArray(category.data?.data) ? category.data.data : []
+      );
+      setSalesByProduct(
+        Array.isArray(product.data?.data) ? product.data.data : []
+      );
+      setStockReport(Array.isArray(stock.data?.data) ? stock.data.data : []);
     } catch {
       toast.error("Gagal mengambil data laporan");
     }
   };
 
+  // === FETCH DETAIL MUTASI STOK ===
   const fetchMutations = async () => {
     try {
-      const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/reports/stock/detail`,
-        {
-          params: {
-            branchId: selectedBranchId,
-            month: selectedMonth,
-          },
-        }
-      );
-      setStockMutations(res.data.data);
+      const res = await axios.get("/api/admin/reports/stock/detail", {
+        params: {
+          branchId: selectedBranchId,
+          month: selectedMonth,
+        },
+      });
+      setStockMutations(Array.isArray(res.data?.data) ? res.data.data : []);
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
       toast.error(
         error?.response?.data?.message || "Gagal mengambil detail mutasi stok"
       );
     }
-
   };
 
-  const fetchBranches = async () => {
-    try {
-      const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/branches`
-      );
-      setBranches(res.data.data);
-    } catch {
-      toast.error("Gagal mengambil data cabang");
-    }
-  };
-
+  // === ON LOAD: Fetch Cabang
   useEffect(() => {
     fetchBranches();
   }, []);
 
+  // === ON FILTER CHANGE
   useEffect(() => {
     fetchReports(selectedBranchId ?? undefined);
     fetchMutations();
-    /* eslint-disable-next-line */
   }, [selectedBranchId, selectedMonth]);
 
   return (
@@ -122,7 +107,7 @@ export default function ReportsPage() {
         Laporan & Analisis
       </h1>
 
-      {/* === Filter Cabang & Bulan === */}
+      {/* === FILTER: Cabang dan Bulan === */}
       <div className="max-w-md mx-auto mb-4 flex flex-col gap-2">
         <select
           value={selectedBranchId ?? ""}
@@ -147,7 +132,7 @@ export default function ReportsPage() {
         />
       </div>
 
-      {/* === Sales per Bulan === */}
+      {/* === PENJUALAN PER BULAN === */}
       <div className="bg-white p-6 rounded-xl shadow">
         <h2 className="text-xl font-semibold mb-4 text-green-700">
           Penjualan per Bulan
@@ -162,7 +147,7 @@ export default function ReportsPage() {
         </ResponsiveContainer>
       </div>
 
-      {/* === Sales per Kategori & Produk === */}
+      {/* === PENJUALAN KATEGORI & PRODUK === */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-white p-6 rounded-xl shadow">
           <h2 className="text-xl font-semibold mb-4 text-green-700">
@@ -209,7 +194,7 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      {/* === Stock Summary === */}
+      {/* === RINGKASAN MUTASI STOK === */}
       <div className="bg-white p-6 rounded-xl shadow">
         <h2 className="text-xl font-semibold mb-4 text-green-700">
           Ringkasan Mutasi Stok
@@ -226,7 +211,7 @@ export default function ReportsPage() {
         </ResponsiveContainer>
       </div>
 
-      {/* === Detail Mutasi === */}
+      {/* === TABEL DETAIL MUTASI === */}
       <div className="bg-white p-6 rounded-xl shadow">
         <h2 className="text-xl font-semibold mb-4 text-green-700">
           Detail Mutasi Stok per Produk
@@ -244,17 +229,18 @@ export default function ReportsPage() {
               </tr>
             </thead>
             <tbody>
-              {stockMutations.map((item, index) => (
-                <tr key={index}>
-                  <td className="p-2 border">{item.date}</td>
-                  <td className="p-2 border">{item.product}</td>
-                  <td className="p-2 border">{item.action}</td>
-                  <td className="p-2 border">{item.amount}</td>
-                  <td className="p-2 border">{item.branch}</td>
-                  <td className="p-2 border">{item.note}</td>
-                </tr>
-              ))}
-              {stockMutations.length === 0 && (
+              {stockMutations.length > 0 ? (
+                stockMutations.map((item, index) => (
+                  <tr key={index}>
+                    <td className="p-2 border">{item.date}</td>
+                    <td className="p-2 border">{item.product}</td>
+                    <td className="p-2 border">{item.action}</td>
+                    <td className="p-2 border">{item.amount}</td>
+                    <td className="p-2 border">{item.branch}</td>
+                    <td className="p-2 border">{item.note}</td>
+                  </tr>
+                ))
+              ) : (
                 <tr>
                   <td colSpan={6} className="p-4 text-center text-gray-500">
                     Tidak ada data mutasi stok untuk bulan ini.

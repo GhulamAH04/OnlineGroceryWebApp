@@ -1,4 +1,3 @@
-// === DISCOUNT MANAGEMENT PAGE ===
 "use client";
 
 import { useEffect, useState } from "react";
@@ -17,7 +16,6 @@ import ConfirmModal from "@/components/features2/common/ConfirmModal";
 import { useDebounceSearch } from "@/hooks/useDebounceSearch";
 
 export default function DiscountPage() {
-  // === STATE ===
   const [discounts, setDiscounts] = useState<Discount[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [editId, setEditId] = useState<number | null>(null);
@@ -25,7 +23,6 @@ export default function DiscountPage() {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounceSearch(search);
 
-  // === FORM SETUP ===
   const {
     register,
     handleSubmit,
@@ -35,14 +32,13 @@ export default function DiscountPage() {
     resolver: yupResolver(discountAdminSchema),
   });
 
-  // === FETCH DATA DISKON & PRODUK ===
   const fetchData = async () => {
     try {
       const [discRes, prodRes] = await Promise.all([
-        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/admin/discounts`, {
+        axios.get("/api/admin/discounts", {
           params: { search: debouncedSearch },
         }),
-        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/admin/products`),
+        axios.get("/api/admin/products"),
       ]);
 
       setDiscounts(discRes?.data?.data ?? []);
@@ -54,10 +50,9 @@ export default function DiscountPage() {
 
   useEffect(() => {
     fetchData();
-    /* eslint-disable-next-line */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearch]);
 
-  // === SUBMIT FORM DISKON ===
   const onSubmit = async (data: DiscountAdminInput) => {
     try {
       const payload = {
@@ -66,16 +61,10 @@ export default function DiscountPage() {
       };
 
       if (editId) {
-        await axios.put(
-          `${process.env.NEXT_PUBLIC_API_URL}/admin/discounts/${editId}`,
-          payload
-        );
+        await axios.put(`/api/admin/discounts/${editId}`, payload);
         toast.success("Diskon berhasil diperbarui");
       } else {
-        await axios.post(
-          `${process.env.NEXT_PUBLIC_API_URL}/admin/discounts`,
-          payload
-        );
+        await axios.post("/api/admin/discounts", payload);
         toast.success("Diskon berhasil ditambahkan");
       }
 
@@ -87,7 +76,6 @@ export default function DiscountPage() {
     }
   };
 
-  // === HANDLE EDIT ===
   const handleEdit = (item: Discount) => {
     reset({
       productId: item.productId,
@@ -100,13 +88,10 @@ export default function DiscountPage() {
     setEditId(item.id);
   };
 
-  // === HANDLE DELETE ===
   const handleDelete = async () => {
     if (!confirmId) return;
     try {
-      await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/discounts/${confirmId}`
-      );
+      await axios.delete(`/api/admin/discounts/${confirmId}`);
       toast.success("Diskon berhasil dihapus");
       fetchData();
     } catch {
@@ -116,7 +101,6 @@ export default function DiscountPage() {
     }
   };
 
-  // === RENDER ===
   return (
     <div className="min-h-screen p-4 bg-gray-50">
       <div className="bg-white p-6 rounded-xl shadow-lg max-w-5xl mx-auto">
@@ -124,7 +108,7 @@ export default function DiscountPage() {
           Manajemen Diskon Produk
         </h1>
 
-        {/* === SEARCH DISKON === */}
+        {/* === SEARCH === */}
         <div className="mb-4">
           <input
             type="text"
@@ -135,7 +119,7 @@ export default function DiscountPage() {
           />
         </div>
 
-        {/* === FORM INPUT DISKON === */}
+        {/* === FORM === */}
         <form
           onSubmit={handleSubmit(onSubmit)}
           className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6"
@@ -147,12 +131,11 @@ export default function DiscountPage() {
               className="w-full border rounded p-2"
             >
               <option value="">Pilih Produk</option>
-              {Array.isArray(products) &&
-                products.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
+              {products.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
             </select>
             {errors.productId && (
               <p className="text-red-500 text-sm">{errors.productId.message}</p>
@@ -226,7 +209,7 @@ export default function DiscountPage() {
           </div>
         </form>
 
-        {/* === TABEL DISKON === */}
+        {/* === TABLE === */}
         <table className="w-full border text-sm">
           <thead className="bg-green-100">
             <tr>
@@ -271,7 +254,7 @@ export default function DiscountPage() {
           </tbody>
         </table>
 
-        {/* === MODAL KONFIRMASI HAPUS === */}
+        {/* === MODAL DELETE === */}
         {confirmId && (
           <ConfirmModal
             open={Boolean(confirmId)}

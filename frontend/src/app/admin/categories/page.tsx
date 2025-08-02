@@ -1,5 +1,3 @@
-// === CATEGORY MANAGEMENT PAGE ===
-// OnlineGroceryWebApp/frontend/src/app/admin/categories/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -16,10 +14,9 @@ import { Category } from "@/interfaces/categoryAdmin";
 const categorySchema = yup.object({
   name: yup.string().required("Nama kategori wajib diisi"),
 });
-
 type CategoryInput = yup.InferType<typeof categorySchema>;
 
-// === FUNCTION UNTUK GENERATE SLUG ===
+// === SLUG GENERATOR ===
 const generateSlug = (text: string) =>
   text
     .toLowerCase()
@@ -27,14 +24,12 @@ const generateSlug = (text: string) =>
     .replace(/(^-|-$)+/g, "");
 
 export default function CategoryPage() {
-  // === STATE ===
   const [categories, setCategories] = useState<Category[]>([]);
   const [editId, setEditId] = useState<number | null>(null);
   const [confirmId, setConfirmId] = useState<number | null>(null);
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounceSearch(search);
 
-  // === FORM SETUP ===
   const {
     register,
     handleSubmit,
@@ -44,43 +39,49 @@ export default function CategoryPage() {
     resolver: yupResolver(categorySchema),
   });
 
-  // === FETCH DATA KATEGORI ===
+  // === FETCH DATA ===
   const fetchData = async () => {
     try {
-      const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/categories`,
-        { params: { search: debouncedSearch } }
-      );
-      setCategories(res.data.data);
-    } catch {
+      const token = localStorage.getItem("token");
+      const res = await axios.get("/api/admin/categories", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        params: { search: debouncedSearch },
+      });
+
+      const data = Array.isArray(res.data.data) ? res.data.data : [];
+      console.log("✅ Kategori fetched:", data);
+      setCategories(data);
+    } catch (err) {
+      console.error("❌ Error fetching kategori:", err);
       toast.error("Gagal mengambil data kategori");
     }
   };
 
   useEffect(() => {
     fetchData();
-    /* eslint-disable-next-line */
   }, [debouncedSearch]);
 
-  // === SUBMIT FORM TAMBAH / EDIT ===
+  // === HANDLE SUBMIT ===
   const onSubmit = async (data: CategoryInput) => {
+    const payload = {
+      name: data.name,
+      slug: generateSlug(data.name),
+    };
+
     try {
-      const payload = {
-        name: data.name,
-        slug: generateSlug(data.name),
-      };
+      const token = localStorage.getItem("token");
 
       if (editId) {
-        await axios.put(
-          `${process.env.NEXT_PUBLIC_API_URL}/admin/categories/${editId}`,
-          payload
-        );
+        await axios.put(`/api/admin/categories/${editId}`, payload, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         toast.success("Kategori berhasil diperbarui");
       } else {
-        await axios.post(
-          `${process.env.NEXT_PUBLIC_API_URL}/admin/categories`,
-          payload
-        );
+        await axios.post("/api/admin/categories", payload, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         toast.success("Kategori berhasil ditambahkan");
       }
 
@@ -102,9 +103,11 @@ export default function CategoryPage() {
   const handleDelete = async () => {
     if (!confirmId) return;
     try {
-      await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/categories/${confirmId}`
-      );
+      const token = localStorage.getItem("token");
+
+      await axios.delete(`/api/admin/categories/${confirmId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       toast.success("Kategori berhasil dihapus");
       fetchData();
     } catch {
@@ -114,7 +117,6 @@ export default function CategoryPage() {
     }
   };
 
-  // === RENDER ===
   return (
     <div className="min-h-screen p-4 bg-gray-50">
       <div className="bg-white p-6 rounded-xl shadow-lg max-w-4xl mx-auto">
@@ -132,6 +134,8 @@ export default function CategoryPage() {
               type="text"
               {...register("name")}
               placeholder="Nama Kategori"
+              autoComplete="off"
+              aria-label="Nama kategori"
               className="w-full border rounded p-2"
             />
             {errors.name && (
@@ -165,6 +169,8 @@ export default function CategoryPage() {
           <input
             type="text"
             placeholder="Cari kategori..."
+            autoComplete="off"
+            aria-label="Cari kategori"
             className="border rounded p-2 w-full md:w-1/2"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -181,26 +187,34 @@ export default function CategoryPage() {
             </tr>
           </thead>
           <tbody>
-            {categories.map((cat) => (
-              <tr key={cat.id} className="border">
-                <td className="p-2">{cat.name}</td>
-                <td className="p-2">{cat.slug}</td>
-                <td className="p-2 flex gap-2">
-                  <button
-                    onClick={() => handleEdit(cat)}
-                    className="text-blue-600"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => setConfirmId(cat.id)}
-                    className="text-red-600"
-                  >
-                    Hapus
-                  </button>
+            {categories.length === 0 ? (
+              <tr>
+                <td colSpan={3} className="text-center text-gray-500 py-4">
+                  Tidak ada kategori ditemukan.
                 </td>
               </tr>
-            ))}
+            ) : (
+              categories.map((cat) => (
+                <tr key={cat.id} className="border">
+                  <td className="p-2">{cat.name}</td>
+                  <td className="p-2">{cat.slug}</td>
+                  <td className="p-2 flex gap-2">
+                    <button
+                      onClick={() => handleEdit(cat)}
+                      className="text-blue-600"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => setConfirmId(cat.id)}
+                      className="text-red-600"
+                    >
+                      Hapus
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
 
