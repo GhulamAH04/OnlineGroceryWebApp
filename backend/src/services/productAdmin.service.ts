@@ -5,6 +5,9 @@ import { uploadToCloudinary } from "../utils/cloudinary";
 
 const prisma = new PrismaClient();
 
+const DEFAULT_IMAGE =
+  "https://res.cloudinary.com/djbdfjx1d/image/upload/v1746972046/nugget_plgi8w.jpg";
+
 export const productService = {
   // === GET ALL PRODUCTS ===
   getAll: async (params: any) => {
@@ -50,35 +53,22 @@ export const productService = {
       },
     });
 
-    // === Transform data ===
-    const result = products.flatMap<ProductAdminItem>((product) => {
-      if (product.product_branchs.length === 0) {
-        return [{
-          id: product.id,
-          name: product.name,
-          slug: product.slug,
-          image: product.image,
-          price: product.price,
-          stock: 0,
-          branchId: null,
-          branchName: '-',
-          categoryName: product.categories?.name || '-',
-          description: product.description || '',
-        }];
-      }
+    // === Transform: Ambil 1 cabang pertama (jika ada), dan 1 gambar ===
+    const result: ProductAdminItem[] = products.map((product) => {
+      const firstBranch = product.product_branchs[0];
 
-      return product.product_branchs.map((pb) => ({
+      return {
         id: product.id,
         name: product.name,
         slug: product.slug,
-        image: product.image,
+        image: product.image || DEFAULT_IMAGE,
         price: product.price,
-        stock: pb.stock,
-        branchId: pb.branchId,
-        branchName: pb.branchs.name,
+        stock: firstBranch?.stock || 0,
+        branchId: firstBranch?.branchId || null,
+        branchName: firstBranch?.branchs?.name || '-',
         categoryName: product.categories?.name || '-',
         description: product.description || '',
-      }));
+      };
     });
 
     return {
@@ -105,7 +95,7 @@ export const productService = {
       id: pb.products.id,
       name: pb.products.name,
       slug: pb.products.slug,
-      image: pb.products.image,
+      image: pb.products.image || DEFAULT_IMAGE,
       price: pb.products.price,
       stock: pb.stock,
       branchId: pb.branchs.id,
@@ -122,10 +112,14 @@ export const productService = {
     });
     if (existing) throw new Error("Produk dengan nama ini sudah ada");
 
-    const uploads = await Promise.all(
-      files.map((file) => uploadToCloudinary(file.buffer))
-    );
-    const firstImageUrl = (uploads[0] as any).secure_url;
+    let imageUrl = DEFAULT_IMAGE;
+    if (files?.length > 0) {
+      const uploads = await Promise.all(
+        files.map((file) => uploadToCloudinary(file.buffer))
+      );
+      imageUrl = (uploads[0] as any).secure_url || DEFAULT_IMAGE;
+    }
+
     const slug = body.name.toLowerCase().replace(/\s+/g, '-');
 
     const product = await prisma.products.create({
@@ -136,7 +130,7 @@ export const productService = {
         price: +body.price,
         categoryId: Number(body.categoryId) || 1,
         weight: body.weight,
-        image: firstImageUrl,
+        image: imageUrl,
         updatedAt: new Date(),
       },
     });
@@ -175,7 +169,7 @@ export const productService = {
       updatedAt: new Date(),
     };
 
-    if (files && files.length > 0) {
+    if (files?.length > 0) {
       const uploads = await Promise.all(
         files.map((file) => uploadToCloudinary(file.buffer))
       );
