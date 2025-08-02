@@ -1,8 +1,18 @@
+"use client";
+
 import { PhoneCall } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export default function NavLinks() {
-  const links = ["Home", "Shop", "About Us", "Contact Us"];
+  const links = [
+    { name: "Home", link: "/" },
+    { name: "Shop", link: "/shop" },
+    { name: "About Us", link: "/about" },
+    { name: "Contact Us", link: "/contact" },
+  ];
+
+  const pathname = usePathname();
 
   return (
     <div
@@ -23,32 +33,36 @@ export default function NavLinks() {
         className="
         flex
         flex-wrap justify-center md:justify-start
-        gap-x-3 sm:gap-x-4
+        gap-x-5 sm:gap-x-6
         gap-y-2
         w-full md:w-auto
         text-sm sm:text-[14px]
+        
       "
       >
-        {links.map((link, index) => (
-          <li key={index}>
-            <Link
-              href="/"
-              className="
-                hover:text-white
-                active:text-white
-                focus:text-white
-                focus:outline-none
-                focus:ring-2 focus:ring-white/50
-                transition-colors
-                px-1 py-0.5
-                rounded
-              "
-              aria-label={link}
-            >
-              {link}
-            </Link>
-          </li>
-        ))}
+        {links.map((link, index) => {
+          const isActive = pathname === link.link;
+          return (
+            <li key={index}>
+              <Link
+                href={link.link}
+                className={`
+                  transition-colors
+                  p-2
+                  rounded
+                  ${
+                    isActive
+                      ? "bg-green-500 text-white font-semibold"
+                      : "hover:text-white hover:font-semibold hover:bg-gray-600"
+                  }
+                `}
+                aria-label={link.name}
+              >
+                {link.name}
+              </Link>
+            </li>
+          );
+        })}
       </ul>
 
       {/* Phone Contact */}

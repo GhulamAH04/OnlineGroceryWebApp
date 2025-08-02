@@ -13,7 +13,6 @@ export default function Middle() {
   const getTotalCart = async () => {
     try {
       const total = await totalCart();
-      console.log("Total Cart:", total);
       setCartItems(total);
     } catch (error) {
       console.error("Failed to fetch total cart:", error);
@@ -26,7 +25,7 @@ export default function Middle() {
     } else {
       setCartItems(undefined);
     }
-      /* eslint-disable-next-line */
+    /* eslint-disable-next-line */
   }, [userState, isLoading]);
 
   return (
@@ -168,8 +167,9 @@ export default function Middle() {
                   loading="lazy"
                 />
               </Link>
-              <div
-                className="
+              {cartItems && (
+                <div
+                  className="
                 absolute -top-1 -right-1
                 bg-green-700
                 rounded-full
@@ -178,14 +178,15 @@ export default function Middle() {
                 text-[10px]
                 flex items-center justify-center
               "
-              >
-                {cartItems ? cartItems.totalQuantity : 0}
-              </div>
+                >
+                  {cartItems.totalQuantity}
+                </div>
+              )}
             </div>
             <div className="hidden sm:block">
               <p className="text-xs text-neutral-500">Shopping Cart:</p>
               <p className="text-sm font-medium">
-                IDR {cartItems ? cartItems.totalPrice : 0}
+                Rp {cartItems ? cartItems.totalPrice.toLocaleString("id-ID") : 0}
               </p>
             </div>
           </div>

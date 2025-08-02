@@ -7,7 +7,7 @@ import { useAppSelector } from "@/lib/redux/hooks";
 import { ICartItems, IGroupedItem } from "@/interfaces/product.interface";
 import { IShippingOption } from "@/interfaces/shipping.interface";
 import { IExistingAddress } from "@/interfaces/address.interface";
-import { apiUrl } from "@/config";
+import { apiUrl, imageUrl } from "@/config";
 import axios from "axios";
 import { getCookie } from "cookies-next";
 import { createOrder } from "@/stores/order.store";
@@ -346,8 +346,8 @@ export default function Checkout() {
                   <h3 className="font-bold text-md text-gray-700 mb-3">
                     Dikirim dari:{" "}
                     {
-                      storeName + " - "
-                      // `(${products[0].storeAddress.cities.name})`
+                      storeName + " - " +
+                      `(${products[0].storeAddress.cities.name})`
                     }
                   </h3>
                   {products.map((product, idx) => (
@@ -357,7 +357,7 @@ export default function Checkout() {
                     >
                       {/* eslint-disable-next-line */}
                       <img
-                        src={product.imageUrl}
+                        src={`${imageUrl}/${product.imageUrl}`}
                         alt={product.name}
                         className="w-16 h-16 object-cover rounded-md"
                       />
