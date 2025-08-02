@@ -8,3 +8,8 @@ export interface UserAdmin {
   branchId?: number | null;        
   branchName?: string;
 }
+
+export interface JwtPayload {
+  userId: number;
+  role: "SUPER_ADMIN" | "STORE_ADMIN" | "USER";
+}

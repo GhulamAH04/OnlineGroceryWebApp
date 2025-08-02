@@ -45,7 +45,7 @@ export const adminService = {
       updated.password = await bcrypt.hash(data.password, 10);
     }
 
-    return prisma.users.update({ where: { id }, data: updated });
+    return prisma.users.update({ where: { id }, data: updated, });
   },
 
   deleteStoreAdmin: async (id: number) => {

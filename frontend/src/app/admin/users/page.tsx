@@ -9,8 +9,9 @@ import axios from "@/lib/axios";
 
 import { userAdminSchema } from "@/schemas/userAdminManagement.schema";
 import type { UserAdminInput } from "@/schemas/userAdminManagement.schema";
-import type { UserAdmin } from "@/interfaces/userAdmin";
+import type { UserAdmin, JwtPayload } from "@/interfaces/userAdmin";
 import ConfirmModal from "@/components/features2/common/ConfirmModal";
+import { jwtDecode } from "jwt-decode";
 
 // === PAGE COMPONENT ===
 export default function UserManagementPage() {
@@ -21,6 +22,7 @@ export default function UserManagementPage() {
   const [editBranchName, setEditBranchName] = useState<string | null>(null);
   const [confirmId, setConfirmId] = useState<number | null>(null);
   const [search, setSearch] = useState("");
+  const [role, setRole] = useState<JwtPayload["role"] | null>(null);
 
   // === FORM SETUP ===
   const {
@@ -33,6 +35,19 @@ export default function UserManagementPage() {
     resolver: yupResolver(userAdminSchema),
     context: { isEdit: !!editId },
   });
+
+  // === GET ROLE FROM TOKEN ===
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      try {
+        const decoded = jwtDecode<JwtPayload>(token);
+        setRole(decoded.role);
+      } catch {
+        setRole(null);
+      }
+    }
+  }, []);
 
   // === FETCH USERS ===
   const fetchUsers = async () => {
@@ -64,7 +79,6 @@ export default function UserManagementPage() {
   const onSubmit = async (data: UserAdminInput) => {
     try {
       if (editId) {
-        // === UPDATE MODE ===
         await axios.put(`/api/admin/users/${editId}`, {
           email: data.email,
           username: data.username,
@@ -72,7 +86,6 @@ export default function UserManagementPage() {
         });
         toast.success("User diperbarui");
       } else {
-        // === CREATE MODE ===
         await axios.post("/api/admin/users", {
           email: data.email,
           username: data.username,
@@ -131,88 +144,94 @@ export default function UserManagementPage() {
       />
 
       {/* === FORM CREATE/EDIT === */}
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="bg-green-50 border border-green-200 rounded p-4 space-y-4"
-      >
-        <div>
-          <label className="block mb-1 font-medium">Email</label>
-          <input
-            {...register("email")}
-            className="w-full px-3 py-2 border rounded"
-          />
-          <p className="text-sm text-red-500">{errors.email?.message}</p>
-        </div>
-
-        <div>
-          <label className="block mb-1 font-medium">Username</label>
-          <input
-            {...register("username")}
-            className="w-full px-3 py-2 border rounded"
-          />
-          <p className="text-sm text-red-500">{errors.username?.message}</p>
-        </div>
-
-        {editId ? (
+      {role === "SUPER_ADMIN" && (
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="bg-green-50 border border-green-200 rounded p-4 space-y-4"
+        >
           <div>
-            <label className="block mb-1 font-medium">Cabang</label>
+            <label className="block mb-1 font-medium">Email</label>
             <input
-              disabled
-              value={editBranchName || "-"}
-              className="w-full px-3 py-2 border rounded bg-gray-100 text-gray-500"
+              {...register("email")}
+              className="w-full px-3 py-2 border rounded"
             />
+            <p className="text-sm text-red-500">{errors.email?.message}</p>
           </div>
-        ) : (
-          <>
-            <div>
-              <label className="block mb-1 font-medium">Password</label>
-              <input
-                type="password"
-                {...register("password")}
-                className="w-full px-3 py-2 border rounded"
-              />
-              <p className="text-sm text-red-500">{errors.password?.message}</p>
-            </div>
 
+          <div>
+            <label className="block mb-1 font-medium">Username</label>
+            <input
+              {...register("username")}
+              className="w-full px-3 py-2 border rounded"
+            />
+            <p className="text-sm text-red-500">{errors.username?.message}</p>
+          </div>
+
+          {editId ? (
             <div>
               <label className="block mb-1 font-medium">Cabang</label>
-              <select
-                {...register("branchId")}
-                className="w-full px-3 py-2 border rounded bg-white"
-              >
-                <option value="">Pilih Cabang</option>
-                {branches.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.name}
-                  </option>
-                ))}
-              </select>
-              <p className="text-sm text-red-500">{errors.branchId?.message}</p>
+              <input
+                disabled
+                value={editBranchName || "-"}
+                className="w-full px-3 py-2 border rounded bg-gray-100 text-gray-500"
+              />
             </div>
-          </>
-        )}
+          ) : (
+            <>
+              <div>
+                <label className="block mb-1 font-medium">Password</label>
+                <input
+                  type="password"
+                  {...register("password")}
+                  className="w-full px-3 py-2 border rounded"
+                />
+                <p className="text-sm text-red-500">
+                  {errors.password?.message}
+                </p>
+              </div>
 
-        <div className="flex gap-3">
-          <button
-            type="submit"
-            className="bg-green-600 text-white px-4 py-2 rounded"
-          >
-            {editId ? "Update" : "Tambah"} User
-          </button>
-          {editId && (
-            <button
-              type="button"
-              onClick={() => {
-                setEditId(null);
-                reset();
-              }}
-              className="text-gray-600 underline"
-            >
-              Batal
-            </button>
+              <div>
+                <label className="block mb-1 font-medium">Cabang</label>
+                <select
+                  {...register("branchId")}
+                  className="w-full px-3 py-2 border rounded bg-white"
+                >
+                  <option value="">Pilih Cabang</option>
+                  {branches.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.name}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-sm text-red-500">
+                  {errors.branchId?.message}
+                </p>
+              </div>
+            </>
           )}
-        </div>
-      </form>
+
+          <div className="flex gap-3">
+            <button
+              type="submit"
+              className="bg-green-600 text-white px-4 py-2 rounded"
+            >
+              {editId ? "Update" : "Tambah"} User
+            </button>
+            {editId && (
+              <button
+                type="button"
+                onClick={() => {
+                  setEditId(null);
+                  reset();
+                }}
+                className="text-gray-600 underline"
+              >
+                Batal
+              </button>
+            )}
+          </div>
+        </form>
+      )}
 
       {/* === TABEL DATA USER === */}
       <table className="w-full border mt-4">
@@ -238,18 +257,22 @@ export default function UserManagementPage() {
                 <td className="p-2 border">{user.username}</td>
                 <td className="p-2 border">{user.branchName || "-"}</td>
                 <td className="p-2 border text-center space-x-2">
-                  <button
-                    className="text-blue-600 hover:underline"
-                    onClick={() => handleEdit(user)}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    className="text-red-600 hover:underline"
-                    onClick={() => setConfirmId(user.id)}
-                  >
-                    Hapus
-                  </button>
+                  {role === "SUPER_ADMIN" && (
+                    <>
+                      <button
+                        className="text-blue-600 hover:underline"
+                        onClick={() => handleEdit(user)}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        className="text-red-600 hover:underline"
+                        onClick={() => setConfirmId(user.id)}
+                      >
+                        Hapus
+                      </button>
+                    </>
+                  )}
                 </td>
               </tr>
             ))
