@@ -1,4 +1,3 @@
-// === FILE: app/admin/inventoryJournal/page.tsx ===
 "use client";
 
 import { useEffect, useState } from "react";
@@ -13,6 +12,7 @@ import {
 } from "@/interfaces/inventoryAdmin";
 import { inventoryJournalSchema } from "@/schemas/inventoryJournalSchema";
 import ConfirmModal from "@/components/features2/common/ConfirmModal";
+import { getRoleFromToken } from "@/utils/getRoleFromToken";
 
 export default function InventoryJournalPage() {
   const [journals, setJournals] = useState<InventoryJournal[]>([]);
@@ -21,9 +21,18 @@ export default function InventoryJournalPage() {
   const [confirmId, setConfirmId] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const [role, setRole] = useState<
+    "SUPER_ADMIN" | "STORE_ADMIN" | "USER" | null
+  >(null);
+  const [storeBranchId, setStoreBranchId] = useState<number | null>(null);
+
+  // === FETCH DATA ===
   const fetchData = async () => {
     try {
       const token = localStorage.getItem("token");
+      const userRole = getRoleFromToken();
+      setRole(userRole);
+
       const [journalRes, productRes, branchRes] = await Promise.all([
         axios.get("/api/admin/inventory-journal", {
           headers: { Authorization: `Bearer ${token}` },
@@ -36,21 +45,32 @@ export default function InventoryJournalPage() {
         }),
       ]);
 
+      // Set Journals
       setJournals(
         Array.isArray(journalRes.data?.data) ? journalRes.data.data : []
       );
 
-     const rawProducts = Array.isArray(productRes.data?.data?.data)
-       ? (productRes.data.data.data as { id: number; name: string }[])
-       : [];
-      const uniqueProducts = Array.from(
-        new Map(rawProducts.map((p) => [p.id, p])).values()
-      );
-      setProducts(uniqueProducts);
+      // Set Products (deduplicate)
+      const productData = productRes.data?.data?.data;
+      if (Array.isArray(productData)) {
+        const typedProducts = productData as { id: number; name: string }[];
+        const uniqueProducts = Array.from(
+          new Map(typedProducts.map((p) => [p.id, p])).values()
+        );
+        setProducts(uniqueProducts);
+      } else {
+        setProducts([]);
+      }
 
-      setBranches(
-        Array.isArray(branchRes.data?.data) ? branchRes.data.data : []
-      );
+      // Set Branches
+      const branchList = branchRes.data?.data;
+      if (Array.isArray(branchList)) {
+        setBranches(branchList);
+        // Auto-assign branch for STORE_ADMIN
+        if (userRole === "STORE_ADMIN" && branchList.length === 1) {
+          setStoreBranchId(branchList[0].id);
+        }
+      }
     } catch (err) {
       console.error("❌ fetch error:", err);
       toast.error("Gagal mengambil data");
@@ -66,9 +86,17 @@ export default function InventoryJournalPage() {
     handleSubmit,
     reset,
     formState: { errors },
+    setValue,
   } = useForm({
     resolver: yupResolver(inventoryJournalSchema),
   });
+
+  // === SET BRANCH AUTO FOR STORE ADMIN ===
+  useEffect(() => {
+    if (role === "STORE_ADMIN" && storeBranchId) {
+      setValue("branchId", storeBranchId);
+    }
+  }, [role, storeBranchId, setValue]);
 
   const onSubmit = async (data: InventoryJournalForm) => {
     try {
@@ -144,6 +172,7 @@ export default function InventoryJournalPage() {
             <select
               {...register("branchId")}
               className="w-full border rounded p-2"
+              disabled={role === "STORE_ADMIN"}
             >
               <option value="">Pilih Cabang</option>
               {branches.map((branch) => (
@@ -218,32 +247,33 @@ export default function InventoryJournalPage() {
             </tr>
           </thead>
           <tbody>
-            {journals.map((j) => (
-              <tr key={j.id} className="border">
-                <td className="p-2">{j.productName}</td>
-                <td className="p-2">{j.branchName}</td>
-                <td className="p-2">{j.action}</td>
-                <td className="p-2">{j.amount}</td>
-                <td className="p-2">{j.note || "-"}</td>
-                <td className="p-2">
-                  {new Date(j.createdAt).toLocaleDateString()}
-                </td>
-                <td className="p-2">
-                  <button
-                    onClick={() => setConfirmId(j.id)}
-                    className="text-red-600 hover:underline"
-                  >
-                    Hapus
-                  </button>
-                </td>
-              </tr>
-            ))}
-            {journals.length === 0 && (
+            {journals.length === 0 ? (
               <tr>
                 <td colSpan={7} className="text-center py-4">
                   Tidak ada data
                 </td>
               </tr>
+            ) : (
+              journals.map((j) => (
+                <tr key={j.id} className="border">
+                  <td className="p-2">{j.productName}</td>
+                  <td className="p-2">{j.branchName}</td>
+                  <td className="p-2">{j.action}</td>
+                  <td className="p-2">{j.amount}</td>
+                  <td className="p-2">{j.note || "-"}</td>
+                  <td className="p-2">
+                    {new Date(j.createdAt).toLocaleDateString()}
+                  </td>
+                  <td className="p-2">
+                    <button
+                      onClick={() => setConfirmId(j.id)}
+                      className="text-red-600 hover:underline"
+                    >
+                      Hapus
+                    </button>
+                  </td>
+                </tr>
+              ))
             )}
           </tbody>
         </table>
