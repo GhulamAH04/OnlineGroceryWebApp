@@ -41,6 +41,7 @@ import InventoryJournalRouter from "./routes/inventoryJournal.routes";
 import InventoryRouter from "./routes/inventoryAdmin.routes";
 import BranchAdminRouter from "./routes/branchAdmin.routes";
 import adminOrderRouter from "./routes/admin.order.routes";
+import AdminRouter from "./routes/admin.routes"; 
 
 // === BODY PARSER ===
 app.use(express.json());
@@ -75,7 +76,7 @@ app.use("/api/admin/categories", CategoryAdminRouter);
 app.use(
   "/api/admin/products",
   authMiddleware,
-  authorizeRoles(["SUPER_ADMIN", "STORE_ADMIN"]), // hanya GET yang boleh di routes
+  authorizeRoles(["SUPER_ADMIN", "STORE_ADMIN"]), 
   ProductAdminRouter
 );
 app.use("/api/admin/discounts", DiscountAdminRouter);
@@ -84,6 +85,7 @@ app.use("/api/admin/inventory", InventoryRouter);
 app.use("/api/admin/inventory-journal", InventoryJournalRouter);
 app.use("/api/admin/branches", BranchAdminRouter);
 app.use("/api/admin/order", adminOrderRouter);
+app.use("/api/admin/users", AdminRouter); 
 
 // === STATIC FILES ===
 app.use("/images", express.static("public/images"));

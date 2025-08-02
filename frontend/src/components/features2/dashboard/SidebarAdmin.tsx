@@ -65,7 +65,7 @@ export default function SidebarAdmin() {
       <div>
         <div className="text-2xl font-bold mb-10 tracking-widest text-white">
           <span className="text-white">EcoBazar</span>
-          <span className="text-yellow-200">.Admin</span>
+          <span className="text-yellow-200">Admin</span>
         </div>
 
         <nav className="flex flex-col gap-1">

@@ -1,5 +1,4 @@
 // === FILE: app/admin/inventoryJournal/page.tsx ===
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -22,41 +21,36 @@ export default function InventoryJournalPage() {
   const [confirmId, setConfirmId] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // === FETCH DATA ===
   const fetchData = async () => {
     try {
       const token = localStorage.getItem("token");
-
       const [journalRes, productRes, branchRes] = await Promise.all([
-        axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/admin/inventory-journal`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        ),
-        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/admin/products`, {
+        axios.get("/api/admin/inventory-journal", {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/admin/branches`, {
+        axios.get("/api/admin/products", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        axios.get("/api/admin/branches", {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
 
-      console.log("📦 journal data:", journalRes.data);
-      console.log("🛒 product data:", productRes.data);
-      console.log("🏬 branch data:", branchRes.data);
-
-      const fetchedProducts = productRes.data?.data?.data; // ✅ ambil dari nested `data.data`
-      const fetchedBranches = branchRes.data?.data;
-      const fetchedJournals = journalRes.data?.data;
-
-      setProducts(
-        Array.isArray(fetchedProducts)
-          ? Array.from(new Map(fetchedProducts.map((p) => [p.id, p])).values())
-          : []
+      setJournals(
+        Array.isArray(journalRes.data?.data) ? journalRes.data.data : []
       );
-      setBranches(Array.isArray(fetchedBranches) ? fetchedBranches : []);
-      setJournals(Array.isArray(fetchedJournals) ? fetchedJournals : []);
+
+     const rawProducts = Array.isArray(productRes.data?.data?.data)
+       ? (productRes.data.data.data as { id: number; name: string }[])
+       : [];
+      const uniqueProducts = Array.from(
+        new Map(rawProducts.map((p) => [p.id, p])).values()
+      );
+      setProducts(uniqueProducts);
+
+      setBranches(
+        Array.isArray(branchRes.data?.data) ? branchRes.data.data : []
+      );
     } catch (err) {
       console.error("❌ fetch error:", err);
       toast.error("Gagal mengambil data");
@@ -80,13 +74,11 @@ export default function InventoryJournalPage() {
     try {
       setIsSubmitting(true);
       const token = localStorage.getItem("token");
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/inventory-journal`,
-        data,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+
+      await axios.post("/api/admin/inventory-journal", data, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
       toast.success("Jurnal stok berhasil ditambahkan");
       reset();
       fetchData();
@@ -101,12 +93,11 @@ export default function InventoryJournalPage() {
     if (!confirmId) return;
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/inventory-journal/${confirmId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+
+      await axios.delete(`/api/admin/inventory-journal/${confirmId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
       toast.success("Jurnal berhasil dihapus");
       fetchData();
     } catch {
@@ -128,7 +119,7 @@ export default function InventoryJournalPage() {
           onSubmit={handleSubmit(onSubmit)}
           className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6"
         >
-          {/* === Produk === */}
+          {/* Produk */}
           <div>
             <label className="block mb-1">Produk</label>
             <select
@@ -137,7 +128,7 @@ export default function InventoryJournalPage() {
             >
               <option value="">Pilih Produk</option>
               {products.map((p) => (
-                <option key={p.id} value={p.id}>
+                <option key={`product-${p.id}`} value={p.id}>
                   {p.name}
                 </option>
               ))}
@@ -147,7 +138,7 @@ export default function InventoryJournalPage() {
             )}
           </div>
 
-          {/* === Cabang === */}
+          {/* Cabang */}
           <div>
             <label className="block mb-1">Toko Cabang</label>
             <select
@@ -155,9 +146,9 @@ export default function InventoryJournalPage() {
               className="w-full border rounded p-2"
             >
               <option value="">Pilih Cabang</option>
-              {branches.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.name}
+              {branches.map((branch) => (
+                <option key={`branch-${branch.id}`} value={branch.id}>
+                  {branch.name}
                 </option>
               ))}
             </select>
@@ -166,7 +157,7 @@ export default function InventoryJournalPage() {
             )}
           </div>
 
-          {/* === Tipe === */}
+          {/* Tipe */}
           <div>
             <label className="block mb-1">Tipe</label>
             <select {...register("type")} className="w-full border rounded p-2">
@@ -179,7 +170,7 @@ export default function InventoryJournalPage() {
             )}
           </div>
 
-          {/* === Jumlah === */}
+          {/* Jumlah */}
           <div>
             <label className="block mb-1">Jumlah</label>
             <input
@@ -192,7 +183,7 @@ export default function InventoryJournalPage() {
             )}
           </div>
 
-          {/* === Catatan === */}
+          {/* Catatan */}
           <div className="md:col-span-2">
             <label className="block mb-1">Catatan (opsional)</label>
             <textarea
@@ -228,7 +219,7 @@ export default function InventoryJournalPage() {
           </thead>
           <tbody>
             {journals.map((j) => (
-              <tr key={`${j.id}-${j.createdAt}`} className="border">
+              <tr key={j.id} className="border">
                 <td className="p-2">{j.productName}</td>
                 <td className="p-2">{j.branchName}</td>
                 <td className="p-2">{j.action}</td>
@@ -240,17 +231,24 @@ export default function InventoryJournalPage() {
                 <td className="p-2">
                   <button
                     onClick={() => setConfirmId(j.id)}
-                    className="text-red-600"
+                    className="text-red-600 hover:underline"
                   >
                     Hapus
                   </button>
                 </td>
               </tr>
             ))}
+            {journals.length === 0 && (
+              <tr>
+                <td colSpan={7} className="text-center py-4">
+                  Tidak ada data
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
 
-        {/* === MODAL KONFIRMASI === */}
+        {/* === MODAL KONFIRMASI HAPUS === */}
         {confirmId && (
           <ConfirmModal
             open={!!confirmId}

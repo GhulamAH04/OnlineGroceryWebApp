@@ -1,5 +1,3 @@
-// OnlineGroceryWebApp/frontend/src/app/admin/users/page.tsx
-
 "use client";
 
 // === IMPORTS ===
@@ -39,7 +37,7 @@ export default function UserManagementPage() {
   // === FETCH USERS ===
   const fetchUsers = async () => {
     try {
-      const res = await axios.get("/admin/users");
+      const res = await axios.get("/api/admin/users");
       setUsers(res.data.data);
     } catch {
       toast.error("Gagal memuat data user");
@@ -49,7 +47,7 @@ export default function UserManagementPage() {
   // === FETCH BRANCHES ===
   const fetchBranches = async () => {
     try {
-      const res = await axios.get("/admin/users/branches");
+      const res = await axios.get("/api/admin/users/branches");
       setBranches(res.data.data);
     } catch {
       toast.error("Gagal memuat data cabang");
@@ -67,7 +65,7 @@ export default function UserManagementPage() {
     try {
       if (editId) {
         // === UPDATE MODE ===
-        await axios.put(`/admin/users/${editId}`, {
+        await axios.put(`/api/admin/users/${editId}`, {
           email: data.email,
           username: data.username,
           role: "STORE_ADMIN",
@@ -75,7 +73,7 @@ export default function UserManagementPage() {
         toast.success("User diperbarui");
       } else {
         // === CREATE MODE ===
-        await axios.post("/admin/users", {
+        await axios.post("/api/admin/users", {
           email: data.email,
           username: data.username,
           password: data.password,
@@ -104,7 +102,7 @@ export default function UserManagementPage() {
   // === HANDLE DELETE ===
   const handleDelete = async () => {
     try {
-      await axios.delete(`/admin/users/${confirmId}`);
+      await axios.delete(`/api/admin/users/${confirmId}`);
       toast.success("User dihapus");
       fetchUsers();
     } catch {
