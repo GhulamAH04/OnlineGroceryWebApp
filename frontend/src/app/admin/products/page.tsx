@@ -1,18 +1,17 @@
+// === FILE: app/admin/products/page.tsx ===
 "use client";
 
 import { useEffect, useState } from "react";
 import axios from "@/lib/axios";
-import Image from "next/image";
 import { toast } from "sonner";
-
 import ConfirmModal from "@/components/features2/common/ConfirmModal";
 import ProductModal from "@/components/features2/productManagement/ProductModal";
 import { useDebounceSearch } from "@/hooks/useDebounceSearch";
 import { Product } from "@/interfaces/productAdmin.interface";
-import { apiUrl, imageUrl } from "@/config";
+import { apiUrl } from "@/config";
+import Image from "next/image";
 
 export default function ProductPage() {
-  // === STATE ===
   const [products, setProducts] = useState<Product[]>([]);
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [confirmId, setConfirmId] = useState<number | null>(null);
@@ -23,21 +22,31 @@ export default function ProductPage() {
     []
   );
 
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+
   const debouncedSearch = useDebounceSearch(search);
 
-  // === FETCH PRODUCTS ===
   const fetchProducts = async () => {
     try {
       const res = await axios.get(`${apiUrl}/api/admin/products`, {
-        params: { search: debouncedSearch },
+        params: {
+          search: debouncedSearch,
+          page,
+          limit,
+          sortBy: "name",
+          sortOrder,
+        },
       });
-      setProducts(Array.isArray(res.data?.data.data) ? res.data.data.data : []);
+      setProducts(
+        Array.isArray(res.data?.data?.data) ? res.data.data.data : []
+      );
     } catch {
       toast.error("Gagal memuat produk");
     }
   };
 
-  // === FETCH STORES ===
   const fetchStores = async () => {
     try {
       const res = await axios.get(`${apiUrl}/api/admin/branches`);
@@ -47,7 +56,6 @@ export default function ProductPage() {
     }
   };
 
-  // === FETCH CATEGORIES ===
   const fetchCategories = async () => {
     try {
       const res = await axios.get(`${apiUrl}/api/admin/categories`);
@@ -57,38 +65,25 @@ export default function ProductPage() {
     }
   };
 
-  // === FETCH ON LOAD ===
-  useEffect(() => {
-    fetchProducts();
-    /* eslint-disable-next-line */
-  }, [debouncedSearch]);
-  
   useEffect(() => {
     fetchStores();
     fetchCategories();
   }, []);
-  
-  // === FETCH SAAT CARI ===
-  useEffect(() => {
-    if (debouncedSearch !== "") {
-      fetchProducts();
-    }
-    /* eslint-disable-next-line */
-  }, [debouncedSearch]);
 
-  // === HANDLE TAMBAH ===
+  useEffect(() => {
+    fetchProducts();
+  }, [debouncedSearch, page, sortOrder]);
+
   const handleAdd = () => {
     setEditProduct(null);
     setIsModalOpen(true);
   };
 
-  // === HANDLE EDIT ===
   const handleEdit = (product: Product) => {
     setEditProduct(product);
     setIsModalOpen(true);
   };
 
-  // === HANDLE DELETE ===
   const handleDelete = async () => {
     try {
       await axios.delete(`${apiUrl}/api/admin/products/${confirmId}`);
@@ -100,13 +95,16 @@ export default function ProductPage() {
     }
   };
 
-  // === HANDLE SUBMIT FORM ===
   const handleSubmit = async (formData: FormData) => {
     try {
       if (editProduct) {
-        await axios.put(`${apiUrl}/api/admin/products/${editProduct.id}`, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        await axios.put(
+          `${apiUrl}/api/admin/products/${editProduct.id}`,
+          formData,
+          {
+            headers: { "Content-Type": "multipart/form-data" },
+          }
+        );
         toast.success("Produk berhasil diperbarui!");
       } else {
         await axios.post(`${apiUrl}/api/admin/products`, formData, {
@@ -114,7 +112,6 @@ export default function ProductPage() {
         });
         toast.success("Produk berhasil ditambahkan!");
       }
-
       setIsModalOpen(false);
       setEditProduct(null);
       fetchProducts();
@@ -123,82 +120,117 @@ export default function ProductPage() {
     }
   };
 
-  // === RENDER ===
-  return (
-    <div className="p-6 space-y-4">
-      <h1 className="text-2xl font-bold text-green-700">Product Management</h1>
+  const fallbackImage =
+    "https://res.cloudinary.com/djbdfjx1d/image/upload/v1746972046/nugget_plgi8w.jpg";
 
-      {/* === SEARCH & ADD === */}
-      <div className="flex justify-between items-center mb-4">
-        <input
-          className="border px-4 py-2 rounded w-full max-w-sm"
-          placeholder="Cari produk..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+  return (
+    <div className="p-6 space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-semibold text-green-700">Produk</h1>
         <button
           onClick={handleAdd}
-          className="ml-4 bg-green-600 text-white px-4 py-2 rounded"
+          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow"
         >
           + Tambah Produk
         </button>
       </div>
 
-      {/* === PRODUCT TABLE === */}
-      <table className="w-full border text-sm">
-        <thead className="bg-green-100 text-left">
-          <tr>
-            <th className="p-2 border">Gambar</th>
-            <th className="p-2 border">Nama</th>
-            <th className="p-2 border">Harga</th>
-            <th className="p-2 border">Stok</th>
-            <th className="p-2 border">Berat</th>
-            <th className="p-2 border">Toko</th>
-            <th className="p-2 border">Kategori</th>
-            <th className="p-2 border">Aksi</th>
-          </tr>
-        </thead>
+      {/* === FILTER BAR === */}
+      <div className="flex flex-wrap gap-4 items-center">
+        <input
+          className="border border-gray-300 px-4 py-2 rounded w-full sm:w-64"
+          placeholder="Cari produk..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <select
+          value={sortOrder}
+          onChange={(e) => setSortOrder(e.target.value as "asc" | "desc")}
+          className="border border-gray-300 px-3 py-2 rounded"
+        >
+          <option value="asc">Sortir Nama (A-Z)</option>
+          <option value="desc">Sortir Nama (Z-A)</option>
+        </select>
+      </div>
 
-        <tbody>
-          {products.map((p) => (
-            <tr key={`${p.id}-${p.branchId}`} className="hover:bg-green-50">
-              <td className="p-2 border">
-                <Image
-                   src={`${imageUrl}/${p.image}`}
-                  alt={p.name}
-                  width={56}
-                  height={56}
-                  className="object-cover rounded"
-                />
-              </td>
-              <td className="p-2 border">{p.name}</td>
-              <td className="p-2 border">Rp {p.price.toLocaleString()}</td>
-              <td className="p-2 border">{p.stock}</td>
-              <td className="p-2 border">{p.weight}</td>
-              <td className="p-2 border">
-                {stores.find((s) => s.id === p.branchId)?.name || "-"}
-              </td>
-              <td className="p-2 border">{p.categoryName || "-"}</td>
-              <td className="p-2 border space-x-2">
-                <button
-                  onClick={() => handleEdit(p)}
-                  className="text-blue-600 hover:underline"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => setConfirmId(p.id)}
-                  className="text-red-600 hover:underline"
-                >
-                  Hapus
-                </button>
-              </td>
+      {/* === TABEL PRODUK === */}
+      <div className="overflow-auto rounded border">
+        <table className="min-w-full text-sm text-left bg-white">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="p-3 border">Gambar</th>
+              <th className="p-3 border">Nama</th>
+              <th className="p-3 border">Harga</th>
+              <th className="p-3 border">Stok</th>
+              <th className="p-3 border">Berat</th>
+              <th className="p-3 border">Toko</th>
+              <th className="p-3 border">Kategori</th>
+              <th className="p-3 border">Aksi</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {products.map((p) => (
+              
+              <tr key={`${p.id}-${p.branchId}`} className="hover:bg-green-50">
+                <td className="p-2 border">
+                  <div className="w-[50px] h-[50px] relative">
+                    <Image
+                      src={p.image || fallbackImage}
+                      alt={p.name}
+                      layout="fill"
+                      objectFit="cover"
+                      className="rounded"
+                      unoptimized
+                    />
+                  </div>
+                </td>
+                <td className="p-2 border">{p.name}</td>
+                <td className="p-2 border">Rp {p.price.toLocaleString()}</td>
+                <td className="p-2 border">{p.stock}</td>
+                <td className="p-2 border">{p.weight} g</td>
+                <td className="p-2 border">
+                  {stores.find((s) => s.id === p.branchId)?.name || "-"}
+                </td>
+                <td className="p-2 border">{p.categoryName || "-"}</td>
+                <td className="p-2 border space-x-2">
+                  <button
+                    onClick={() => handleEdit(p)}
+                    className="text-blue-600 hover:underline"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => setConfirmId(p.id)}
+                    className="text-red-600 hover:underline"
+                  >
+                    Hapus
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-      {/* === MODAL FORM === */}
+      {/* === PAGINATION === */}
+      <div className="flex justify-center gap-4 mt-4">
+        <button
+          onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+          className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+          disabled={page === 1}
+        >
+          Prev
+        </button>
+        <span className="px-4 py-2 text-gray-700">Halaman {page}</span>
+        <button
+          onClick={() => setPage((prev) => prev + 1)}
+          className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+        >
+          Next
+        </button>
+      </div>
+
+      {/* === MODAL TAMBAH/EDIT === */}
       <ProductModal
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -208,7 +240,7 @@ export default function ProductPage() {
         categories={categories}
       />
 
-      {/* === MODAL DELETE CONFIRMATION === */}
+      {/* === MODAL HAPUS === */}
       <ConfirmModal
         open={!!confirmId}
         onCancel={() => setConfirmId(null)}
