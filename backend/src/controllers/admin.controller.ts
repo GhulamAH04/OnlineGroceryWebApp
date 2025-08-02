@@ -41,6 +41,182 @@ export const getAllAdmins = async (
 };
 
 // === CREATE STORE ADMIN ===
+export const createStoreAdmin = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { username, email, password, role } = req.body;
+    const branchId = parseInt(req.body.branchId);
+
+    // === VALIDASI ROLE WAJIB STORE_ADMIN ===
+    if (role !== "STORE_ADMIN") {
+      throw new Error("Only STORE_ADMIN can be created");
+    }
+
+    const existingUser = await prisma.users.findUnique({
+      where: { email },
+    });
+
+    if (existingUser) throw new Error("Email already exists");
+
+    const salt = genSaltSync(10);
+    const hashedPassword = await hash(password, salt);
+
+    const user = await prisma.$transaction(async (t) => {
+      const newUser = await t.users.create({
+        data: {
+          username,
+          email,
+          password: hashedPassword,
+          role,
+          isVerified: true,
+          updatedAt: new Date(),
+        },
+      });
+
+      const branch = await t.branchs.findUnique({
+        where: { id: branchId },
+      });
+
+      if (!branch) {
+        throw new Error("Branch not found");
+      }
+
+      await t.branchs.update({
+        where: { id: branchId },
+        data: {
+          users: {
+            connect: { id: newUser.id },
+          },
+        },
+      });
+
+      return newUser;
+    });
+
+    res.status(201).json({ success: true, message: "Created", data: user });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// === UPDATE STORE ADMIN ===
+export const updateStoreAdmin = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const id = +req.params.id;
+    const { email, role, username } = req.body;
+
+    // === CEK ROLE TIDAK BOLEH UBAH JADI SUPER_ADMIN ===
+    if (role !== "STORE_ADMIN") {
+      throw new Error("Cannot update to non STORE_ADMIN role");
+    }
+
+    const user = await prisma.users.update({
+      where: { id },
+      data: {
+        email,
+        role,
+        username,
+        updatedAt: new Date(),
+      },
+    });
+
+    res.json({ success: true, message: "Updated", data: user });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// === DELETE STORE ADMIN ===
+export const deleteStoreAdmin = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const id = +req.params.id;
+
+    await prisma.users.delete({
+      where: { id },
+    });
+
+    res.json({ success: true, message: "Deleted", data: null });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// === GET ALL BRANCHES ===
+export const getAllBranches = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const branches = await prisma.branchs.findMany({
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+
+    res.json({ success: true, data: branches });
+  } catch (err) {
+    next(err);
+  }
+};
+
+
+
+
+/*
+import { Request, Response, NextFunction } from "express";
+import { PrismaClient } from "@prisma/client";
+import { genSaltSync, hash } from "bcrypt";
+
+const prisma = new PrismaClient();
+
+// === GET ALL ADMIN USERS (SUPER_ADMIN & STORE_ADMIN) ===
+export const getAllAdmins = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const users = await prisma.users.findMany({
+      where: {
+        role: {
+          in: ["SUPER_ADMIN", "STORE_ADMIN"],
+        },
+      },
+      include: {
+        branchs: {
+          select: { name: true },
+        },
+      },
+    });
+
+    const result = users.map((u) => ({
+      id: u.id,
+      email: u.email,
+      username: u.username,
+      branchName: u.branchs?.name || null,
+      role: u.role,
+    }));
+
+    res.json({ success: true, message: "OK", data: result });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// === CREATE STORE ADMIN ===
 // === CREATE STORE ADMIN ===
 export const createStoreAdmin = async (
   req: Request,
@@ -163,3 +339,4 @@ export const getAllBranches = async (
     next(err);
   }
 };
+*/
