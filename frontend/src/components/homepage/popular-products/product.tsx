@@ -53,7 +53,7 @@ export default function Product({ image, name, price, productId }: PageProps) {
             duration-500
             group-hover:scale-105
           "
-          src={`${imageUrl}/${image}`}
+          src={`${image}`}
           alt={name}
           loading="lazy"
         />
