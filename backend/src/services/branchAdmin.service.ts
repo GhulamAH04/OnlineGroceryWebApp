@@ -1,3 +1,5 @@
+
+/*
 // === FILE: services/branchAdmin.service.ts ===
 
 import { PrismaClient, Prisma } from "@prisma/client";
@@ -68,3 +70,4 @@ export const branchService = {
     });
   },
 };
+*/

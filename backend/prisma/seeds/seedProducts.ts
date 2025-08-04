@@ -5,6 +5,7 @@ export const seedProducts = async (prisma: PrismaClient) => {
   console.log("⏳ Seeding products...");
 
   const categories = await prisma.categories.findMany();
+  const branches = await prisma.branchs.findMany(); // ambil semua cabang
   const now = new Date();
 
   // Clear existing products and stocks
@@ -12,17 +13,14 @@ export const seedProducts = async (prisma: PrismaClient) => {
   await prisma.product_branchs.deleteMany();
   await prisma.products.deleteMany();
 
-  // Produk berdasarkan kategori
-  const productMap: Record<
-    string,
-    {
-      name: string;
-      description: string;
-      price: number;
-      image: string;
-      weight: number;
-    }[]
-  > = {
+  // === DATA PRODUK ===
+  const productMap: Record<string, {
+    name: string;
+    description: string;
+    price: number;
+    image: string;
+    weight: number;
+  }[]> = {
     "Sayur Segar": [
       {
         name: "Bayam Segar",
@@ -202,8 +200,7 @@ export const seedProducts = async (prisma: PrismaClient) => {
         name: "Paket Nasi Goreng Komplit",
         description: "Nasi, ayam, telur, sayur.",
         price: 40000,
-        image:
-          "https://res.cloudinary.com/demo/image/upload/nasigorengpaket.jpg",
+        image: "https://res.cloudinary.com/demo/image/upload/nasigorengpaket.jpg",
         weight: 100,
       },
     ],
@@ -240,8 +237,23 @@ export const seedProducts = async (prisma: PrismaClient) => {
       });
 
       createdProducts.push({ id: product.id, name: product.name });
+
+      // === Tambahkan stok ke maksimal 5 cabang ===
+      const shuffled = [...branches].sort(() => 0.5 - Math.random());
+      const selectedBranches = shuffled.slice(0, 5); // maksimal 5 cabang
+
+      for (const branch of selectedBranches) {
+        await prisma.product_branchs.create({
+          data: {
+            productId: product.id,
+            branchId: branch.id,
+            stock: Math.floor(Math.random() * 10) + 1, // stok 1–10
+            updatedAt: now,
+          },
+        });
+      }
     }
   }
 
-  console.log(`✅ seedProducts selesai: ${createdProducts.length} produk dimasukkan dengan stok per cabang.`);
+  console.log(`✅ seedProducts selesai: ${createdProducts.length} produk dimasukkan ke maksimal 5 cabang.`);
 };

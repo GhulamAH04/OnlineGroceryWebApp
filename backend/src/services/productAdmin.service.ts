@@ -1,4 +1,4 @@
-// === SERVICE: PRODUCT ADMIN ===
+// === FILE: productAdmin.service.ts ===
 import { PrismaClient } from "@prisma/client";
 import { CreateProductInput, ProductAdminItem } from "../interfaces/productAdmin.interface";
 import { uploadToCloudinary } from "../utils/cloudinary";
@@ -10,74 +10,78 @@ const DEFAULT_IMAGE =
 
 export const productService = {
   // === GET ALL PRODUCTS ===
-  getAll: async (params: any) => {
-    const {
-      page = 1,
-      limit = 10,
-      search = '',
-      sortOrder = 'desc',
-    } = params;
+ getAll: async (params: any) => {
+  const {
+    page = 1,
+    limit = 10,
+    search = "",
+    sortBy = "name",
+    sortOrder = "asc",
+    categoryId,
+    role,
+    branchId,
+  } = params;
 
-    const take = parseInt(limit);
-    const skip = (parseInt(page) - 1) * take;
-    const finalSearch = search || '';
+  const take = parseInt(limit);
+  const skip = (parseInt(page) - 1) * take;
 
-    const products = await prisma.products.findMany({
-      where: {
-        name: {
-          contains: finalSearch,
-          mode: 'insensitive',
-        },
+  const whereProduct: any = {
+    name: {
+      contains: search,
+      mode: "insensitive",
+    },
+  };
+
+  if (categoryId) {
+    whereProduct.categoryId = parseInt(categoryId);
+  }
+
+  const allProducts = await prisma.products.findMany({
+    where: whereProduct,
+    include: {
+      categories: true,
+      product_branchs: {
+        include: { branchs: true },
       },
-      include: {
-        categories: true,
-        product_branchs: {
-          include: {
-            branchs: true,
-          },
-        },
-      },
-      orderBy: {
-        createdAt: sortOrder,
-      },
-      skip,
-      take,
-    });
+    },
+    orderBy: { [sortBy]: sortOrder },
+  });
 
-    const total = await prisma.products.count({
-      where: {
-        name: {
-          contains: finalSearch,
-          mode: 'insensitive',
-        },
-      },
-    });
+  const DEFAULT_IMAGE =
+    "https://res.cloudinary.com/djbdfjx1d/image/upload/v1746972046/nugget_plgi8w.jpg";
 
-    // === Transform: Ambil 1 cabang pertama (jika ada), dan 1 gambar ===
-    const result: ProductAdminItem[] = products.map((product) => {
-      const firstBranch = product.product_branchs[0];
+  const result = allProducts.flatMap((product) => {
+    const branches = product.product_branchs.filter((pb) =>
+      role === "STORE_ADMIN" ? pb.branchId === Number(branchId) : true
+    );
 
-      return {
-        id: product.id,
-        name: product.name,
-        slug: product.slug,
-        image: product.image || DEFAULT_IMAGE,
-        price: product.price,
-        stock: firstBranch?.stock || 0,
-        branchId: firstBranch?.branchId || null,
-        branchName: firstBranch?.branchs?.name || '-',
-        categoryName: product.categories?.name || '-',
-        description: product.description || '',
-      };
-    });
+    return branches.map((pb) => ({
+      id: product.id,
+      name: product.name,
+      slug: product.slug,
+      image: product.image || DEFAULT_IMAGE,
+      price: product.price,
+      weight: product.weight,
+      stock: pb.stock,
+      branchId: pb.branchId,
+      branchName: pb.branchs.name,
+      categoryName: product.categories?.name || "-",
+      description: product.description || "",
+    }));
+  });
 
-    return {
-      data: result,
-      total,
-      page: +page,
+  const total = result.length;
+  const paginated = result.slice(skip, skip + take);
+
+  return {
+    data: paginated,
+    meta: {
+      totalItems: total,
       totalPages: Math.ceil(total / take),
-    };
-  },
+      currentPage: parseInt(page),
+    },
+  };
+},
 
   // === GET PRODUCT BY ID ===
   getById: async (id: number) => {
@@ -100,8 +104,8 @@ export const productService = {
       stock: pb.stock,
       branchId: pb.branchs.id,
       branchName: pb.branchs.name,
-      categoryName: pb.products.categories?.name || '-',
-      description: pb.products.description || '',
+      categoryName: pb.products.categories?.name || "-",
+      description: pb.products.description || "",
     };
   },
 
@@ -120,7 +124,7 @@ export const productService = {
       imageUrl = (uploads[0] as any).secure_url || DEFAULT_IMAGE;
     }
 
-    const slug = body.name.toLowerCase().replace(/\s+/g, '-');
+    const slug = body.name.toLowerCase().replace(/\s+/g, "-");
 
     const product = await prisma.products.create({
       data: {
@@ -128,9 +132,9 @@ export const productService = {
         slug,
         description: body.description,
         price: +body.price,
-        categoryId: Number(body.categoryId) || 1,
         weight: body.weight,
         image: imageUrl,
+        categoryId: Number(body.categoryId) || 1,
         updatedAt: new Date(),
       },
     });
@@ -158,7 +162,7 @@ export const productService = {
     });
     if (existing) throw new Error("Produk dengan nama ini sudah ada");
 
-    const slug = body.name.toLowerCase().replace(/\s+/g, '-');
+    const slug = body.name.toLowerCase().replace(/\s+/g, "-");
 
     const updated: any = {
       name: body.name,

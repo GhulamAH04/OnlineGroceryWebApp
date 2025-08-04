@@ -10,12 +10,28 @@ export const getProducts = async (
   next: NextFunction
 ) => {
   try {
-    const data = await productService.getAll(req.query);
-    res.json({ success: true, message: 'OK', data });
+    if (!req.user) {
+      res.status(401).json({ success: false, message: "Unauthorized" });
+      return;
+    }
+
+    const result = await productService.getAll({
+      ...req.query,
+      role: req.user.role,
+      branchId: req.user.branchId,
+    });
+
+    res.json({
+      success: true,
+      message: "OK",
+      data: result.data,
+      meta: result.meta,
+    });
   } catch (err) {
     next(err);
   }
 };
+
 
 // === GET PRODUCT BY ID ===
 export const getProductById = async (

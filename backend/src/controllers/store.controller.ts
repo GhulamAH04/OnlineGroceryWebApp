@@ -131,9 +131,6 @@ export async function AssignStoreAdminController(
   }
 }
 
-// === GET BRANCHES FOR DRO
-
-
 
 /*
 // NAHALIL

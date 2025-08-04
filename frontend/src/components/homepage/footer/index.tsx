@@ -48,7 +48,7 @@ export default function Footer() {
             <ul className="space-y-2">
               <li>
                 <Link
-                  href="/shop"
+                  href="/products"
                   className="text-[#808080] hover:text-[#FFFFFF]"
                 >
                   Shop

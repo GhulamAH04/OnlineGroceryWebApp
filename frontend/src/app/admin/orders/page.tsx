@@ -56,7 +56,7 @@ export default function OrderPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
-  const [limit] = useState(10);
+  const [limit] = useState(5);
   const [totalPage, setTotalPage] = useState(1);
   const [branches, setBranches] = useState<Array<{ id: number; name: string }>>(
     []

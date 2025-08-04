@@ -1,3 +1,6 @@
+
+
+/*
 // FILE: backend/src/routes/branchAdmin.routes.ts
 
 import { Router } from "express";
@@ -23,3 +26,4 @@ router.delete("/:id", deleteBranch);
 router.patch("/:id", assignStoreAdmin); // ✅ assign store admin
 
 export default router;
+*/

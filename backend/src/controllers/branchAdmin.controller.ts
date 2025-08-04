@@ -1,3 +1,4 @@
+/*
 // === FILE: backend/src/controllers/branchAdmin.controller.ts ===
 
 import { Request, Response, NextFunction } from "express";
@@ -72,3 +73,4 @@ export const assignStoreAdmin = async (
     next(err);
   }
 };
+*/

@@ -1,6 +1,6 @@
-// OnlineGroceryWebApp/frontend/src/components/features2/dashboard/LayoutAdmin.tsx
-
 "use client";
+
+import { usePathname } from "next/navigation";
 import SidebarAdmin from "./SidebarAdmin";
 
 export default function AdminLayout({
@@ -8,6 +8,15 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+
+  // ⛔ Jangan tampilkan sidebar saat di halaman login
+  const isLoginPage = pathname === "/admin/login";
+
+  if (isLoginPage) {
+    return <>{children}</>;
+  }
+
   return (
     <div className="min-h-screen flex bg-gray-50">
       {/* Sidebar */}

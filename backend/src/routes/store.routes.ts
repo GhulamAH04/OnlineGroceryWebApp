@@ -7,6 +7,7 @@ import {
   DeleteStoreController,
   getAllStoresController,
   UpdateStoreController,
+  getAllBranchesForDropdown
 } from "../controllers/store.controller";
 
 import { authMiddleware } from "../middlewares/authAdmin.middleware";
@@ -14,13 +15,15 @@ import { authorizeRoles } from "../middlewares/authorizeRoles.middleware";
 
 const router = Router();
 
-// === Semua route butuh autentikasi
 router.use(authMiddleware);
 
-// === GET: Boleh SUPER_ADMIN & STORE_ADMIN (read-only)
+// === GET semua cabang detail ===
 router.get("/", authorizeRoles(["SUPER_ADMIN", "STORE_ADMIN"]), getAllStoresController);
 
-// === POST/PUT/PATCH/DELETE: Hanya SUPER_ADMIN
+// ✅ === GET cabang untuk dropdown saja ===
+router.get("/dropdown", authorizeRoles(["SUPER_ADMIN", "STORE_ADMIN"]), getAllBranchesForDropdown);
+
+// === CRUD khusus SUPER_ADMIN ===
 router.post("/", authorizeRoles(["SUPER_ADMIN"]), AddNewStoreController);
 router.put("/:id", authorizeRoles(["SUPER_ADMIN"]), UpdateStoreController);
 router.patch("/:id", authorizeRoles(["SUPER_ADMIN"]), AssignStoreAdminController);

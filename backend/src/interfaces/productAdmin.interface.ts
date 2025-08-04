@@ -12,16 +12,20 @@ export interface CreateProductInput {
   branchId?: number | null;
 }
 // src/interfaces/productAdmin.interface.ts
+// === FILE: src/interfaces/productAdmin.interface.ts ===
+// === FILE: src/interfaces/productAdmin.interface.ts ===
 
 export interface ProductAdminItem {
   id: number;
   name: string;
   slug: string;
-  image: string | null;
+  image: string;
   price: number;
-  stock: number;
-  branchId: number | null; // ✅ BUKAN hanya number
-  branchName: string;
-  categoryName: string;
+  weight: number;
   description: string;
+  categoryName: string;
+  stock: number;
+  branchId: number;
+  branchName: string;
 }
+

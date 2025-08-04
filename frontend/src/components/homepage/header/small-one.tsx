@@ -61,13 +61,20 @@ const token = getCookie("access_token") as string;
         <p>Store Location: {location.city}</p>
       </div>
       {!userState.isLogin ? (
-        <div className="flex gap-2 sm:gap-3 xl:gap-2">
+        <div className="flex gap-2 sm:gap-3 xl:gap-4 items-center">
           <Link href="/login" className="hover:text-black">
             Sign In
           </Link>
           <p>/</p>
           <Link href="/register" className="hover:text-black">
             Sign Up
+          </Link>
+          <span className="hidden sm:inline">|</span>
+          <Link
+            href="/admin/login"
+            className="text-blue-600 hover:text-blue-800 text-xs sm:text-sm font-medium"
+          >
+            Admin Login
           </Link>
         </div>
       ) : (

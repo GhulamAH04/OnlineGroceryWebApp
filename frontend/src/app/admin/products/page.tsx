@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import axios from "@/lib/axios";
 import { toast } from "sonner";
 import ConfirmModal from "@/components/features2/common/ConfirmModal";
@@ -9,25 +10,29 @@ import ProductModal from "@/components/features2/productManagement/ProductModal"
 import { useDebounceSearch } from "@/hooks/useDebounceSearch";
 import { Product } from "@/interfaces/productAdmin.interface";
 import { apiUrl } from "@/config";
-import Image from "next/image";
 
 export default function ProductPage() {
+  // === STATE ===
   const [products, setProducts] = useState<Product[]>([]);
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [confirmId, setConfirmId] = useState<number | null>(null);
   const [search, setSearch] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [stores, setStores] = useState<{ id: number; name: string }[]>([]);
   const [categories, setCategories] = useState<{ id: number; name: string }[]>(
     []
   );
-
   const [page, setPage] = useState(1);
-  const [limit] = useState(10);
+  const [limit] = useState(5);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [totalPages, setTotalPages] = useState(1);
 
   const debouncedSearch = useDebounceSearch(search);
+  const fallbackImage =
+    "https://res.cloudinary.com/djbdfjx1d/image/upload/v1746972046/nugget_plgi8w.jpg";
 
+  // === FETCH DATA ===
   const fetchProducts = async () => {
     try {
       const res = await axios.get(`${apiUrl}/api/admin/products`, {
@@ -37,11 +42,12 @@ export default function ProductPage() {
           limit,
           sortBy: "name",
           sortOrder,
+          categoryId: selectedCategory || undefined,
         },
       });
-      setProducts(
-        Array.isArray(res.data?.data?.data) ? res.data.data.data : []
-      );
+
+      setProducts(res.data?.data || []);
+      setTotalPages(res.data?.meta?.totalPages || 1);
     } catch {
       toast.error("Gagal memuat produk");
     }
@@ -72,8 +78,9 @@ export default function ProductPage() {
 
   useEffect(() => {
     fetchProducts();
-  }, [debouncedSearch, page, sortOrder]);
+  }, [debouncedSearch, page, sortOrder, selectedCategory]);
 
+  // === HANDLER ===
   const handleAdd = () => {
     setEditProduct(null);
     setIsModalOpen(true);
@@ -86,7 +93,9 @@ export default function ProductPage() {
 
   const handleDelete = async () => {
     try {
-      await axios.delete(`${apiUrl}/api/admin/products/${confirmId}`);
+      await axios.delete(`${apiUrl}/api/admin/products/${confirmId}`, {
+        params: { confirm: true },
+      });
       toast.success("Produk dihapus");
       setConfirmId(null);
       fetchProducts();
@@ -101,9 +110,7 @@ export default function ProductPage() {
         await axios.put(
           `${apiUrl}/api/admin/products/${editProduct.id}`,
           formData,
-          {
-            headers: { "Content-Type": "multipart/form-data" },
-          }
+          { headers: { "Content-Type": "multipart/form-data" } }
         );
         toast.success("Produk berhasil diperbarui!");
       } else {
@@ -120,13 +127,13 @@ export default function ProductPage() {
     }
   };
 
-  const fallbackImage =
-    "https://res.cloudinary.com/djbdfjx1d/image/upload/v1746972046/nugget_plgi8w.jpg";
-
+  // === UI ===
   return (
     <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-semibold text-green-700">Produk</h1>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <h1 className="text-2xl sm:text-3xl font-bold text-green-700">
+          Manajemen Produk
+        </h1>
         <button
           onClick={handleAdd}
           className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow"
@@ -136,27 +143,39 @@ export default function ProductPage() {
       </div>
 
       {/* === FILTER BAR === */}
-      <div className="flex flex-wrap gap-4 items-center">
+      <div className="flex flex-wrap gap-3 items-center">
         <input
-          className="border border-gray-300 px-4 py-2 rounded w-full sm:w-64"
+          className="border border-gray-300 px-4 py-2 rounded-lg shadow-sm focus:ring-2 focus:ring-green-400 w-full sm:w-64"
           placeholder="Cari produk..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
         <select
+          value={selectedCategory}
+          onChange={(e) => setSelectedCategory(e.target.value)}
+          className="border border-gray-300 px-3 py-2 rounded-lg"
+        >
+          <option value="">Semua Kategori</option>
+          {categories.map((cat) => (
+            <option key={cat.id} value={cat.id}>
+              {cat.name}
+            </option>
+          ))}
+        </select>
+        <select
           value={sortOrder}
           onChange={(e) => setSortOrder(e.target.value as "asc" | "desc")}
-          className="border border-gray-300 px-3 py-2 rounded"
+          className="border border-gray-300 px-3 py-2 rounded-lg"
         >
           <option value="asc">Sortir Nama (A-Z)</option>
           <option value="desc">Sortir Nama (Z-A)</option>
         </select>
       </div>
 
-      {/* === TABEL PRODUK === */}
+      {/* === TABEL === */}
       <div className="overflow-auto rounded border">
         <table className="min-w-full text-sm text-left bg-white">
-          <thead className="bg-gray-100">
+          <thead className="bg-gray-100 text-gray-700">
             <tr>
               <th className="p-3 border">Gambar</th>
               <th className="p-3 border">Nama</th>
@@ -170,7 +189,6 @@ export default function ProductPage() {
           </thead>
           <tbody>
             {products.map((p) => (
-              
               <tr key={`${p.id}-${p.branchId}`} className="hover:bg-green-50">
                 <td className="p-2 border">
                   <div className="w-[50px] h-[50px] relative">
@@ -213,24 +231,30 @@ export default function ProductPage() {
       </div>
 
       {/* === PAGINATION === */}
-      <div className="flex justify-center gap-4 mt-4">
+      <div className="flex justify-center items-center gap-4 mt-6">
         <button
           onClick={() => setPage((prev) => Math.max(1, prev - 1))}
-          className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
           disabled={page === 1}
+          className="px-4 py-2 rounded bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 disabled:opacity-50"
         >
-          Prev
+          &larr; Prev
         </button>
-        <span className="px-4 py-2 text-gray-700">Halaman {page}</span>
+
+        <span className="text-sm text-gray-600">
+          Halaman <span className="font-semibold">{page}</span> dari{" "}
+          <span className="font-semibold">{totalPages}</span>
+        </span>
+
         <button
-          onClick={() => setPage((prev) => prev + 1)}
-          className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+          onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
+          disabled={page >= totalPages}
+          className="px-4 py-2 rounded bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 disabled:opacity-50"
         >
-          Next
+          Next &rarr;
         </button>
       </div>
 
-      {/* === MODAL TAMBAH/EDIT === */}
+      {/* === MODALS === */}
       <ProductModal
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -240,7 +264,6 @@ export default function ProductPage() {
         categories={categories}
       />
 
-      {/* === MODAL HAPUS === */}
       <ConfirmModal
         open={!!confirmId}
         onCancel={() => setConfirmId(null)}
