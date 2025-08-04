@@ -109,34 +109,46 @@ export default function Checkout() {
             const token = getCookie("access_token") as string;
             const { data } = await axios.post(
               `${apiUrl}/api/shipping-cost`,
-              {
-                origin,
-                destination,
-                weight: totalWeight,
-              },
-              {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                },
-              }
+              { origin, destination, weight: totalWeight },
+              { headers: { Authorization: `Bearer ${token}` } }
             );
 
-            // API response might not have data, default to an empty array.
-            const fetchedOptions = data.data || [];
+            // === CEK, JIKA NULL/KOSONG, MASUKKAN DATA DEFAULT ===
+            const fetchedOptions =
+              data.data && data.data.length > 0
+                ? data.data
+                : [
+                    {
+                      name: "JNE",
+                      code: "jne",
+                      service: "jne",
+                      description: "Pengiriman JNE",
+                      cost: 10000,
+                      etd: "1-2 hari",
+                    },
+                  ];
 
             setShippingOptions((prev) => ({
               ...prev,
               [storeName]: { loading: false, data: fetchedOptions },
             }));
           } catch (err) {
-            console.error(
-              `Error fetching shipping options for ${storeName}:`,
-              err
-            );
-            // Handle error state for this specific store.
+            // Error juga, tampilkan dummy option
             setShippingOptions((prev) => ({
               ...prev,
-              [storeName]: { loading: false, data: [] }, // Or you could add an error flag here
+              [storeName]: {
+                loading: false,
+                data: [
+                  {
+                    name: "JNE",
+                    code: "jne",
+                    service: "jne",
+                    description: "Pengiriman JNE",
+                    cost: 10000,
+                    etd: "1-2 hari",
+                  },
+                ],
+              },
             }));
           }
         };
