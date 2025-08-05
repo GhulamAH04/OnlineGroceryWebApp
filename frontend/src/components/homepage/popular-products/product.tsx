@@ -1,5 +1,3 @@
-// OnlineGroceryWebApp/frontend/src/components/homepage/popular-products/product.tsx
-
 "use client";
 
 import { EyeIcon, Heart, Star, ShoppingCart } from "lucide-react";
