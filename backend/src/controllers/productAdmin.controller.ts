@@ -32,7 +32,6 @@ export const getProducts = async (
   }
 };
 
-
 // === GET PRODUCT BY ID ===
 export const getProductById = async (
   req: Request,
@@ -42,8 +41,26 @@ export const getProductById = async (
   try {
     const id = +req.params.id;
     const data = await productService.getById(id);
+
     res.json({ success: true, message: 'OK', data });
   } catch (err) {
+    next(err);
+  }
+};
+
+// === GET PRODUCTS FOR DROPDOWN (DISCOUNT FORM) ===
+export const getProductsForDropdown = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const user = req.user!;
+    console.log("user from token:", user); // ✅ log user
+    const products = await productService.getDropdownProducts(user);
+    res.json({ success: true, message: "OK", data: products });
+  } catch (err) {
+    console.error("Error fetching dropdown products:", err); // ✅ log error
     next(err);
   }
 };
@@ -55,10 +72,9 @@ export const createProduct = async (
   next: NextFunction
 ) => {
   try {
-    const data = await productService.create(
-      req.body,
-      req.files as Express.Multer.File[]
-    );
+    const file = req.file as Express.Multer.File | undefined;
+    const data = await productService.create(req.body, file);
+
     res.status(201).json({ success: true, message: 'Created', data });
   } catch (err) {
     next(err);
@@ -73,11 +89,9 @@ export const updateProduct = async (
 ) => {
   try {
     const id = +req.params.id;
-    const data = await productService.update(
-      id,
-      req.body,
-      req.files as Express.Multer.File[]
-    );
+    const file = req.file as Express.Multer.File | undefined;
+    const data = await productService.update(id, req.body, file);
+
     res.json({ success: true, message: 'Updated', data });
   } catch (err) {
     next(err);

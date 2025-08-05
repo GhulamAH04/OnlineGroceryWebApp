@@ -11,13 +11,14 @@ export const getDiscounts = async (req: Request, res: Response, next: NextFuncti
     next(err);
   }
 };
-
 export const createDiscount = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const user = req.user!;
+    console.log("DISCOUNT CREATE PAYLOAD:", req.body); // ✅ debug payload
     const data = await discountService.create(user, req.body);
     res.status(201).json({ success: true, message: 'Created', data });
   } catch (err) {
+    console.error("CREATE DISCOUNT ERROR:", err); // ✅ debug error
     next(err);
   }
 };

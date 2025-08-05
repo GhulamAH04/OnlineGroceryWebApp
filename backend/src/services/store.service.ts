@@ -85,7 +85,7 @@ async function AssignStoreAdmin(storeId: number, userId: number) {
 }
 
 export async function getAllBranchesForDropdownService() {
-  const all = await prisma.branchs.findMany({
+  const branches = await prisma.branchs.findMany({
     select: {
       id: true,
       name: true,
@@ -93,15 +93,10 @@ export async function getAllBranchesForDropdownService() {
     orderBy: {
       name: "asc",
     },
+    distinct: ["id"], // ✅ pastikan tidak duplikat berdasarkan ID
   });
 
-  // Filter unique by name
-  const uniqueByName = all.filter(
-    (branch, index, self) =>
-      index === self.findIndex((b) => b.name === branch.name)
-  );
-
-  return uniqueByName;
+  return branches;
 }
 
 

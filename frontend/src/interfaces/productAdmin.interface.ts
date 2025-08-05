@@ -33,3 +33,8 @@ export interface CartItem {
   quantity: number;
   image: string | undefined;
 }
+
+export interface ProductSummary {
+  id: number;
+  name: string;
+}

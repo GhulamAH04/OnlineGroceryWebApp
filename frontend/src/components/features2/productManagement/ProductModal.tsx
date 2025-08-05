@@ -76,15 +76,19 @@ export default function ProductModal({
   // === HANDLE SUBMIT FORM ===
   const handleFormSubmit = (data: ProductAdminInput) => {
     const formData = new FormData();
+
+    // Tambahkan field text biasa
     Object.entries(data).forEach(([key, value]) => {
       formData.append(key, String(value));
     });
+
+    // Tambahkan file image (1 file saja dulu)
     if (image) {
-      formData.append("images", image);
+      formData.append("image", image); // ⬅️ Ganti "images" jadi "image"
     }
+
     onSubmit(formData);
   };
-
   // === RENDER ===
   return (
     <Dialog open={open} onOpenChange={onClose}>

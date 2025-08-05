@@ -1,4 +1,4 @@
-// File: backend/src/routes/productAdmin.routes.ts
+// === ROUTES: PRODUCT ADMIN ===
 
 import express from 'express';
 import {
@@ -7,6 +7,7 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
+  getProductsForDropdown
 } from '../controllers/productAdmin.controller';
 import { upload } from '../middlewares/fileUpload.middleware';
 import { authMiddleware } from '../middlewares/authAdmin.middleware';
@@ -14,42 +15,49 @@ import { authorizeRoles } from '../middlewares/authorizeRoles.middleware';
 
 const router = express.Router();
 
-// === READ ONLY: SUPER_ADMIN & STORE_ADMIN ===
+// === READ ONLY (GET): SUPER_ADMIN & STORE_ADMIN ===
 router.get(
-  "/",
+  '/',
   authMiddleware,
-  authorizeRoles(["SUPER_ADMIN", "STORE_ADMIN"]),
+  authorizeRoles(['SUPER_ADMIN', 'STORE_ADMIN']),
   getProducts
 );
 
 router.get(
-  "/:id",
+  "/dropdown",
   authMiddleware,
   authorizeRoles(["SUPER_ADMIN", "STORE_ADMIN"]),
+  getProductsForDropdown
+);
+
+router.get(
+  '/:id',
+  authMiddleware,
+  authorizeRoles(['SUPER_ADMIN', 'STORE_ADMIN']),
   getProductById
 );
 
 // === WRITE (POST/PUT/DELETE): ONLY SUPER_ADMIN ===
 router.post(
-  "/",
+  '/',
   authMiddleware,
-  authorizeRoles(["SUPER_ADMIN"]),
-  upload.array("images", 3),
+  authorizeRoles(['SUPER_ADMIN']),
+  upload.single('image'), // 👈 sesuaikan dengan FormData frontend
   createProduct
 );
 
 router.put(
-  "/:id",
+  '/:id',
   authMiddleware,
-  authorizeRoles(["SUPER_ADMIN"]),
-  upload.array("images", 3),
+  authorizeRoles(['SUPER_ADMIN']),
+  upload.single('image'),
   updateProduct
 );
 
 router.delete(
-  "/:id",
+  '/:id',
   authMiddleware,
-  authorizeRoles(["SUPER_ADMIN"]),
+  authorizeRoles(['SUPER_ADMIN']),
   deleteProduct
 );
 

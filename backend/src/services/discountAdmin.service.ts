@@ -35,29 +35,33 @@ export const discountService = {
       buyX,
       getY,
     } = body;
+let resolvedBranchId = branchId;
 
-    let resolvedBranchId = branchId;
+if (user.role === 'STORE_ADMIN') {
+  const branch = await prisma.branchs.findFirst({ where: { userId: user.id } });
+  if (!branch) throw new Error('Branch not found');
+  resolvedBranchId = branch.id;
+}
 
-    if (user.role === 'STORE_ADMIN') {
-      const branch = await prisma.branchs.findFirst({ where: { userId: user.id } });
-      if (!branch) throw new Error('Branch not found');
-      resolvedBranchId = branch.id;
-    }
+// ✅ Defensive check untuk SUPER_ADMIN
+if (!resolvedBranchId) {
+  throw new Error("Branch ID wajib dipilih");
+}
 
-    return prisma.discount.create({
-      data: {
-        type,
-        value: +value,
-        isPercentage: type === 'PERCENTAGE',
-        minPurchase: minPurchase ? +minPurchase : null,
-        expiredAt: new Date(expiredAt),
-        branchId: resolvedBranchId,
-        productId: productId ? +productId : null,
-        buyX: buyX ? +buyX : null,
-        getY: getY ? +getY : null,
-        updatedAt: new Date(),
-      },
-    });
+   return prisma.discount.create({
+  data: {
+    type,
+    value: Number(value),
+    isPercentage: String(isPercentage) === "true",
+    minPurchase: minPurchase !== undefined && minPurchase !== "" ? Number(minPurchase) : null,
+    expiredAt: new Date(expiredAt),
+    branchId: resolvedBranchId,
+    productId: productId !== undefined && productId !== "" ? Number(productId) : null,
+    buyX: buyX !== undefined && buyX !== "" ? Number(buyX) : null,
+    getY: getY !== undefined && getY !== "" ? Number(getY) : null,
+    updatedAt: new Date(),
+  },
+});
   },
 
   update: async (id: number, user: { id: number; role: Role }, body: any) => {

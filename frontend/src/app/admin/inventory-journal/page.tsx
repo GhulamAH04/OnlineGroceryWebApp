@@ -1,3 +1,4 @@
+// === FILE: app/admin/inventoryJournal/page.tsx ===
 "use client";
 
 import { useEffect, useState } from "react";
@@ -6,6 +7,7 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { toast } from "sonner";
 
+import type { ProductSummary } from "@/interfaces/productAdmin.interface";
 import {
   InventoryJournal,
   InventoryJournalForm,
@@ -16,7 +18,7 @@ import { getRoleFromToken } from "@/utils/getRoleFromToken";
 
 export default function InventoryJournalPage() {
   const [journals, setJournals] = useState<InventoryJournal[]>([]);
-  const [products, setProducts] = useState<{ id: number; name: string }[]>([]);
+  const [products, setProducts] = useState<ProductSummary[]>([]);
   const [branches, setBranches] = useState<{ id: number; name: string }[]>([]);
   const [confirmId, setConfirmId] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -25,6 +27,18 @@ export default function InventoryJournalPage() {
     "SUPER_ADMIN" | "STORE_ADMIN" | "USER" | null
   >(null);
   const [storeBranchId, setStoreBranchId] = useState<number | null>(null);
+
+  // === Type Guard untuk produk ===
+  function isProductSummary(p: unknown): p is ProductSummary {
+    return (
+      typeof p === "object" &&
+      p !== null &&
+      "id" in p &&
+      "name" in p &&
+      typeof (p as Record<string, unknown>).id === "number" &&
+      typeof (p as Record<string, unknown>).name === "string"
+    );
+  }
 
   // === FETCH DATA ===
   const fetchData = async () => {
@@ -37,7 +51,7 @@ export default function InventoryJournalPage() {
         axios.get("/api/admin/inventory-journal", {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        axios.get("/api/admin/products", {
+        axios.get("/api/admin/products/dropdown", {
           headers: { Authorization: `Bearer ${token}` },
         }),
         axios.get("/api/admin/branches", {
@@ -45,28 +59,37 @@ export default function InventoryJournalPage() {
         }),
       ]);
 
-      // Set Journals
+      // === Set Jurnal
       setJournals(
         Array.isArray(journalRes.data?.data) ? journalRes.data.data : []
       );
 
-      // Set Products (deduplicate)
-      const productData = productRes.data?.data?.data;
-      if (Array.isArray(productData)) {
-        const typedProducts = productData as { id: number; name: string }[];
-        const uniqueProducts = Array.from(
-          new Map(typedProducts.map((p) => [p.id, p])).values()
-        );
-        setProducts(uniqueProducts);
-      } else {
-        setProducts([]);
-      }
+      // === Set Produk
+      const fullProductRes = productRes.data;
+      const rawProductData =
+        fullProductRes?.data && Array.isArray(fullProductRes.data)
+          ? fullProductRes.data
+          : Array.isArray(fullProductRes)
+          ? fullProductRes
+          : [];
 
-      // Set Branches
+      const mappedProducts: ProductSummary[] = (rawProductData as unknown[])
+        .filter(isProductSummary)
+        .map((p) => ({
+          id: p.id,
+          name: p.name,
+        }));
+
+      const uniqueProducts = Array.from(
+        new Map(mappedProducts.map((p) => [p.id, p])).values()
+      );
+
+      setProducts(uniqueProducts);
+
+      // === Set Cabang
       const branchList = branchRes.data?.data;
       if (Array.isArray(branchList)) {
         setBranches(branchList);
-        // Auto-assign branch for STORE_ADMIN
         if (userRole === "STORE_ADMIN" && branchList.length === 1) {
           setStoreBranchId(branchList[0].id);
         }
