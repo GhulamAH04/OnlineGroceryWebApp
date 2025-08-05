@@ -31,6 +31,11 @@ export const discountAdminSchema = yup.object({
       originalValue === "" ? null : value
     ),
 
+    branchId: yup
+  .number()
+  .typeError("Cabang wajib dipilih")
+  .required("Cabang wajib dipilih"),
+
   expiredAt: yup
     .string()
     .required("Tanggal kadaluarsa wajib diisi")

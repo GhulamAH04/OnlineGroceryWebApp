@@ -45,7 +45,7 @@ export default function SmallCategory({ image, name }: PageProps) {
             transition-transform
             duration-300
           "
-          src={`${imageUrl}${image}`}
+          src={`${imageUrl}${image || "/fallback-category.png"}`}
           alt={name}
           loading="lazy"
         />

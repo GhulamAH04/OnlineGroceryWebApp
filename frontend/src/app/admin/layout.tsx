@@ -1,3 +1,5 @@
+// OnlineGroceryWebApp/frontend/src/app/admin/layout.tsx
+
 "use client";
 import AdminLayout from "@/components/features2/dashboard/LayoutAdmin";
 

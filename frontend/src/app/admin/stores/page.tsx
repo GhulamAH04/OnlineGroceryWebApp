@@ -22,7 +22,7 @@ export default function StoresPage() {
     try {
       setLoading(true);
       const token = getCookie("access_token") as string;
-      const { data } = await axios.get(`${apiUrl}/api/branches`, {
+      const { data } = await axios.get(`${apiUrl}/api/admin/branches`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

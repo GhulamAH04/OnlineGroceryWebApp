@@ -6,12 +6,14 @@ import Link from "next/link";
 import { apiUrl } from "@/config";
 
 export default function AdminLoginPage() {
+  // === STATE ===
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [loginError, setLoginError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  // === Auto redirect if token exists & valid ===
+  // === AUTO REDIRECT jika sudah login ===
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -19,6 +21,7 @@ export default function AdminLoginPage() {
     }
   }, [router]);
 
+  // === HANDLE INPUT ===
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -27,6 +30,7 @@ export default function AdminLoginPage() {
     }
   };
 
+  // === VALIDASI MANUAL ===
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
     if (!formData.email) {
@@ -34,49 +38,58 @@ export default function AdminLoginPage() {
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = "Format email tidak valid";
     }
+
     if (!formData.password) {
       newErrors.password = "Password wajib diisi";
     } else if (formData.password.length < 6) {
       newErrors.password = "Minimal 6 karakter";
     }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
+  // === HANDLE SUBMIT ===
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError("");
 
-    if (validateForm()) {
-      try {
-        const res = await fetch(`${apiUrl}/api/admin/auth/login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
-        });
+    if (!validateForm()) return;
 
-        const data = await res.json();
+    try {
+      setIsLoading(true);
 
-        if (data.success && data.data.token) {
-          const token = data.data.token;
+      const res = await fetch(`${apiUrl}/api/admin/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
 
-          // ✅ Simpan token ke cookie (untuk middleware Next.js)
-          document.cookie = `token=${token}; path=/; secure; samesite=strict`;
+      const data = await res.json();
 
-          // ✅ Simpan token ke localStorage (untuk axios interceptor)
-          localStorage.setItem("token", token);
+      if (data.success && data.data.token) {
+        const token = data.data.token;
 
-          router.push("/admin/products");
-        } else {
-          setLoginError(data.message || "Login gagal");
-        }
-      } catch (err) {
-        console.error("Login error:", err);
-        setLoginError("Server error. Silakan coba lagi.");
+        // === Simpan token ke cookie dan localStorage ===
+        document.cookie = `token=${token}; path=/; secure; samesite=strict`;
+        localStorage.setItem("token", token);
+
+        // === Reset form ===
+        setFormData({ email: "", password: "" });
+
+        // === Redirect ke dashboard ===
+        router.push("/admin/products");
+      } else {
+        setLoginError(data.message || "Login gagal");
       }
+    } catch {
+      setLoginError("Server error. Silakan coba lagi.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  // === RENDER ===
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
@@ -98,7 +111,7 @@ export default function AdminLoginPage() {
         <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
           <div>
             <label htmlFor="email" className="sr-only">
-              Email address
+              Email
             </label>
             <input
               id="email"
@@ -138,9 +151,14 @@ export default function AdminLoginPage() {
 
           <button
             type="submit"
-            className="w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+            disabled={isLoading}
+            className={`w-full flex justify-center py-2 px-4 text-sm font-medium rounded-md text-white ${
+              isLoading
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700"
+            }`}
           >
-            Login
+            {isLoading ? "Memproses..." : "Login"}
           </button>
         </form>
 

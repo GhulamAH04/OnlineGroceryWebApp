@@ -17,26 +17,26 @@ export interface Discount {
   endDate?: string;
 }
 */
-
-// File: src/interfaces/discountAdmin.ts
 import { Product } from "./productAdmin.interface";
 
 export interface Discount {
   id: number;
   productId: number | null;
+  branchId?: number; // ✅ Tambahkan ini
   type: "PERCENTAGE" | "NOMINAL" | "BUY1GET1";
   value: number;
   isPercentage: boolean;
   minPurchase: number | null;
   expiredAt: string;
-  products?: Product | null; // ✅ Tambahkan ini
+  products?: Product | null;
 }
 
 export interface DiscountAdminForm {
   productId: number;
+  branchId?: number; // ✅ Optional juga di form
   type: "PERCENTAGE" | "NOMINAL" | "BUY1GET1";
   value: number;
   isPercentage: boolean;
   minPurchase?: number;
   expiredAt: string;
-} 
+}

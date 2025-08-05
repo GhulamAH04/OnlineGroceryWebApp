@@ -18,7 +18,7 @@ import { authorizeRoles } from "./middlewares/authorizeRoles.middleware";
 import { errorHandler } from "./middlewares/errorHandler.middleware";
 
 // === ROUTES - USER ===
-import ProductRouter from "./routes/productUser.routes";
+import ProductUserRouter from "./routes/productUser.routes";
 import CategoryRouter from "./routes/category.routes";
 import AuthRouter from "./routes/auth.routes";
 import UserRouter from "./routes/user.routes";
@@ -39,7 +39,7 @@ import DiscountAdminRouter from "./routes/discountAdmin.routes";
 import ReportAdminRouter from "./routes/reportSalesAdmin";
 import InventoryJournalRouter from "./routes/inventoryJournal.routes";
 import InventoryRouter from "./routes/inventoryAdmin.routes";
-import BranchAdminRouter from "./routes/branchAdmin.routes";
+ // import BranchAdminRouter from "./routes/branchAdmin.routes";
 import adminOrderRouter from "./routes/admin.order.routes";
 import AdminRouter from "./routes/admin.routes"; 
 
@@ -57,7 +57,7 @@ app.use(
 
 // === API ROUTES ===
 // --- USER ---
-app.use("/api/products", ProductRouter);
+app.use("/api/products", ProductUserRouter);
 app.use("/api/categories", CategoryRouter);
 app.use("/api/auth", AuthRouter);
 app.use("/api/users", UserRouter);
@@ -83,9 +83,10 @@ app.use("/api/admin/discounts", DiscountAdminRouter);
 app.use("/api/admin/reports", ReportAdminRouter);
 app.use("/api/admin/inventory", InventoryRouter);
 app.use("/api/admin/inventory-journal", InventoryJournalRouter);
-app.use("/api/admin/branches", BranchAdminRouter);
+// app.use("/api/admin/branches", BranchAdminRouter);
 app.use("/api/admin/order", adminOrderRouter);
 app.use("/api/admin/users", AdminRouter); 
+app.use("/api/admin/branches", StoreRouter);
 
 // === STATIC FILES ===
 app.use("/images", express.static("public/images"));

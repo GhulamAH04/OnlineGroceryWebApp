@@ -1,6 +1,5 @@
 // === PRODUCT DETAIL PAGE (USER) ===
-// OnlineGroceryWebApp/frontend/src/app/admin/products/[id]/page.tsx
-
+// OnlineGroceryWebApp/frontend/src/app/products/[id]/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -8,7 +7,8 @@ import { useParams, useRouter } from "next/navigation";
 import axios from "@/lib/axios";
 import { toast } from "sonner";
 import { Product, CartItem } from "@/interfaces/productAdmin.interface";
-import { imageUrl } from "@/config";
+// import { imageUrl } from "@/config";
+
 
 export default function ProductDetailPage() {
   const { id } = useParams();
@@ -20,9 +20,7 @@ export default function ProductDetailPage() {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const res = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/products/${id}`
-        );
+        const res = await axios.get(`/api/products/${id}`);
         setProduct(res.data?.data || null);
       } catch {
         toast.error("Gagal memuat produk");
@@ -76,6 +74,13 @@ export default function ProductDetailPage() {
   return (
     <div className="max-w-3xl mx-auto p-6 space-y-6">
       {/* === NAMA PRODUK === */}
+      <button
+        onClick={() => router.back()}
+        className="text-sm text-green-600 hover:underline"
+      >
+        ← Kembali
+      </button>
+
       <h1 className="text-2xl font-bold text-green-700">{product.name}</h1>
 
       {/* === INFO TAMBAHAN === */}
@@ -87,7 +92,7 @@ export default function ProductDetailPage() {
       {/* === GAMBAR PRODUK === */}
       {/* eslint-disable-next-line */}
       <img
-        src={`${imageUrl}/${product.image}`}
+        src={product.image}
         alt={product.name}
         width={600}
         height={400}

@@ -8,7 +8,7 @@ export interface IProductBranch {
   products: IProduct;
 }
 
-interface IProduct {
+export interface IProduct {
   id: number;
   name: string;
   price: number;

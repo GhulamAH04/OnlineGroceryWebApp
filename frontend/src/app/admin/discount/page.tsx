@@ -5,6 +5,7 @@ import axios from "@/lib/axios";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { toast } from "sonner";
+import { getRoleFromToken } from "@/utils/getRoleFromToken";
 
 import {
   discountAdminSchema,
@@ -18,10 +19,13 @@ import { useDebounceSearch } from "@/hooks/useDebounceSearch";
 export default function DiscountPage() {
   const [discounts, setDiscounts] = useState<Discount[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [branches, setBranches] = useState<{ id: number; name: string }[]>([]);
   const [editId, setEditId] = useState<number | null>(null);
   const [confirmId, setConfirmId] = useState<number | null>(null);
   const [search, setSearch] = useState("");
+  const [isMounted, setIsMounted] = useState(false);
   const debouncedSearch = useDebounceSearch(search);
+  const userRole = getRoleFromToken();
 
   const {
     register,
@@ -34,20 +38,34 @@ export default function DiscountPage() {
 
   const fetchData = async () => {
     try {
+      // Fetch diskon dan produk bersamaan
       const [discRes, prodRes] = await Promise.all([
         axios.get("/api/admin/discounts", {
           params: { search: debouncedSearch },
         }),
-        axios.get("/api/admin/products"),
+        axios.get("/api/admin/products/dropdown"),
       ]);
 
-      setDiscounts(discRes?.data?.data ?? []);
-      setProducts(Array.isArray(prodRes?.data?.data.data) ? prodRes.data.data.data : []);
-    } catch {
+      // Set diskon dan produk
+      setDiscounts(Array.isArray(discRes?.data?.data) ? discRes.data.data : []);
+      setProducts(Array.isArray(prodRes?.data?.data) ? prodRes.data.data : []);
+
+      // Jika user SUPER_ADMIN, fetch cabang juga
+      if (userRole === "SUPER_ADMIN") {
+        const { data } = await axios.get("/api/admin/branches/dropdown");
+        setBranches(Array.isArray(data?.data) ? data.data : []);
+      }
+    } catch (err) {
       toast.error("Gagal mengambil data diskon");
+      console.error("FETCH DISCOUNT ERROR:", err);
     }
   };
 
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+  
   useEffect(() => {
     fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -75,17 +93,19 @@ export default function DiscountPage() {
       toast.error("Gagal menyimpan diskon");
     }
   };
-const handleEdit = (item: Discount) => {
-  reset({
-    productId: item.productId ?? undefined,
-    type: item.type,
-    value: item.value,
-    isPercentage: item.isPercentage,
-    minPurchase: item.minPurchase ?? undefined,
-    expiredAt: item.expiredAt.slice(0, 10),
-  });
-  setEditId(item.id);
-};
+
+  const handleEdit = (item: Discount) => {
+    reset({
+      productId: item.productId ?? undefined,
+      branchId: item.branchId ?? undefined,
+      type: item.type,
+      value: item.value,
+      isPercentage: item.isPercentage,
+      minPurchase: item.minPurchase ?? undefined,
+      expiredAt: item.expiredAt.slice(0, 10),
+    });
+    setEditId(item.id);
+  };
 
   const handleDelete = async () => {
     if (!confirmId) return;
@@ -140,6 +160,28 @@ const handleEdit = (item: Discount) => {
               <p className="text-red-500 text-sm">{errors.productId.message}</p>
             )}
           </div>
+
+          {isMounted && userRole === "SUPER_ADMIN" && (
+            <div>
+              <label className="block mb-1">Cabang</label>
+              <select
+                {...register("branchId")}
+                className="w-full border rounded p-2"
+              >
+                <option value="">Pilih Cabang</option>
+                {branches.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name}
+                  </option>
+                ))}
+              </select>
+              {errors.branchId && (
+                <p className="text-red-500 text-sm">
+                  {errors.branchId.message}
+                </p>
+              )}
+            </div>
+          )}
 
           <div>
             <label className="block mb-1">Tipe</label>
@@ -224,7 +266,6 @@ const handleEdit = (item: Discount) => {
             {discounts.map((d) => (
               <tr key={d.id}>
                 <td className="p-2 border">{d.products?.name || "-"}</td>
-
                 <td className="p-2 border">{d.type}</td>
                 <td className="p-2 border">
                   {d.isPercentage

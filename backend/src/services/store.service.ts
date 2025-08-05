@@ -85,6 +85,23 @@ async function AssignStoreAdmin(storeId: number, userId: number) {
 }
 
 export async function getAllBranchesForDropdownService() {
+  const branches = await prisma.branchs.findMany({
+    select: {
+      id: true,
+      name: true,
+    },
+    orderBy: {
+      name: "asc",
+    },
+    distinct: ["id"], // ✅ pastikan tidak duplikat berdasarkan ID
+  });
+
+  return branches;
+}
+
+
+/* Nahalil
+export async function getAllBranchesForDropdownService() {
   return prisma.branchs.findMany({
     select: {
       id: true,
@@ -95,7 +112,7 @@ export async function getAllBranchesForDropdownService() {
     },
   });
 }
-
+*/
 export async function getAllStoresService() {
   try {
     const stores = await prisma.branchs.findMany({

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import axios from "@/lib/axios";
 import { toast } from "sonner";
+import { uniqBy } from "lodash";
 import {
   BarChart,
   Bar,
@@ -22,21 +23,8 @@ import {
   StockReportItem,
   StockMutationItem,
   Branch,
+  DiscountReportItem,
 } from "@/interfaces/reportSales.interface";
-
-// === Tambahan Interface untuk Diskon ===
-interface DiscountReportItem {
-  discountType: string;
-  productName: string;
-  branchName: string;
-  isPercentage: boolean;
-  discountValue: number;
-  minPurchase: number | null;
-  buyX: number | null;
-  getY: number | null;
-  timesUsed: number;
-  totalDiscountGiven: number;
-}
 
 const COLORS = ["#22c55e", "#16a34a", "#15803d", "#166534"];
 
@@ -55,8 +43,10 @@ export default function ReportsPage() {
 
   const fetchBranches = async () => {
     try {
-      const res = await axios.get("/api/admin/branches");
-      setBranches(Array.isArray(res.data?.data) ? res.data.data : []);
+const res = await axios.get("/api/admin/branches/dropdown");
+ const data: Branch[] = Array.isArray(res.data?.data) ? res.data.data : [];
+ const unique = uniqBy(data, "id"); // Tetap object Branch[]
+ setBranches(unique);
     } catch {
       toast.error("Gagal mengambil data cabang");
     }

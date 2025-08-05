@@ -8,7 +8,7 @@ import {
   getStockSummary,
   getStockDetail,
   getDiscountReportController, // ✅ laporan diskon
-} from "../controllers/reportSalesAdmin";
+} from "../controllers/reportSalesAdmin.controller";
 
 import { authMiddleware } from "../middlewares/authAdmin.middleware";
 import { authorizeRoles } from "../middlewares/authorizeRoles.middleware";
